@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -5,6 +6,7 @@ using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 namespace Match3
 {
@@ -29,6 +31,10 @@ namespace Match3
         [Tooltip("Shows running totals per tile type cleared. If unset, a default overlay is created.")]
         [SerializeField] private TMP_Text collectedDestroyedTypesLabel;
 
+        [Header("Tile points")]
+        [Tooltip("Each match-clear wave adds (-2 + tiles cleared in that wave) to this total.")]
+        [SerializeField] private TMP_Text tilePointsText;
+
         private Match3Tile[,] _tiles;
         private Match3Tile _selectedTile;
         private bool _isResolving;
@@ -36,22 +42,37 @@ namespace Match3
         private int _bestCombo;
 
         private readonly Dictionary<int, int> _destroyedTypeCountsThisResolve = new Dictionary<int, int>();
+        /// <summary>Counts cleared in the current cascade wave only (merged into totals after each wave).</summary>
+        private readonly Dictionary<int, int> _destroyedThisWave = new Dictionary<int, int>();
         private readonly Dictionary<int, int> _totalDestroyedByTypeAllTime = new Dictionary<int, int>();
         private readonly List<int> _sortedTypeIdsScratch = new List<int>();
         private readonly StringBuilder _collectedLabelBuilder = new StringBuilder(128);
         private ReadOnlyDictionary<int, int> _lastDestroyedTypeCounts;
+        private int _tilePoints;
 
         /// <summary>
         /// Per-type counts from the most recent completed match resolution (after swap or full cascade). Empty if the last swap had no matches.
         /// </summary>
         public IReadOnlyDictionary<int, int> LastDestroyedTypeCounts => _lastDestroyedTypeCounts ?? EmptyDestroyedCounts;
 
+        /// <summary>Running score: each clear wave contributes <c>-2 + (tiles cleared that wave)</c>.</summary>
+        public int TilePoints => _tilePoints;
+
+        /// <summary>Fired after a swap attempt finishes (matched cascades or swap cancelled).</summary>
+        public event Action MoveCycleCompleted;
+
+        /// <summary>When false, mouse input does not affect the board.</summary>
+        public bool AllowPlayerInput { get; set; } = true;
+
+        /// <summary>True while tiles are swapping or cascades are resolving.</summary>
+        public bool IsResolving => _isResolving;
+
         private static readonly ReadOnlyDictionary<int, int> EmptyDestroyedCounts =
             new ReadOnlyDictionary<int, int>(new Dictionary<int, int>());
 
         private void Update()
         {
-            if (_isResolving || !Input.GetMouseButtonDown(0))
+            if (_tiles == null || !AllowPlayerInput || _isResolving || !Input.GetMouseButtonDown(0))
             {
                 return;
             }
@@ -73,11 +94,12 @@ namespace Match3
             BuildInitialBoard();
             UpdateComboUI(0);
             UpdateCollectedDestroyedLabel();
+            UpdateTilePointsUI();
         }
 
         public void OnTileClicked(Match3Tile tile)
         {
-            if (_isResolving || tile == null)
+            if (!AllowPlayerInput || _isResolving || tile == null)
             {
                 return;
             }
@@ -194,6 +216,7 @@ namespace Match3
                 yield return StartCoroutine(SwapTiles(first, second, swapDuration));
                 _lastDestroyedTypeCounts = EmptyDestroyedCounts;
                 _isResolving = false;
+                MoveCycleCompleted?.Invoke();
                 yield break;
             }
 
@@ -207,15 +230,77 @@ namespace Match3
 
                 UpdateComboUI(_currentCombo);
                 ClearMatches(matches);
+                AccumulateDestroyedTypesIntoTotal(_destroyedThisWave);
+                AccumulateTilePointsForWave(_destroyedThisWave);
+                UpdateCollectedDestroyedLabel();
+                UpdateTilePointsUI();
                 yield return StartCoroutine(CollapseColumns());
                 yield return StartCoroutine(RefillBoard());
                 matches = FindAllMatches();
             }
 
             _lastDestroyedTypeCounts = new ReadOnlyDictionary<int, int>(new Dictionary<int, int>(_destroyedTypeCountsThisResolve));
-            AccumulateDestroyedTypesIntoTotal();
-            UpdateCollectedDestroyedLabel();
             _isResolving = false;
+            MoveCycleCompleted?.Invoke();
+        }
+
+        /// <summary>
+        /// Picks a random adjacent pair and starts swap resolution (for AI).
+        /// </summary>
+        /// <returns>True if a swap coroutine was started.</returns>
+        public bool TryRandomLegalSwap()
+        {
+            if (_isResolving || _tiles == null || width < 1 || height < 1)
+            {
+                return false;
+            }
+
+            for (int attempt = 0; attempt < 128; attempt++)
+            {
+                int x = Random.Range(0, width);
+                int y = Random.Range(0, height);
+                Match3Tile a = _tiles[x, y];
+                if (a == null)
+                {
+                    continue;
+                }
+
+                int dir = Random.Range(0, 4);
+                int nx = x;
+                int ny = y;
+                if (dir == 0)
+                {
+                    nx++;
+                }
+                else if (dir == 1)
+                {
+                    nx--;
+                }
+                else if (dir == 2)
+                {
+                    ny++;
+                }
+                else
+                {
+                    ny--;
+                }
+
+                if (nx < 0 || nx >= width || ny < 0 || ny >= height)
+                {
+                    continue;
+                }
+
+                Match3Tile b = _tiles[nx, ny];
+                if (b == null)
+                {
+                    continue;
+                }
+
+                StartCoroutine(TrySwapAndResolve(a, b));
+                return true;
+            }
+
+            return false;
         }
 
         private IEnumerator SwapTiles(Match3Tile first, Match3Tile second, float duration)
@@ -317,6 +402,7 @@ namespace Match3
 
         private void ClearMatches(HashSet<Match3Tile> matches)
         {
+            _destroyedThisWave.Clear();
             foreach (Match3Tile tile in matches)
             {
                 if (tile == null)
@@ -330,17 +416,23 @@ namespace Match3
                 }
 
                 int typeId = tile.TypeId;
-                if (_destroyedTypeCountsThisResolve.TryGetValue(typeId, out int count))
-                {
-                    _destroyedTypeCountsThisResolve[typeId] = count + 1;
-                }
-                else
-                {
-                    _destroyedTypeCountsThisResolve[typeId] = 1;
-                }
+                AddDestroyedCount(typeId, _destroyedThisWave);
+                AddDestroyedCount(typeId, _destroyedTypeCountsThisResolve);
 
                 _tiles[tile.X, tile.Y] = null;
                 Destroy(tile.gameObject);
+            }
+        }
+
+        private static void AddDestroyedCount(int typeId, Dictionary<int, int> target)
+        {
+            if (target.TryGetValue(typeId, out int count))
+            {
+                target[typeId] = count + 1;
+            }
+            else
+            {
+                target[typeId] = 1;
             }
         }
 
@@ -525,9 +617,9 @@ namespace Match3
             collectedDestroyedTypesLabel = tmp;
         }
 
-        private void AccumulateDestroyedTypesIntoTotal()
+        private void AccumulateDestroyedTypesIntoTotal(Dictionary<int, int> deltaByType)
         {
-            foreach (KeyValuePair<int, int> kv in _destroyedTypeCountsThisResolve)
+            foreach (KeyValuePair<int, int> kv in deltaByType)
             {
                 if (_totalDestroyedByTypeAllTime.TryGetValue(kv.Key, out int total))
                 {
@@ -537,6 +629,31 @@ namespace Match3
                 {
                     _totalDestroyedByTypeAllTime[kv.Key] = kv.Value;
                 }
+            }
+        }
+
+        private void AccumulateTilePointsForWave(Dictionary<int, int> destroyedByTypeThisWave)
+        {
+            int destroyedAmount = SumValueCounts(destroyedByTypeThisWave);
+            _tilePoints += -2 + destroyedAmount;
+        }
+
+        private static int SumValueCounts(Dictionary<int, int> destroyedByType)
+        {
+            int sum = 0;
+            foreach (KeyValuePair<int, int> kv in destroyedByType)
+            {
+                sum += kv.Value;
+            }
+
+            return sum;
+        }
+
+        private void UpdateTilePointsUI()
+        {
+            if (tilePointsText != null)
+            {
+                tilePointsText.text = "Tile points: " + _tilePoints;
             }
         }
 

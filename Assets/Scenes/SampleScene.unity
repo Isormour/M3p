@@ -888,7 +888,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1337212826
+--- !u!1 &1114082207
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -896,48 +896,46 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1337212828}
-  - component: {fileID: 1337212827}
+  - component: {fileID: 1114082209}
+  - component: {fileID: 1114082208}
   m_Layer: 0
-  m_Name: Match3Board
+  m_Name: BattleManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1337212827
+--- !u!114 &1114082208
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1337212826}
+  m_GameObject: {fileID: 1114082207}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 89831b09ff62224419c3a1a6ea023d4f, type: 3}
+  m_Script: {fileID: 11500000, guid: 348736d57d4c1a54f9090633c5cb7fe4, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Match3.Match3Board
-  width: 8
-  height: 8
-  tileSpacing: 1.1
-  tileTypeDefinitions:
-  - {fileID: 11400000, guid: 88078226c0e3e49458326c6f5b431834, type: 2}
-  - {fileID: 11400000, guid: fb0e43bb3e72afb43a017902700c99c4, type: 2}
-  - {fileID: 11400000, guid: 031c32cbcfb4a0f4e97c6bd265a1bb5d, type: 2}
-  swapDuration: 0.12
-  fallDuration: 0.15
-  comboText: {fileID: 383389450}
-  collectedDestroyedTypesLabel: {fileID: 221602474}
---- !u!4 &1337212828
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.BattleManager
+  _match3BoardPrefab: {fileID: 328658094966070081, guid: 9f462f2b8dc6fd042b25dc2d8a8e47d4, type: 3}
+  _boardParent: {fileID: 1114082209}
+  _player: {fileID: 0}
+  _enemyBattleCharacterPrefab: {fileID: 0}
+  _enemySpawnParent: {fileID: 1114082209}
+  _enemyDefinitions:
+  - {fileID: 11400000, guid: ebd9382b9ea52454d949325ed8df145a, type: 2}
+  _skillDefinitions:
+  - {fileID: 11400000, guid: 8e7c90d07d8cc4347aa1eed69da26932, type: 2}
+--- !u!4 &1114082209
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1337212826}
+  m_GameObject: {fileID: 1114082207}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 310.61646, y: 626.40234, z: 79.76759}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -950,6 +948,6 @@ SceneRoots:
   - {fileID: 330585546}
   - {fileID: 410087041}
   - {fileID: 832575519}
-  - {fileID: 1337212828}
   - {fileID: 249953382}
   - {fileID: 505073790}
+  - {fileID: 1114082209}
