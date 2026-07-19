@@ -12,6 +12,17 @@ namespace M3P
 
         public int maxHP = 100;
 
+        [SerializeField] Sprite _icon;
+
+        [Tooltip("Visual / behaviour prefab for this enemy. Root must have EnemyBattleCharacter.")]
+        [SerializeField] EnemyBattleCharacter _enemyCharacterPrefab;
+
+        /// <summary>Icon shown in battle UI.</summary>
+        public Sprite Icon => _icon;
+
+        /// <summary>Prefab instantiated for this enemy in battle.</summary>
+        public EnemyBattleCharacter EnemyCharacterPrefab => _enemyCharacterPrefab;
+
         [SerializeField] SkillDefinition[] _skills;
 
         public SkillDefinition[] Skills => _skills;

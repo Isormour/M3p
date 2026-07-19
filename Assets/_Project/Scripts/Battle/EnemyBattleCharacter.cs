@@ -8,11 +8,12 @@ namespace M3P
     {
         public override bool IsPlayerControlled => false;
 
+        public override EEffectSource EffectSource => EEffectSource.Enemy;
+
         [SerializeField] float _thinkSeconds = 0.35f;
 
         EnemyDefinition _definition;
 
-        /// <summary>Definition used to configure this instance, when spawned from battle.</summary>
         public EnemyDefinition Definition => _definition;
 
         public void Configure(EnemyDefinition definition)
@@ -21,7 +22,11 @@ namespace M3P
             if (definition == null)
                 return;
 
-            ConfigureHealth(definition.maxHP);
+            int constitution = Mathf.Max(1, definition.maxHP / 10);
+            HardStats hardStats = new HardStats(1, 1, constitution);
+            CharacterStats stats = new CharacterStats(hardStats);
+            stats.RecalculateSoftStatsForBattle();
+            SetCharacterStats(stats);
 
             string displayName = definition.Name;
             if (!string.IsNullOrEmpty(displayName))
@@ -32,10 +37,24 @@ namespace M3P
         {
             yield return new WaitForSeconds(_thinkSeconds);
 
-            if (board == null)
+            if (_definition?.Skills == null || _definition.Skills.Length == 0)
                 yield break;
 
-            board.TryRandomLegalSwap();
+            BattleManager manager = BattleManager.Instance;
+            if (manager == null)
+                yield break;
+
+            BattleCharacter target = manager.Player;
+            if (target == null)
+                yield break;
+
+            foreach (SkillDefinition skill in _definition.Skills)
+            {
+                if (skill == null)
+                    continue;
+
+                manager.ExecuteSkill(skill, this, target);
+            }
         }
     }
 }

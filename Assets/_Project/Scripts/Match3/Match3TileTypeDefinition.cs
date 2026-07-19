@@ -7,8 +7,10 @@ namespace Match3
     {
         [SerializeField] private GameObject prefab;
         [SerializeField] private Sprite sprite;
+        [SerializeField] private Color color = Color.white;
 
         public GameObject Prefab => prefab;
         public Sprite Sprite => sprite;
+        public Color Color => color;
     }
 }

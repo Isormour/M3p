@@ -17,14 +17,16 @@ namespace M3P
 
         [Header("Turns")]
         [SerializeField] PlayerBattleCharacter _player;
-        [Tooltip("Prefab must have EnemyBattleCharacter on its root.")]
-        [SerializeField] EnemyBattleCharacter _enemyBattleCharacterPrefab;
         [Tooltip("Optional transform for spawned enemies; defaults under this manager.")]
         [SerializeField] Transform _enemySpawnParent;
         [SerializeField] List<EnemyDefinition> _enemyDefinitions = new List<EnemyDefinition>();
 
         [Header("Skills")]
         [SerializeField] SkillDefinition[] _skillDefinitions;
+
+        [Header("Flow")]
+        [Tooltip("When enabled, begins a battle as soon as this component starts (scene load).")]
+        [SerializeField] bool _startBattleImmediately;
 
         Match3Board _activeBoard;
         EnemyDefinition _activeEnemyDefinition;
@@ -38,6 +40,9 @@ namespace M3P
 
         /// <summary>True when the human player may swap tiles on the board.</summary>
         public bool IsPlayerTurn => _isPlayerTurn;
+
+        /// <summary>Human player for the current battle.</summary>
+        public PlayerBattleCharacter Player => _player;
 
         /// <summary>The enemy opponent for the current battle, chosen when the battle starts.</summary>
         public EnemyBattleCharacter ActiveEnemy => _activeEnemy;
@@ -59,6 +64,15 @@ namespace M3P
             Instance = this;
             DontDestroyOnLoad(gameObject);
             RebuildSkillLookup();
+        }
+
+        void Start()
+        {
+            if (Instance != this)
+                return;
+
+            if (_startBattleImmediately)
+                StartBattle();
         }
 
         void OnDestroy()
@@ -95,6 +109,30 @@ namespace M3P
             return _definitionsBySkillId.TryGetValue(skillId, out definition);
         }
 
+        public void ExecuteSkill(SkillDefinition skill, BattleCharacter caster, BattleCharacter target)
+        {
+            if (skill == null || target == null)
+                return;
+
+            skill.UseSkill(caster, target);
+        }
+
+        public bool TryExecuteSkill(SkillDefinition skill, BattleCharacter caster, BattleCharacter target)
+        {
+            if (skill == null || caster == null || target == null || !target.IsAlive)
+                return false;
+
+            SoftStats softStats = caster.Stats?.Soft;
+            if (softStats == null || !skill.HasEnoughMana(softStats))
+                return false;
+
+            if (!skill.TrySpendMana(softStats))
+                return false;
+
+            skill.UseSkill(caster, target);
+            return true;
+        }
+
         /// <summary>Spawns the match-3 board prefab (ends any existing battle first).</summary>
         public void StartBattle()
         {
@@ -106,11 +144,14 @@ namespace M3P
 
             EndBattle();
 
+            _player?.PrepareForBattle();
+
             PickRandomEnemyDefinition();
             SpawnEnemyBattleCharacter();
 
             Transform parent = _boardParent != null ? _boardParent : transform;
             GameObject instance = Instantiate(_match3BoardPrefab, parent);
+            // Keep board at parent origin. Parent should sit where the camera can see (near world origin is typical).
             instance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
 
             _activeBoard = instance.GetComponent<Match3Board>();
@@ -158,15 +199,19 @@ namespace M3P
             if (_activeEnemyDefinition == null)
                 return;
 
-            if (_enemyBattleCharacterPrefab == null)
+            EnemyBattleCharacter prefab = _activeEnemyDefinition.EnemyCharacterPrefab;
+
+            if (prefab == null)
             {
-                Debug.LogError($"{nameof(BattleManager)}: assign {nameof(_enemyBattleCharacterPrefab)} to spawn enemies from definitions.", this);
+                Debug.LogError(
+                    $"{nameof(BattleManager)}: set {nameof(EnemyDefinition.EnemyCharacterPrefab)} on {_activeEnemyDefinition.name}.",
+                    this);
                 _activeEnemyDefinition = null;
                 return;
             }
 
             Transform parent = _enemySpawnParent != null ? _enemySpawnParent : transform;
-            EnemyBattleCharacter spawned = Instantiate(_enemyBattleCharacterPrefab, parent);
+            EnemyBattleCharacter spawned = Instantiate(prefab, parent);
             spawned.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             spawned.Configure(_activeEnemyDefinition);
             _activeEnemy = spawned;
@@ -180,7 +225,16 @@ namespace M3P
                 yield break;
 
             _activeBoard.MoveCycleCompleted += HandleBoardMoveCycleCompleted;
+            _activeBoard.MatchWaveCompleted += HandleMatchWaveCompleted;
             BeginPlayerTurn();
+        }
+
+        void HandleMatchWaveCompleted(int tilesDestroyed)
+        {
+            if (!_isPlayerTurn || _activeEnemy == null || tilesDestroyed <= 0)
+                return;
+
+            _activeEnemy.Stats?.Soft?.TakeDamage(tilesDestroyed);
         }
 
         void HandleBoardMoveCycleCompleted()
@@ -195,7 +249,9 @@ namespace M3P
 
                 if (_activeEnemy == null)
                 {
-                    Debug.LogWarning($"{nameof(BattleManager)}: add {nameof(EnemyDefinition)} assets to {nameof(_enemyDefinitions)} and assign {nameof(_enemyBattleCharacterPrefab)}.", this);
+                    Debug.LogWarning(
+                        $"{nameof(BattleManager)}: ensure {nameof(_enemyDefinitions)} are set and each has {nameof(EnemyDefinition.EnemyCharacterPrefab)}.",
+                        this);
                     BeginPlayerTurn();
                     return;
                 }
@@ -225,10 +281,7 @@ namespace M3P
                 yield break;
 
             if (!_activeBoard.IsResolving)
-            {
-                Debug.LogWarning($"{nameof(BattleManager)}: enemy did not start a swap; returning turn to player.", this);
                 BeginPlayerTurn();
-            }
         }
 
         /// <summary>Destroys the board created by <see cref="StartBattle"/>.</summary>
@@ -239,6 +292,7 @@ namespace M3P
             if (_activeBoard != null)
             {
                 _activeBoard.MoveCycleCompleted -= HandleBoardMoveCycleCompleted;
+                _activeBoard.MatchWaveCompleted -= HandleMatchWaveCompleted;
                 Destroy(_activeBoard.gameObject);
                 _activeBoard = null;
             }

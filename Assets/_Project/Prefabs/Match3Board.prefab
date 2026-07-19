@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 328658094966070081}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -310.61646, y: -626.40234, z: -79.76759}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -51,8 +51,22 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 88078226c0e3e49458326c6f5b431834, type: 2}
   - {fileID: 11400000, guid: fb0e43bb3e72afb43a017902700c99c4, type: 2}
   - {fileID: 11400000, guid: 031c32cbcfb4a0f4e97c6bd265a1bb5d, type: 2}
+  - {fileID: 11400000, guid: 8a7c4931377b97e43b43ddc1e93fbd4e, type: 2}
+  - {fileID: 11400000, guid: 3b3c19c61b9ce4a4ea680cbd46f909a6, type: 2}
   swapDuration: 0.12
   fallDuration: 0.15
-  comboText: {fileID: 0}
-  collectedDestroyedTypesLabel: {fileID: 0}
-  tilePointsText: {fileID: 0}
+  _onComboChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  _onBestComboChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  _onTilePointsChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  _onDestroyedTypeTotalChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  _onTilesDestroyedInWave:
+    m_PersistentCalls:
+      m_Calls: []

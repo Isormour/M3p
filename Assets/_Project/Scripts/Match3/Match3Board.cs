@@ -2,10 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text;
-using TMPro;
+using M3P;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.Events;
 using Random = UnityEngine.Random;
 
 namespace Match3
@@ -17,24 +16,18 @@ namespace Match3
         [SerializeField] private int height = 8;
         [SerializeField] private float tileSpacing = 1.1f;
 
-        [Header("Tile types")]
-        [SerializeField] private Match3TileTypeDefinition[] tileTypeDefinitions;
-
         [Header("Animation")]
         [SerializeField] private float swapDuration = 0.12f;
         [SerializeField] private float fallDuration = 0.15f;
 
-        [Header("Combo")]
-        [SerializeField] private TMP_Text comboText;
+        [Header("Events")]
+        [SerializeField] UnityEvent<int> _onComboChanged;
+        [SerializeField] UnityEvent<int> _onBestComboChanged;
+        [SerializeField] UnityEvent<int> _onTilePointsChanged;
+        [SerializeField] UnityEvent<int, int> _onDestroyedTypeTotalChanged;
+        [SerializeField] UnityEvent<int, int> _onTilesDestroyedInWave;
 
-        [Header("Collected destroys")]
-        [Tooltip("Shows running totals per tile type cleared. If unset, a default overlay is created.")]
-        [SerializeField] private TMP_Text collectedDestroyedTypesLabel;
-
-        [Header("Tile points")]
-        [Tooltip("Each match-clear wave adds (-2 + tiles cleared in that wave) to this total.")]
-        [SerializeField] private TMP_Text tilePointsText;
-
+        private GameConfig _config;
         private Match3Tile[,] _tiles;
         private Match3Tile _selectedTile;
         private bool _isResolving;
@@ -45,8 +38,6 @@ namespace Match3
         /// <summary>Counts cleared in the current cascade wave only (merged into totals after each wave).</summary>
         private readonly Dictionary<int, int> _destroyedThisWave = new Dictionary<int, int>();
         private readonly Dictionary<int, int> _totalDestroyedByTypeAllTime = new Dictionary<int, int>();
-        private readonly List<int> _sortedTypeIdsScratch = new List<int>();
-        private readonly StringBuilder _collectedLabelBuilder = new StringBuilder(128);
         private ReadOnlyDictionary<int, int> _lastDestroyedTypeCounts;
         private int _tilePoints;
 
@@ -58,14 +49,34 @@ namespace Match3
         /// <summary>Running score: each clear wave contributes <c>-2 + (tiles cleared that wave)</c>.</summary>
         public int TilePoints => _tilePoints;
 
+        /// <summary>Highest combo reached in the current board session.</summary>
+        public int BestCombo => _bestCombo;
+
         /// <summary>Fired after a swap attempt finishes (matched cascades or swap cancelled).</summary>
         public event Action MoveCycleCompleted;
+
+        /// <summary>Fired once per cascade wave with the total number of tiles cleared in that wave.</summary>
+        public event Action<int> MatchWaveCompleted;
 
         /// <summary>When false, mouse input does not affect the board.</summary>
         public bool AllowPlayerInput { get; set; } = true;
 
         /// <summary>True while tiles are swapping or cascades are resolving.</summary>
         public bool IsResolving => _isResolving;
+
+        public int TileTypeCount => _config != null ? _config.TileTypeCount : 0;
+
+        public UnityEvent<int, int> TilesDestroyedInWave => _onTilesDestroyedInWave;
+
+        public Color GetTileTypeColor(int typeId)
+        {
+            return _config != null ? _config.GetTileTypeColor(typeId) : Color.white;
+        }
+
+        public Sprite GetTileTypeSprite(int typeId)
+        {
+            return _config != null ? _config.GetTileTypeSprite(typeId) : null;
+        }
 
         private static readonly ReadOnlyDictionary<int, int> EmptyDestroyedCounts =
             new ReadOnlyDictionary<int, int>(new Dictionary<int, int>());
@@ -82,19 +93,17 @@ namespace Match3
 
         private void Start()
         {
-            if (!ValidateDefinitions(out string definitionError))
+            if (!TryResolveConfig(out string configError))
             {
-                Debug.LogError(definitionError);
+                Debug.LogError(configError);
                 enabled = false;
                 return;
             }
 
-            EnsureCollectedDestroyedLabel();
             _tiles = new Match3Tile[width, height];
             BuildInitialBoard();
-            UpdateComboUI(0);
-            UpdateCollectedDestroyedLabel();
-            UpdateTilePointsUI();
+            RaiseComboChanged(0);
+            RaiseTilePointsChanged();
         }
 
         public void OnTileClicked(Match3Tile tile)
@@ -150,7 +159,7 @@ namespace Match3
 
             do
             {
-                typeId = Random.Range(0, tileTypeDefinitions.Length);
+                typeId = Random.Range(0, _config.TileTypeCount);
                 attempts++;
             }
             while (CreatesInitialMatch(x, y, typeId) && attempts < 16);
@@ -183,7 +192,8 @@ namespace Match3
 
         private void SpawnTile(int x, int y, int typeId)
         {
-            GameObject prefab = tileTypeDefinitions[typeId].Prefab;
+            Match3TileTypeDefinition definition = _config.GetTileType(typeId);
+            GameObject prefab = definition.Prefab;
             Vector3 worldPos = GridToWorld(x, y);
             GameObject instance = Instantiate(prefab, worldPos, Quaternion.identity, transform);
             Match3Tile tile = instance.GetComponent<Match3Tile>();
@@ -199,6 +209,7 @@ namespace Match3
             }
 
             tile.Initialize(this, x, y, typeId);
+            tile.ApplyMeshColor(definition.Color);
             _tiles[x, y] = tile;
         }
 
@@ -207,7 +218,7 @@ namespace Match3
             _isResolving = true;
             _currentCombo = 0;
             _destroyedTypeCountsThisResolve.Clear();
-            UpdateComboUI(0);
+            RaiseComboChanged(0);
             yield return StartCoroutine(SwapTiles(first, second, swapDuration));
 
             HashSet<Match3Tile> matches = FindAllMatches();
@@ -226,14 +237,17 @@ namespace Match3
                 if (_currentCombo > _bestCombo)
                 {
                     _bestCombo = _currentCombo;
+                    _onBestComboChanged?.Invoke(_bestCombo);
                 }
 
-                UpdateComboUI(_currentCombo);
+                RaiseComboChanged(_currentCombo);
                 ClearMatches(matches);
                 AccumulateDestroyedTypesIntoTotal(_destroyedThisWave);
+                RaiseDestroyedTypeTotalsChanged(_destroyedThisWave);
+                RaiseTilesDestroyedInWave(_destroyedThisWave);
+                MatchWaveCompleted?.Invoke(SumValueCounts(_destroyedThisWave));
                 AccumulateTilePointsForWave(_destroyedThisWave);
-                UpdateCollectedDestroyedLabel();
-                UpdateTilePointsUI();
+                RaiseTilePointsChanged();
                 yield return StartCoroutine(CollapseColumns());
                 yield return StartCoroutine(RefillBoard());
                 matches = FindAllMatches();
@@ -507,7 +521,7 @@ namespace Match3
                         continue;
                     }
 
-                    int typeId = Random.Range(0, tileTypeDefinitions.Length);
+                    int typeId = Random.Range(0, _config.TileTypeCount);
                     SpawnTile(x, y, typeId);
                     Match3Tile tile = _tiles[x, y];
                     Vector3 spawnPos = GridToWorld(x, height + 1);
@@ -551,70 +565,29 @@ namespace Match3
             return transform.position + new Vector3(x * tileSpacing, y * tileSpacing, 0f);
         }
 
-        private void UpdateComboUI(int comboValue)
+        private void RaiseComboChanged(int comboValue)
         {
-            if (comboText != null)
-            {
-                if (comboValue <= 0)
-                {
-                    comboText.text = "Combo: 0";
-                }
-                else
-                {
-                    comboText.text = "Combo: x" + comboValue + " (Best: x" + _bestCombo + ")";
-                }
+            _onComboChanged?.Invoke(comboValue);
+        }
 
-                return;
-            }
+        private void RaiseTilePointsChanged()
+        {
+            _onTilePointsChanged?.Invoke(_tilePoints);
+        }
 
-            if (comboValue > 1)
+        private void RaiseDestroyedTypeTotalsChanged(Dictionary<int, int> deltaByType)
+        {
+            foreach (KeyValuePair<int, int> kv in deltaByType)
             {
-                Debug.Log("Combo x" + comboValue);
+                if (_totalDestroyedByTypeAllTime.TryGetValue(kv.Key, out int total))
+                    _onDestroyedTypeTotalChanged?.Invoke(kv.Key, total);
             }
         }
 
-        private void EnsureCollectedDestroyedLabel()
+        private void RaiseTilesDestroyedInWave(Dictionary<int, int> destroyedThisWave)
         {
-            if (collectedDestroyedTypesLabel != null)
-            {
-                return;
-            }
-
-            GameObject canvasGo = new GameObject("CollectedDestroyedCanvas");
-            canvasGo.transform.SetParent(transform, false);
-
-            Canvas canvas = canvasGo.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 10;
-
-            CanvasScaler scaler = canvasGo.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920, 1080);
-            scaler.matchWidthOrHeight = 0.5f;
-            canvasGo.AddComponent<GraphicRaycaster>();
-
-            GameObject textGo = new GameObject("CollectedDestroyedLabel");
-            textGo.transform.SetParent(canvasGo.transform, false);
-
-            RectTransform rect = textGo.AddComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = new Vector2(24f, -24f);
-            rect.sizeDelta = new Vector2(520f, 400f);
-
-            TextMeshProUGUI tmp = textGo.AddComponent<TextMeshProUGUI>();
-            TMP_FontAsset font = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
-            if (font != null)
-            {
-                tmp.font = font;
-            }
-
-            tmp.fontSize = 22f;
-            tmp.alignment = TextAlignmentOptions.TopLeft;
-            tmp.color = Color.white;
-
-            collectedDestroyedTypesLabel = tmp;
+            foreach (KeyValuePair<int, int> kv in destroyedThisWave)
+                _onTilesDestroyedInWave?.Invoke(kv.Key, kv.Value);
         }
 
         private void AccumulateDestroyedTypesIntoTotal(Dictionary<int, int> deltaByType)
@@ -649,61 +622,31 @@ namespace Match3
             return sum;
         }
 
-        private void UpdateTilePointsUI()
+        private bool TryResolveConfig(out string message)
         {
-            if (tilePointsText != null)
+            if (GameManager.Instance == null)
             {
-                tilePointsText.text = "Tile points: " + _tilePoints;
-            }
-        }
-
-        private void UpdateCollectedDestroyedLabel()
-        {
-            if (collectedDestroyedTypesLabel == null)
-            {
-                return;
-            }
-
-            if (_totalDestroyedByTypeAllTime.Count == 0)
-            {
-                collectedDestroyedTypesLabel.text = "Collected destroyed\n(None yet)";
-                return;
-            }
-
-            _sortedTypeIdsScratch.Clear();
-            foreach (int key in _totalDestroyedByTypeAllTime.Keys)
-            {
-                _sortedTypeIdsScratch.Add(key);
-            }
-
-            _sortedTypeIdsScratch.Sort();
-
-            StringBuilder sb = _collectedLabelBuilder;
-            sb.Clear();
-            sb.AppendLine("Collected destroyed");
-            for (int i = 0; i < _sortedTypeIdsScratch.Count; i++)
-            {
-                int typeId = _sortedTypeIdsScratch[i];
-                sb.Append("Type ");
-                sb.Append(typeId);
-                sb.Append(": ");
-                sb.AppendLine(_totalDestroyedByTypeAllTime[typeId].ToString());
-            }
-
-            collectedDestroyedTypesLabel.text = sb.ToString();
-        }
-
-        private bool ValidateDefinitions(out string message)
-        {
-            if (tileTypeDefinitions == null || tileTypeDefinitions.Length < 3)
-            {
-                message = "Assign at least 3 tile type definitions.";
+                message = "GameManager instance is missing.";
                 return false;
             }
 
-            for (int i = 0; i < tileTypeDefinitions.Length; i++)
+            _config = GameManager.Instance.Config;
+            if (_config == null)
             {
-                Match3TileTypeDefinition def = tileTypeDefinitions[i];
+                message = "GameManager has no GameConfig assigned.";
+                return false;
+            }
+
+            if (_config.TileTypeCount < 3)
+            {
+                message = "GameConfig must define at least 3 tile types.";
+                return false;
+            }
+
+            Match3TileTypeDefinition[] tileTypes = _config.TileTypes;
+            for (int i = 0; i < tileTypes.Length; i++)
+            {
+                Match3TileTypeDefinition def = tileTypes[i];
                 if (def == null)
                 {
                     message = "Tile type definition at index " + i + " is null.";

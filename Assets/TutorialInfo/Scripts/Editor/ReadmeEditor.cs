@@ -6,19 +6,42 @@ using System;
 using System.IO;
 using System.Reflection;
 
-[CustomEditor(typeof(Readme))]
+/// <summary>
+/// Separate from CustomEditor type so inspector lifecycle does not double-subscribe delayCall on domain reload quirks.
+/// </summary>
 [InitializeOnLoad]
+static class ReadmeEditorBootstrap
+{
+    static ReadmeEditorBootstrap()
+    {
+        EditorApplication.delayCall += ReadmeEditor.SelectReadmeAutomatically;
+    }
+}
+
+[CustomEditor(typeof(Readme))]
 public class ReadmeEditor : Editor
 {
-    static string s_ShowedReadmeSessionStateName = "ReadmeEditor.showedReadme";
+    internal static string s_ShowedReadmeSessionStateName = "ReadmeEditor.showedReadme";
     
-    static string s_ReadmeSourceDirectory = "Assets/TutorialInfo";
+    internal static string s_ReadmeSourceDirectory = "Assets/TutorialInfo";
 
-    const float k_Space = 16f;
+    internal const float k_Space = 16f;
 
-    static ReadmeEditor()
+    /// <summary>Called once after domain reload via <see cref="ReadmeEditorBootstrap"/>.</summary>
+    internal static void SelectReadmeAutomatically()
     {
-        EditorApplication.delayCall += SelectReadmeAutomatically;
+        if (SessionState.GetBool(s_ShowedReadmeSessionStateName, false))
+            return;
+
+        SessionState.SetBool(s_ShowedReadmeSessionStateName, true);
+
+        Readme readme = SelectReadme();
+        if (readme != null && !readme.loadedLayout)
+        {
+            LoadLayout();
+            readme.loadedLayout = true;
+            EditorUtility.SetDirty(readme);
+        }
     }
 
     static void RemoveTutorial()
@@ -51,50 +74,77 @@ public class ReadmeEditor : Editor
         }
     }
 
-    static void SelectReadmeAutomatically()
-    {
-        if (!SessionState.GetBool(s_ShowedReadmeSessionStateName, false))
-        {
-            var readme = SelectReadme();
-            SessionState.SetBool(s_ShowedReadmeSessionStateName, true);
-
-            if (readme && !readme.loadedLayout)
-            {
-                LoadLayout();
-                readme.loadedLayout = true;
-            }
-        }
-    }
-
     static void LoadLayout()
     {
-        var assembly = typeof(EditorApplication).Assembly;
-        var windowLayoutType = assembly.GetType("UnityEditor.WindowLayout", true);
-        var method = windowLayoutType.GetMethod("LoadWindowLayout", BindingFlags.Public | BindingFlags.Static);
-        method.Invoke(null, new object[] { Path.Combine(Application.dataPath, "TutorialInfo/Layout.wlt"), false });
+        Assembly assembly = typeof(EditorApplication).Assembly;
+        Type windowLayoutType = assembly.GetType("UnityEditor.WindowLayout", throwOnError: false);
+        if (windowLayoutType == null)
+            return;
+
+        MethodInfo method = windowLayoutType.GetMethod("LoadWindowLayout", BindingFlags.Public | BindingFlags.Static);
+        if (method == null)
+            return;
+
+        string layoutPath = Path.Combine(Application.dataPath, "TutorialInfo/Layout.wlt");
+        if (!File.Exists(layoutPath))
+            return;
+
+        method.Invoke(null, new object[] { layoutPath, false });
     }
 
     static Readme SelectReadme()
     {
-        var ids = AssetDatabase.FindAssets("Readme t:Readme");
-        if (ids.Length == 1)
+        string[] ids = AssetDatabase.FindAssets("Readme t:Readme");
+        if (ids == null || ids.Length == 0)
         {
-            var readmeObject = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(ids[0]));
-
-            Selection.objects = new UnityEngine.Object[] { readmeObject };
-
-            return (Readme)readmeObject;
-        }
-        else
-        {
-            Debug.Log("Couldn't find a readme");
+            Debug.Log("ReadmeEditor: no Readme assets found (search: 'Readme t:Readme').");
             return null;
         }
+
+        Readme preferred = null;
+        string preferredPath = null;
+
+        foreach (string guid in ids)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            if (string.IsNullOrEmpty(path))
+                continue;
+
+            UnityEngine.Object readmeObject = AssetDatabase.LoadMainAssetAtPath(path);
+            if (readmeObject is not Readme readme)
+            {
+                Debug.LogWarning($"ReadmeEditor: skip '{path}' — not a Readme ScriptableObject (script missing?).");
+                continue;
+            }
+
+            bool isDefaultPath = path == "Assets/Readme.asset";
+            if (preferred == null || isDefaultPath)
+            {
+                preferred = readme;
+                preferredPath = path;
+                if (isDefaultPath)
+                    break;
+            }
+        }
+
+        if (preferred == null)
+        {
+            Debug.LogWarning("ReadmeEditor: no valid Readme assets after load; not changing selection.");
+            return null;
+        }
+
+        if (ids.Length > 1)
+            Debug.Log($"ReadmeEditor: multiple Readme assets found; using '{preferredPath}'.");
+
+        Selection.objects = new UnityEngine.Object[] { preferred };
+        return preferred;
     }
 
     protected override void OnHeaderGUI()
     {
-        var readme = (Readme)target;
+        if (target is not Readme readme)
+            return;
+
         Init();
 
         var iconWidth = Mathf.Min(EditorGUIUtility.currentViewWidth / 3f - 20f, 128f);
@@ -122,8 +172,13 @@ public class ReadmeEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        var readme = (Readme)target;
+        if (target is not Readme readme)
+            return;
+
         Init();
+
+        if (readme.sections == null)
+            return;
 
         foreach (var section in readme.sections)
         {
