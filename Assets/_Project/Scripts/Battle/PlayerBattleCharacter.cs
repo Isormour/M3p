@@ -19,5 +19,11 @@ namespace M3P
         {
             SetCharacterStats(Profile.CreateBattleStats());
         }
+
+        public override void OnTurnStarted()
+        {
+            CharacterStats stats = Stats;
+            stats?.Soft?.ResetActionPoints(stats.Hard);
+        }
     }
 }

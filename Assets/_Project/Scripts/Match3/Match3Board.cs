@@ -58,6 +58,9 @@ namespace Match3
         /// <summary>Fired once per cascade wave with the total number of tiles cleared in that wave.</summary>
         public event Action<int> MatchWaveCompleted;
 
+        /// <summary>Fired for each tile right before it is destroyed.</summary>
+        public event Action<Vector3, int> TileDestroyed;
+
         /// <summary>When false, mouse input does not affect the board.</summary>
         public bool AllowPlayerInput { get; set; } = true;
 
@@ -209,7 +212,6 @@ namespace Match3
             }
 
             tile.Initialize(this, x, y, typeId);
-            tile.ApplyMeshColor(definition.Color);
             _tiles[x, y] = tile;
         }
 
@@ -432,6 +434,8 @@ namespace Match3
                 int typeId = tile.TypeId;
                 AddDestroyedCount(typeId, _destroyedThisWave);
                 AddDestroyedCount(typeId, _destroyedTypeCountsThisResolve);
+
+                TileDestroyed?.Invoke(tile.transform.position, typeId);
 
                 _tiles[tile.X, tile.Y] = null;
                 Destroy(tile.gameObject);

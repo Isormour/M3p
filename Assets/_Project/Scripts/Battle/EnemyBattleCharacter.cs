@@ -1,5 +1,5 @@
-using System.Collections;
 using Match3;
+using System.Collections;
 using UnityEngine;
 
 namespace M3P
@@ -22,9 +22,7 @@ namespace M3P
             if (definition == null)
                 return;
 
-            int constitution = Mathf.Max(1, definition.maxHP / 10);
-            HardStats hardStats = new HardStats(1, 1, constitution);
-            CharacterStats stats = new CharacterStats(hardStats);
+            CharacterStats stats = new CharacterStats(definition.HardStats);
             stats.RecalculateSoftStatsForBattle();
             SetCharacterStats(stats);
 

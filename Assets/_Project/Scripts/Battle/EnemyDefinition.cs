@@ -10,7 +10,9 @@ namespace M3P
         /// <remarks>Distinct from Unity’s inherited <see cref="Object.name"/> (asset filename).</remarks>
         public string Name => _name;
 
-        public int maxHP = 100;
+        [SerializeField] HardStats _hardStats = new HardStats(1, 1, 10, 1);
+
+        public HardStats HardStats => _hardStats;
 
         [SerializeField] Sprite _icon;
 

@@ -141,7 +141,8 @@ namespace M3P
             if (target == null || !target.IsAlive)
                 return false;
 
-            return _skill.HasEnoughMana(_player.Stats.Soft);
+            SoftStats softStats = _player.Stats.Soft;
+            return _skill.HasEnoughActionPoints(softStats) && _skill.HasEnoughMana(softStats);
         }
 
         void ClearCostLabels()

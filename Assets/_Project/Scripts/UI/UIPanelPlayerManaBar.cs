@@ -1,4 +1,3 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,9 +6,9 @@ namespace M3P
     public sealed class UIPanelPlayerManaBar : MonoBehaviour
     {
         [SerializeField] Image _manaIcon;
-        [SerializeField] TextMeshProUGUI _amountText;
-
+        [SerializeField] UISimpleIndicator _indicator;
         int _tileTypeId;
+        int _currentAmount = 0;
 
         public int TileTypeId => _tileTypeId;
 
@@ -17,9 +16,9 @@ namespace M3P
         {
             _tileTypeId = tileTypeId;
 
-            if (_manaIcon == null || _amountText == null)
+            if (_manaIcon == null || _indicator == null)
             {
-                Debug.LogError($"{nameof(UIPanelPlayerManaBar)}: assign {nameof(_manaIcon)} and {nameof(_amountText)} on the prefab.", this);
+                Debug.LogError($"{nameof(UIPanelPlayerManaBar)}: assign {nameof(_manaIcon)} and {nameof(_indicator)} on the prefab.", this);
                 return;
             }
 
@@ -28,15 +27,30 @@ namespace M3P
                 : Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
             _manaIcon.enabled = true;
 
-            SetAmount(0);
+            _indicator.Bind(
+                getCurrent: () => _currentAmount,
+                getMax: () => 0,
+                formatText: (current, _) => current.ToString()
+            );
         }
 
         public void SetAmount(int amount)
         {
-            if (_amountText == null)
-                return;
+            if (_currentAmount == amount) return;
+            _currentAmount = amount;
+            
+            if (_indicator != null)
+            {
+                _indicator.ManualRefresh();
+            }
+        }
 
-            _amountText.text = amount.ToString();
+        private void OnDestroy()
+        {
+            if (_indicator != null)
+            {
+                _indicator.Unbind();
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
+using Match3;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using Match3;
 using UnityEngine;
 
 namespace M3P
@@ -23,6 +24,9 @@ namespace M3P
 
         [Header("Skills")]
         [SerializeField] SkillDefinition[] _skillDefinitions;
+
+        [Header("World")]
+        [SerializeField] BattleWorld _battleWorld;
 
         [Header("Flow")]
         [Tooltip("When enabled, begins a battle as soon as this component starts (scene load).")]
@@ -52,6 +56,7 @@ namespace M3P
 
         /// <summary>Skill definitions keyed by <see cref="SkillDefinition.SkillId"/>.</summary>
         public IReadOnlyDictionary<int, SkillDefinition> DefinitionsBySkillId => _definitionsBySkillId;
+        public Action<Match3Board> OnBattleStarted;
 
         void Awake()
         {
@@ -123,13 +128,17 @@ namespace M3P
                 return false;
 
             SoftStats softStats = caster.Stats?.Soft;
-            if (softStats == null || !skill.HasEnoughMana(softStats))
+            if (softStats == null || !skill.HasEnoughActionPoints(softStats) || !skill.HasEnoughMana(softStats))
                 return false;
 
-            if (!skill.TrySpendMana(softStats))
+            if (!skill.TrySpendActionPoints(softStats) || !skill.TrySpendMana(softStats))
                 return false;
 
             skill.UseSkill(caster, target);
+
+            if (caster == _player)
+                _battleWorld?.NotifySkillUsed(skill);
+
             return true;
         }
 
@@ -165,7 +174,7 @@ namespace M3P
                 ClearSpawnedEnemy();
                 return;
             }
-
+            OnBattleStarted?.Invoke(_activeBoard);
             StartCoroutine(SetupTurnFlowRoutine());
         }
 
@@ -185,7 +194,7 @@ namespace M3P
                     continue;
 
                 seen++;
-                if (Random.Range(0, seen) == 0)
+                if (UnityEngine.Random.Range(0, seen) == 0)
                     pick = candidate;
             }
 
@@ -235,6 +244,7 @@ namespace M3P
                 return;
 
             _activeEnemy.Stats?.Soft?.TakeDamage(tilesDestroyed);
+            _battleWorld?.NotifyMatchWave(tilesDestroyed);
         }
 
         void HandleBoardMoveCycleCompleted()

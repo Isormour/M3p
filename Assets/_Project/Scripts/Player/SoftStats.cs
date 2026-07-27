@@ -22,16 +22,22 @@ namespace M3P
     {
         public int MaxHP;
         public int CurrentHealth;
+        public int MaxActionPoints;
+        public int CurrentActionPoints;
         public List<TileTypeMana> ManaByBrokenTileType = new List<TileTypeMana>();
 
         public event Action Changed;
 
         public static int CalculateMaxHP(HardStats hard) => Mathf.Max(1, hard.Constitution * 10);
 
+        public static int CalculateMaxActionPoints(HardStats hard) => Mathf.Max(0, hard.Agility);
+
         public SoftStats(HardStats hard)
         {
             MaxHP = CalculateMaxHP(hard);
             CurrentHealth = MaxHP;
+            MaxActionPoints = CalculateMaxActionPoints(hard);
+            CurrentActionPoints = MaxActionPoints;
         }
 
         public int GetManaForTileType(int tileTypeId)
@@ -95,7 +101,30 @@ namespace M3P
         {
             MaxHP = CalculateMaxHP(hard);
             CurrentHealth = MaxHP;
+            ResetActionPoints(hard);
             ResetMana();
+        }
+
+        public void ResetActionPoints(HardStats hard)
+        {
+            MaxActionPoints = CalculateMaxActionPoints(hard);
+            CurrentActionPoints = MaxActionPoints;
+            NotifyChanged();
+        }
+
+        public bool HasActionPoints(int cost = 1) => CurrentActionPoints >= cost;
+
+        public bool TrySpendActionPoint(int cost = 1)
+        {
+            if (cost <= 0)
+                return true;
+
+            if (CurrentActionPoints < cost)
+                return false;
+
+            CurrentActionPoints -= cost;
+            NotifyChanged();
+            return true;
         }
 
         public void ResetMana()
@@ -109,6 +138,7 @@ namespace M3P
             return new SoftStats(hard)
             {
                 CurrentHealth = CurrentHealth,
+                CurrentActionPoints = CurrentActionPoints,
                 ManaByBrokenTileType = ManaByBrokenTileType != null
                     ? new List<TileTypeMana>(ManaByBrokenTileType)
                     : new List<TileTypeMana>(),

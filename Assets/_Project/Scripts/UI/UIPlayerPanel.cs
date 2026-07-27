@@ -1,5 +1,5 @@
-using System.Collections;
 using Match3;
+using System.Collections;
 using UnityEngine;
 
 namespace M3P
@@ -8,8 +8,9 @@ namespace M3P
     {
         [SerializeField] PlayerBattleCharacter _player;
         [SerializeField] UIPanelPlayerMana _playerManaPanel;
-        [SerializeField] UIPlayerPanelSkills _playerSkillsPanel;
-        [SerializeField] UIHPIndicator _playerHP;
+        [SerializeField] UIPanelSkills _playerSkillsPanel;
+        [SerializeField] UISimpleIndicator _playerHP;
+        [SerializeField] UISimpleIndicator _playerActionPoints;
 
         Coroutine _watchBattleRoutine;
 
@@ -34,7 +35,7 @@ namespace M3P
                 _watchBattleRoutine = null;
             }
 
-            UnbindHP();
+            UnbindIndicators();
         }
 
         void OnValidate()
@@ -43,10 +44,7 @@ namespace M3P
                 _playerManaPanel = GetComponentInChildren<UIPanelPlayerMana>(true);
 
             if (_playerSkillsPanel == null)
-                _playerSkillsPanel = GetComponentInChildren<UIPlayerPanelSkills>(true);
-
-            if (_playerHP == null)
-                _playerHP = GetComponentInChildren<UIHPIndicator>(true);
+                _playerSkillsPanel = GetComponentInChildren<UIPanelSkills>(true);
         }
 
         public void SetPlayer(PlayerBattleCharacter player)
@@ -85,26 +83,43 @@ namespace M3P
             if (_playerSkillsPanel != null)
                 _playerSkillsPanel.SetPlayer(_player);
 
-            BindHP();
+            BindIndicators();
         }
 
-        void BindHP()
+        void BindIndicators()
         {
-            if (_playerHP == null)
-                return;
-
             if (_player?.Stats?.Soft == null)
             {
-                _playerHP.Unbind();
+                UnbindIndicators();
                 return;
             }
 
-            _playerHP.Bind(_player.Stats.Soft, _player.Stats.MaxHealth);
+            SoftStats softStats = _player.Stats.Soft;
+            int maxHealth = _player.Stats.MaxHealth;
+
+            if (_playerHP != null)
+            {
+                _playerHP.Bind(
+                    () => softStats.CurrentHealth,
+                    () => maxHealth,
+                    handler => softStats.Changed += handler,
+                    handler => softStats.Changed -= handler);
+            }
+
+            if (_playerActionPoints != null)
+            {
+                _playerActionPoints.Bind(
+                    () => softStats.CurrentActionPoints,
+                    () => softStats.MaxActionPoints,
+                    handler => softStats.Changed += handler,
+                    handler => softStats.Changed -= handler);
+            }
         }
 
-        void UnbindHP()
+        void UnbindIndicators()
         {
             _playerHP?.Unbind();
+            _playerActionPoints?.Unbind();
         }
     }
 }

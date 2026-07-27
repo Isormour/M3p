@@ -14,7 +14,7 @@ namespace M3P
 
         public PlayerProfile()
         {
-            HardStats = new HardStats(1, 1, 1);
+            HardStats = new HardStats(1, 1, 1, 1);
         }
 
         public CharacterStats CreateBattleStats()

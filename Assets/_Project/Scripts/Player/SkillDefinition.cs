@@ -9,7 +9,7 @@ namespace M3P
         [SerializeField] int _skillId;
         [SerializeField] TileTypeMana[] _manaCosts = Array.Empty<TileTypeMana>();
         [SerializeField] BattleEffect[] _effects = Array.Empty<BattleEffect>();
-
+        [field: SerializeField] public string _animationName { private set; get; } = "BasicAttack";
         public int SkillId => _skillId;
 
         public TileTypeMana[] ManaCosts => _manaCosts ?? Array.Empty<TileTypeMana>();
@@ -26,6 +26,18 @@ namespace M3P
             }
 
             return 0;
+        }
+
+        public const int DefaultActionPointCost = 1;
+
+        public bool HasEnoughActionPoints(SoftStats softStats)
+        {
+            return softStats != null && softStats.HasActionPoints(DefaultActionPointCost);
+        }
+
+        public bool TrySpendActionPoints(SoftStats softStats)
+        {
+            return softStats != null && softStats.TrySpendActionPoint(DefaultActionPointCost);
         }
 
         public bool HasEnoughMana(SoftStats softStats)
