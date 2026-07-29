@@ -28,7 +28,7 @@ namespace M3P
 
         public event Action Changed;
 
-        public static int CalculateMaxHP(HardStats hard) => Mathf.Max(1, hard.Constitution * 10);
+        public static int CalculateMaxHP(HardStats hard) => Mathf.Max(1, hard.Constitution * 20);
 
         public static int CalculateMaxActionPoints(HardStats hard) => Mathf.Max(0, hard.Agility);
 

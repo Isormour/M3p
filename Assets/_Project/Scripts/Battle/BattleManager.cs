@@ -238,12 +238,30 @@ namespace M3P
             BeginPlayerTurn();
         }
 
-        void HandleMatchWaveCompleted(int tilesDestroyed)
+        /// <summary>
+        /// Resolves one basic attack per match group, so a cascade lands several separate hits while a
+        /// single long line lands one bigger hit.
+        /// </summary>
+        void HandleMatchWaveCompleted(IReadOnlyList<MatchGroup> groups)
         {
-            if (!_isPlayerTurn || _activeEnemy == null || tilesDestroyed <= 0)
+            if (!_isPlayerTurn || _activeEnemy == null || groups == null || groups.Count == 0)
                 return;
 
-            _activeEnemy.Stats?.Soft?.TakeDamage(tilesDestroyed);
+            GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
+            if (config == null)
+                return;
+
+            HardStats attacker = _player?.Stats != null ? _player.Stats.Hard : default;
+            SoftStats targetStats = _activeEnemy.Stats?.Soft;
+            int tilesDestroyed = 0;
+
+            for (int i = 0; i < groups.Count; i++)
+            {
+                MatchGroup group = groups[i];
+                tilesDestroyed += group.Size;
+                targetStats?.TakeDamage(config.CalculateBasicAttackDamage(attacker, group.Size));
+            }
+
             _battleWorld?.NotifyMatchWave(tilesDestroyed);
         }
 

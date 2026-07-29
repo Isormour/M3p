@@ -106,7 +106,7 @@ namespace M3P
 
                 UIPlayerPanelSkillsBar bar = Instantiate(_barPrefab, _barContainer);
                 bar.name = $"SkillBar_{skill.name}";
-                bar.Configure(skill, _board, _player);
+                bar.Configure(skill, _player);
                 bars[barIndex++] = bar;
             }
 

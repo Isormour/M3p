@@ -1,27 +1,51 @@
 using System;
+using Match3;
 using UnityEngine;
 
 namespace M3P
 {
+    /// <summary>
+    /// Authoring-side mana cost. References the tile type asset directly so reordering
+    /// <see cref="GameConfig.TileTypes"/> cannot silently remap a cost onto another colour.
+    /// </summary>
+    [Serializable]
+    public struct TileTypeManaCost
+    {
+        public Match3TileTypeDefinition TileType;
+        public int Amount;
+
+        public TileTypeManaCost(Match3TileTypeDefinition tileType, int amount = 0)
+        {
+            TileType = tileType;
+            Amount = amount;
+        }
+    }
+
     [CreateAssetMenu(fileName = "SkillDefinition", menuName = "M3P/Skill Definition", order = 0)]
     public class SkillDefinition : ScriptableObject
     {
         [SerializeField] int _skillId;
-        [SerializeField] TileTypeMana[] _manaCosts = Array.Empty<TileTypeMana>();
+        [SerializeField] TileTypeManaCost[] _manaCosts = Array.Empty<TileTypeManaCost>();
         [SerializeField] BattleEffect[] _effects = Array.Empty<BattleEffect>();
         [field: SerializeField] public string _animationName { private set; get; } = "BasicAttack";
+
+        [NonSerialized] bool _loggedUnresolvedTileType;
+
         public int SkillId => _skillId;
 
-        public TileTypeMana[] ManaCosts => _manaCosts ?? Array.Empty<TileTypeMana>();
+        public TileTypeManaCost[] ManaCosts => _manaCosts ?? Array.Empty<TileTypeManaCost>();
 
         public BattleEffect[] Effects => _effects ?? Array.Empty<BattleEffect>();
 
-        public int GetManaCostForTileType(int tileTypeId)
+        public int GetManaCostForTileType(Match3TileTypeDefinition tileType)
         {
-            TileTypeMana[] costs = ManaCosts;
+            if (tileType == null)
+                return 0;
+
+            TileTypeManaCost[] costs = ManaCosts;
             for (int i = 0; i < costs.Length; i++)
             {
-                if (costs[i].TileTypeId == tileTypeId)
+                if (costs[i].TileType == tileType)
                     return costs[i].Amount;
             }
 
@@ -45,13 +69,17 @@ namespace M3P
             if (softStats == null)
                 return false;
 
-            TileTypeMana[] costs = ManaCosts;
+            TileTypeManaCost[] costs = ManaCosts;
             for (int i = 0; i < costs.Length; i++)
             {
                 if (costs[i].Amount <= 0)
                     continue;
 
-                if (softStats.GetManaForTileType(costs[i].TileTypeId) < costs[i].Amount)
+                int tileTypeId = ResolveTileTypeId(costs[i].TileType);
+                if (tileTypeId < 0)
+                    return false;
+
+                if (softStats.GetManaForTileType(tileTypeId) < costs[i].Amount)
                     return false;
             }
 
@@ -63,17 +91,46 @@ namespace M3P
             if (!HasEnoughMana(softStats))
                 return false;
 
-            TileTypeMana[] costs = ManaCosts;
+            TileTypeManaCost[] costs = ManaCosts;
             for (int i = 0; i < costs.Length; i++)
             {
                 if (costs[i].Amount <= 0)
                     continue;
 
-                int remaining = softStats.GetManaForTileType(costs[i].TileTypeId) - costs[i].Amount;
-                softStats.SetManaForTileType(costs[i].TileTypeId, remaining);
+                int tileTypeId = ResolveTileTypeId(costs[i].TileType);
+                int remaining = softStats.GetManaForTileType(tileTypeId) - costs[i].Amount;
+                softStats.SetManaForTileType(tileTypeId, remaining);
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Maps an authored tile type onto the runtime id used by the board, or -1 when it cannot be resolved.
+        /// Logs at most once per asset because this runs from per-frame UI refreshes.
+        /// </summary>
+        int ResolveTileTypeId(Match3TileTypeDefinition tileType)
+        {
+            GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
+            if (config == null)
+                return -1;
+
+            int tileTypeId = config.GetTileTypeId(tileType);
+            if (tileTypeId < 0 && !_loggedUnresolvedTileType)
+            {
+                _loggedUnresolvedTileType = true;
+                string tileTypeName = tileType != null ? tileType.name : "<none>";
+                Debug.LogError(
+                    $"{nameof(SkillDefinition)} '{name}': mana cost tile type '{tileTypeName}' is missing from {nameof(GameConfig)}. The skill can never be cast.",
+                    this);
+            }
+
+            return tileTypeId;
+        }
+
+        void OnEnable()
+        {
+            _loggedUnresolvedTileType = false;
         }
 
         public void UseSkill(BattleCharacter caster, BattleCharacter target)

@@ -1,4 +1,3 @@
-using Match3;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -22,7 +21,7 @@ namespace M3P
         public SkillDefinition Skill => _skill;
         public IReadOnlyList<UIPlayerPanelSkillsCostLabel> CostLabels => _costLabels;
 
-        public void Configure(SkillDefinition skill, Match3Board board, PlayerBattleCharacter player)
+        public void Configure(SkillDefinition skill, PlayerBattleCharacter player)
         {
             _skill = skill;
             _player = player;
@@ -48,16 +47,15 @@ namespace M3P
                 return;
             }
 
-            TileTypeMana[] costs = skill.ManaCosts;
+            TileTypeManaCost[] costs = skill.ManaCosts;
             for (int i = 0; i < costs.Length; i++)
             {
-                if (costs[i].Amount <= 0)
+                if (costs[i].Amount <= 0 || costs[i].TileType == null)
                     continue;
 
                 UIPlayerPanelSkillsCostLabel label = Instantiate(_costLabelPrefab, _costContainer);
-                label.name = $"CostLabel_Type{costs[i].TileTypeId}";
-                Sprite icon = board != null ? board.GetTileTypeSprite(costs[i].TileTypeId) : null;
-                label.Configure(icon, costs[i].Amount);
+                label.name = $"CostLabel_{costs[i].TileType.name}";
+                label.Configure(costs[i].TileType.Sprite, costs[i].Amount);
                 _costLabels.Add(label);
             }
 

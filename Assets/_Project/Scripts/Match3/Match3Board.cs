@@ -11,6 +11,9 @@ namespace Match3
 {
     public class Match3Board : MonoBehaviour
     {
+        /// <summary>Shortest run that counts as a match.</summary>
+        public const int MinimumMatchSize = 3;
+
         [Header("Board")]
         [SerializeField] private int width = 8;
         [SerializeField] private int height = 8;
@@ -38,6 +41,7 @@ namespace Match3
         /// <summary>Counts cleared in the current cascade wave only (merged into totals after each wave).</summary>
         private readonly Dictionary<int, int> _destroyedThisWave = new Dictionary<int, int>();
         private readonly Dictionary<int, int> _totalDestroyedByTypeAllTime = new Dictionary<int, int>();
+        private readonly HashSet<Match3Tile> _matchedTilesBuffer = new HashSet<Match3Tile>();
         private ReadOnlyDictionary<int, int> _lastDestroyedTypeCounts;
         private int _tilePoints;
 
@@ -55,8 +59,11 @@ namespace Match3
         /// <summary>Fired after a swap attempt finishes (matched cascades or swap cancelled).</summary>
         public event Action MoveCycleCompleted;
 
-        /// <summary>Fired once per cascade wave with the total number of tiles cleared in that wave.</summary>
-        public event Action<int> MatchWaveCompleted;
+        /// <summary>
+        /// Fired once per cascade wave with the match groups cleared in that wave. Tiles are already
+        /// destroyed when this runs, so only read <see cref="MatchGroup.TypeId"/> and <see cref="MatchGroup.Size"/>.
+        /// </summary>
+        public event Action<IReadOnlyList<MatchGroup>> MatchWaveCompleted;
 
         /// <summary>Fired for each tile right before it is destroyed.</summary>
         public event Action<Vector3, int> TileDestroyed;
@@ -234,8 +241,8 @@ namespace Match3
             RaiseComboChanged(0);
             yield return StartCoroutine(SwapTiles(first, second, swapDuration));
 
-            HashSet<Match3Tile> matches = FindAllMatches();
-            if (matches.Count == 0)
+            List<MatchGroup> groups = FindAllMatchGroups();
+            if (groups.Count == 0)
             {
                 yield return StartCoroutine(SwapTiles(first, second, swapDuration));
                 _lastDestroyedTypeCounts = EmptyDestroyedCounts;
@@ -244,7 +251,7 @@ namespace Match3
                 yield break;
             }
 
-            while (matches.Count > 0)
+            while (groups.Count > 0)
             {
                 _currentCombo++;
                 if (_currentCombo > _bestCombo)
@@ -254,16 +261,17 @@ namespace Match3
                 }
 
                 RaiseComboChanged(_currentCombo);
-                ClearMatches(matches);
+                CollectUniqueTiles(groups, _matchedTilesBuffer);
+                ClearMatches(_matchedTilesBuffer);
                 AccumulateDestroyedTypesIntoTotal(_destroyedThisWave);
                 RaiseDestroyedTypeTotalsChanged(_destroyedThisWave);
                 RaiseTilesDestroyedInWave(_destroyedThisWave);
-                MatchWaveCompleted?.Invoke(SumValueCounts(_destroyedThisWave));
+                MatchWaveCompleted?.Invoke(groups);
                 AccumulateTilePointsForWave(_destroyedThisWave);
                 RaiseTilePointsChanged();
                 yield return StartCoroutine(CollapseColumns());
                 yield return StartCoroutine(RefillBoard());
-                matches = FindAllMatches();
+                groups = FindAllMatchGroups();
             }
 
             _lastDestroyedTypeCounts = new ReadOnlyDictionary<int, int>(new Dictionary<int, int>(_destroyedTypeCountsThisResolve));
@@ -352,79 +360,86 @@ namespace Match3
             yield return secondMove;
         }
 
-        private HashSet<Match3Tile> FindAllMatches()
+        /// <summary>
+        /// Every maximal run of <see cref="MinimumMatchSize"/> or more same-type tiles, one entry per line.
+        /// A tile sitting on an L or T intersection belongs to two groups.
+        /// </summary>
+        private List<MatchGroup> FindAllMatchGroups()
         {
-            HashSet<Match3Tile> matches = new HashSet<Match3Tile>();
+            List<MatchGroup> groups = new List<MatchGroup>();
 
             for (int y = 0; y < height; y++)
             {
-                int runLength = 1;
-                for (int x = 1; x < width; x++)
+                int runStart = 0;
+                for (int x = 1; x <= width; x++)
                 {
-                    Match3Tile current = _tiles[x, y];
-                    Match3Tile previous = _tiles[x - 1, y];
-
-                    if (current != null && previous != null && current.TypeId == previous.TypeId)
+                    if (x < width && ContinuesRun(_tiles[x, y], _tiles[x - 1, y]))
                     {
-                        runLength++;
+                        continue;
                     }
-                    else
+
+                    int runLength = x - runStart;
+                    if (runLength >= MinimumMatchSize)
                     {
-                        if (runLength >= 3)
+                        List<Match3Tile> tiles = new List<Match3Tile>(runLength);
+                        for (int i = runStart; i < x; i++)
                         {
-                            for (int i = 0; i < runLength; i++)
-                            {
-                                matches.Add(_tiles[x - 1 - i, y]);
-                            }
+                            tiles.Add(_tiles[i, y]);
                         }
-                        runLength = 1;
-                    }
-                }
 
-                if (runLength >= 3)
-                {
-                    for (int i = 0; i < runLength; i++)
-                    {
-                        matches.Add(_tiles[width - 1 - i, y]);
+                        groups.Add(new MatchGroup(tiles[0].TypeId, MatchOrientation.Horizontal, tiles));
                     }
+
+                    runStart = x;
                 }
             }
 
             for (int x = 0; x < width; x++)
             {
-                int runLength = 1;
-                for (int y = 1; y < height; y++)
+                int runStart = 0;
+                for (int y = 1; y <= height; y++)
                 {
-                    Match3Tile current = _tiles[x, y];
-                    Match3Tile previous = _tiles[x, y - 1];
-
-                    if (current != null && previous != null && current.TypeId == previous.TypeId)
+                    if (y < height && ContinuesRun(_tiles[x, y], _tiles[x, y - 1]))
                     {
-                        runLength++;
+                        continue;
                     }
-                    else
+
+                    int runLength = y - runStart;
+                    if (runLength >= MinimumMatchSize)
                     {
-                        if (runLength >= 3)
+                        List<Match3Tile> tiles = new List<Match3Tile>(runLength);
+                        for (int i = runStart; i < y; i++)
                         {
-                            for (int i = 0; i < runLength; i++)
-                            {
-                                matches.Add(_tiles[x, y - 1 - i]);
-                            }
+                            tiles.Add(_tiles[x, i]);
                         }
-                        runLength = 1;
-                    }
-                }
 
-                if (runLength >= 3)
-                {
-                    for (int i = 0; i < runLength; i++)
-                    {
-                        matches.Add(_tiles[x, height - 1 - i]);
+                        groups.Add(new MatchGroup(tiles[0].TypeId, MatchOrientation.Vertical, tiles));
                     }
+
+                    runStart = y;
                 }
             }
 
-            return matches;
+            return groups;
+        }
+
+        private static bool ContinuesRun(Match3Tile current, Match3Tile previous)
+        {
+            return current != null && previous != null && current.TypeId == previous.TypeId;
+        }
+
+        private static void CollectUniqueTiles(List<MatchGroup> groups, HashSet<Match3Tile> destination)
+        {
+            destination.Clear();
+
+            for (int i = 0; i < groups.Count; i++)
+            {
+                IReadOnlyList<Match3Tile> tiles = groups[i].Tiles;
+                for (int t = 0; t < tiles.Count; t++)
+                {
+                    destination.Add(tiles[t]);
+                }
+            }
         }
 
         private void ClearMatches(HashSet<Match3Tile> matches)
