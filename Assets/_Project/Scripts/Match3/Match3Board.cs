@@ -32,7 +32,6 @@ namespace Match3
 
         private GameConfig _config;
         private Match3Tile[,] _tiles;
-        private Match3Tile _selectedTile;
         private bool _isResolving;
         private int _currentCombo;
         private int _bestCombo;
@@ -56,8 +55,11 @@ namespace Match3
         /// <summary>Highest combo reached in the current board session.</summary>
         public int BestCombo => _bestCombo;
 
-        /// <summary>Fired after a swap attempt finishes (matched cascades or swap cancelled).</summary>
-        public event Action MoveCycleCompleted;
+        /// <summary>Fired once a played card action and every cascade it triggered have finished resolving.</summary>
+        public event Action BoardActionResolved;
+
+        /// <summary>Fired when the player clicks a tile. Targeting is owned by whoever is playing cards.</summary>
+        public event Action<Match3Tile> TileClicked;
 
         /// <summary>
         /// Fired once per cascade wave with the match groups cleared in that wave. Tiles are already
@@ -74,7 +76,26 @@ namespace Match3
         /// <summary>True while tiles are swapping or cascades are resolving.</summary>
         public bool IsResolving => _isResolving;
 
+        public int Width => width;
+
+        public int Height => height;
+
         public int TileTypeCount => _config != null ? _config.TileTypeCount : 0;
+
+        public bool IsInsideBoard(int x, int y)
+        {
+            return x >= 0 && x < width && y >= 0 && y < height;
+        }
+
+        public Match3Tile GetTile(int x, int y)
+        {
+            return _tiles != null && IsInsideBoard(x, y) ? _tiles[x, y] : null;
+        }
+
+        public static bool AreAdjacent(Vector2Int first, Vector2Int second)
+        {
+            return Mathf.Abs(first.x - second.x) + Mathf.Abs(first.y - second.y) == 1;
+        }
 
         public UnityEvent<int, int> TilesDestroyedInWave => _onTilesDestroyedInWave;
 
@@ -86,6 +107,11 @@ namespace Match3
         public Sprite GetTileTypeSprite(int typeId)
         {
             return _config != null ? _config.GetTileTypeSprite(typeId) : null;
+        }
+
+        public int GetTileTypeId(Match3TileTypeDefinition tileType)
+        {
+            return _config != null ? _config.GetTileTypeId(tileType) : -1;
         }
 
         public TileTypeGraphics GetTileTypeRuneGraphics(int typeId)
@@ -133,31 +159,7 @@ namespace Match3
                 return;
             }
 
-            if (_selectedTile == null)
-            {
-                _selectedTile = tile;
-                _selectedTile.SetSelected(true);
-                return;
-            }
-
-            if (_selectedTile == tile)
-            {
-                _selectedTile.SetSelected(false);
-                _selectedTile = null;
-                return;
-            }
-
-            if (!AreAdjacent(_selectedTile, tile))
-            {
-                _selectedTile.SetSelected(false);
-                _selectedTile = tile;
-                _selectedTile.SetSelected(true);
-                return;
-            }
-
-            StartCoroutine(TrySwapAndResolve(_selectedTile, tile));
-            _selectedTile.SetSelected(false);
-            _selectedTile = null;
+            TileClicked?.Invoke(tile);
         }
 
         private void BuildInitialBoard()
@@ -233,24 +235,41 @@ namespace Match3
             _tiles[x, y] = tile;
         }
 
-        private IEnumerator TrySwapAndResolve(Match3Tile first, Match3Tile second)
+        /// <summary>
+        /// Runs one card action and everything it sets off, then reports completion through
+        /// <see cref="BoardActionResolved"/>. Card actions are never rolled back: a swap that forms no
+        /// match still stands.
+        /// </summary>
+        public IEnumerator ExecuteActionRoutine(BoardActionLogic logic, IReadOnlyList<Vector2Int> targets)
         {
+            if (logic == null || _tiles == null || _isResolving)
+            {
+                yield break;
+            }
+
             _isResolving = true;
             _currentCombo = 0;
             _destroyedTypeCountsThisResolve.Clear();
             RaiseComboChanged(0);
-            yield return StartCoroutine(SwapTiles(first, second, swapDuration));
+
+            yield return StartCoroutine(logic.ExecuteRoutine(this, targets));
+            yield return StartCoroutine(ResolveCascadesRoutine());
+
+            _lastDestroyedTypeCounts = new ReadOnlyDictionary<int, int>(new Dictionary<int, int>(_destroyedTypeCountsThisResolve));
+            _isResolving = false;
+            BoardActionResolved?.Invoke();
+        }
+
+        /// <summary>
+        /// Settles the board after an action: drops tiles into gaps, refills, then clears every match
+        /// until none remain. Each wave reports its groups so damage can be scored per match.
+        /// </summary>
+        private IEnumerator ResolveCascadesRoutine()
+        {
+            yield return StartCoroutine(CollapseColumns());
+            yield return StartCoroutine(RefillBoard());
 
             List<MatchGroup> groups = FindAllMatchGroups();
-            if (groups.Count == 0)
-            {
-                yield return StartCoroutine(SwapTiles(first, second, swapDuration));
-                _lastDestroyedTypeCounts = EmptyDestroyedCounts;
-                _isResolving = false;
-                MoveCycleCompleted?.Invoke();
-                yield break;
-            }
-
             while (groups.Count > 0)
             {
                 _currentCombo++;
@@ -262,10 +281,7 @@ namespace Match3
 
                 RaiseComboChanged(_currentCombo);
                 CollectUniqueTiles(groups, _matchedTilesBuffer);
-                ClearMatches(_matchedTilesBuffer);
-                AccumulateDestroyedTypesIntoTotal(_destroyedThisWave);
-                RaiseDestroyedTypeTotalsChanged(_destroyedThisWave);
-                RaiseTilesDestroyedInWave(_destroyedThisWave);
+                ClearTiles(_matchedTilesBuffer);
                 MatchWaveCompleted?.Invoke(groups);
                 AccumulateTilePointsForWave(_destroyedThisWave);
                 RaiseTilePointsChanged();
@@ -273,91 +289,113 @@ namespace Match3
                 yield return StartCoroutine(RefillBoard());
                 groups = FindAllMatchGroups();
             }
+        }
 
-            _lastDestroyedTypeCounts = new ReadOnlyDictionary<int, int>(new Dictionary<int, int>(_destroyedTypeCountsThisResolve));
-            _isResolving = false;
-            MoveCycleCompleted?.Invoke();
+        /// <summary>Swaps two tiles unconditionally. Adjacency is the caller's rule, not the board's.</summary>
+        public IEnumerator SwapRoutine(Vector2Int first, Vector2Int second)
+        {
+            Match3Tile firstTile = GetTile(first.x, first.y);
+            Match3Tile secondTile = GetTile(second.x, second.y);
+
+            if (firstTile == null || secondTile == null || firstTile == secondTile)
+            {
+                yield break;
+            }
+
+            _tiles[first.x, first.y] = secondTile;
+            _tiles[second.x, second.y] = firstTile;
+
+            firstTile.SetCoordinates(second.x, second.y);
+            secondTile.SetCoordinates(first.x, first.y);
+
+            Coroutine firstMove = StartCoroutine(AnimateMove(firstTile.transform, GridToWorld(second.x, second.y), swapDuration));
+            Coroutine secondMove = StartCoroutine(AnimateMove(secondTile.transform, GridToWorld(first.x, first.y), swapDuration));
+            yield return firstMove;
+            yield return secondMove;
+        }
+
+        /// <summary>Slides a whole row sideways, wrapping the tile pushed off the edge around to the other side.</summary>
+        public IEnumerator ShiftRowRoutine(int y, int direction)
+        {
+            if (_tiles == null || y < 0 || y >= height || direction == 0)
+            {
+                yield break;
+            }
+
+            int step = direction > 0 ? 1 : -1;
+            Match3Tile[] before = new Match3Tile[width];
+            for (int x = 0; x < width; x++)
+            {
+                before[x] = _tiles[x, y];
+            }
+
+            List<Coroutine> moves = new List<Coroutine>();
+            for (int x = 0; x < width; x++)
+            {
+                int sourceX = ((x - step) % width + width) % width;
+                Match3Tile tile = before[sourceX];
+                _tiles[x, y] = tile;
+
+                if (tile == null)
+                {
+                    continue;
+                }
+
+                tile.SetCoordinates(x, y);
+                Vector3 target = GridToWorld(x, y);
+
+                if (Mathf.Abs(x - sourceX) > 1)
+                {
+                    tile.transform.position = target;
+                    continue;
+                }
+
+                moves.Add(StartCoroutine(AnimateMove(tile.transform, target, swapDuration)));
+            }
+
+            for (int i = 0; i < moves.Count; i++)
+            {
+                yield return moves[i];
+            }
         }
 
         /// <summary>
-        /// Picks a random adjacent pair and starts swap resolution (for AI).
+        /// Destroys tiles outright. They still pay mana, but because no <see cref="MatchGroup"/> is formed
+        /// they trigger no basic attack — destruction cards feed skills rather than dealing damage.
         /// </summary>
-        /// <returns>True if a swap coroutine was started.</returns>
-        public bool TryRandomLegalSwap()
+        public void DestroyTiles(IReadOnlyList<Vector2Int> cells)
         {
-            if (_isResolving || _tiles == null || width < 1 || height < 1)
+            if (_tiles == null || cells == null)
+            {
+                return;
+            }
+
+            _matchedTilesBuffer.Clear();
+            for (int i = 0; i < cells.Count; i++)
+            {
+                Match3Tile tile = GetTile(cells[i].x, cells[i].y);
+                if (tile != null)
+                {
+                    _matchedTilesBuffer.Add(tile);
+                }
+            }
+
+            ClearTiles(_matchedTilesBuffer);
+        }
+
+        /// <summary>Replaces the tile at a cell with a fresh one of another type, keeping the correct prefab.</summary>
+        public bool SetTileType(int x, int y, int typeId)
+        {
+            Match3Tile tile = GetTile(x, y);
+            if (tile == null || _config == null || _config.GetTileType(typeId) == null || tile.TypeId == typeId)
             {
                 return false;
             }
 
-            for (int attempt = 0; attempt < 128; attempt++)
-            {
-                int x = Random.Range(0, width);
-                int y = Random.Range(0, height);
-                Match3Tile a = _tiles[x, y];
-                if (a == null)
-                {
-                    continue;
-                }
-
-                int dir = Random.Range(0, 4);
-                int nx = x;
-                int ny = y;
-                if (dir == 0)
-                {
-                    nx++;
-                }
-                else if (dir == 1)
-                {
-                    nx--;
-                }
-                else if (dir == 2)
-                {
-                    ny++;
-                }
-                else
-                {
-                    ny--;
-                }
-
-                if (nx < 0 || nx >= width || ny < 0 || ny >= height)
-                {
-                    continue;
-                }
-
-                Match3Tile b = _tiles[nx, ny];
-                if (b == null)
-                {
-                    continue;
-                }
-
-                StartCoroutine(TrySwapAndResolve(a, b));
-                return true;
-            }
-
-            return false;
-        }
-
-        private IEnumerator SwapTiles(Match3Tile first, Match3Tile second, float duration)
-        {
-            int firstX = first.X;
-            int firstY = first.Y;
-            int secondX = second.X;
-            int secondY = second.Y;
-
-            _tiles[firstX, firstY] = second;
-            _tiles[secondX, secondY] = first;
-
-            first.SetCoordinates(secondX, secondY);
-            second.SetCoordinates(firstX, firstY);
-
-            Vector3 firstTarget = GridToWorld(first.X, first.Y);
-            Vector3 secondTarget = GridToWorld(second.X, second.Y);
-
-            Coroutine firstMove = StartCoroutine(AnimateMove(first.transform, firstTarget, duration));
-            Coroutine secondMove = StartCoroutine(AnimateMove(second.transform, secondTarget, duration));
-            yield return firstMove;
-            yield return secondMove;
+            _tiles[x, y] = null;
+            Destroy(tile.gameObject);
+            SpawnTile(x, y, typeId);
+            return true;
         }
 
         /// <summary>
@@ -442,19 +480,19 @@ namespace Match3
             }
         }
 
-        private void ClearMatches(HashSet<Match3Tile> matches)
+        /// <summary>
+        /// Removes tiles and pays out their mana. Shared by cascade waves and by cards that destroy
+        /// tiles directly, so both routes grant mana identically.
+        /// </summary>
+        private void ClearTiles(HashSet<Match3Tile> tiles)
         {
             _destroyedThisWave.Clear();
-            foreach (Match3Tile tile in matches)
+
+            foreach (Match3Tile tile in tiles)
             {
                 if (tile == null)
                 {
                     continue;
-                }
-
-                if (tile == _selectedTile)
-                {
-                    _selectedTile = null;
                 }
 
                 int typeId = tile.TypeId;
@@ -466,6 +504,15 @@ namespace Match3
                 _tiles[tile.X, tile.Y] = null;
                 Destroy(tile.gameObject);
             }
+
+            if (_destroyedThisWave.Count == 0)
+            {
+                return;
+            }
+
+            AccumulateDestroyedTypesIntoTotal(_destroyedThisWave);
+            RaiseDestroyedTypeTotalsChanged(_destroyedThisWave);
+            RaiseTilesDestroyedInWave(_destroyedThisWave);
         }
 
         private static void AddDestroyedCount(int typeId, Dictionary<int, int> target)
@@ -581,13 +628,6 @@ namespace Match3
             }
 
             tileTransform.position = targetPosition;
-        }
-
-        private bool AreAdjacent(Match3Tile first, Match3Tile second)
-        {
-            int dx = Mathf.Abs(first.X - second.X);
-            int dy = Mathf.Abs(first.Y - second.Y);
-            return dx + dy == 1;
         }
 
         private Vector3 GridToWorld(int x, int y)

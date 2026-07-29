@@ -25,6 +25,9 @@ namespace M3P
         [Header("Skills")]
         [SerializeField] SkillDefinition[] _skillDefinitions;
 
+        [Header("Cards")]
+        [SerializeField] CardPlayController _cardPlay;
+
         [Header("World")]
         [SerializeField] BattleWorld _battleWorld;
 
@@ -56,6 +59,9 @@ namespace M3P
 
         /// <summary>Skill definitions keyed by <see cref="SkillDefinition.SkillId"/>.</summary>
         public IReadOnlyDictionary<int, SkillDefinition> DefinitionsBySkillId => _definitionsBySkillId;
+
+        /// <summary>Deck and hand for the current battle.</summary>
+        public CardPlayController CardPlay => _cardPlay;
         public Action<Match3Board> OnBattleStarted;
 
         void Awake()
@@ -137,7 +143,10 @@ namespace M3P
             skill.UseSkill(caster, target);
 
             if (caster == _player)
+            {
                 _battleWorld?.NotifySkillUsed(skill);
+                EndPlayerTurnIfExhausted();
+            }
 
             return true;
         }
@@ -174,6 +183,7 @@ namespace M3P
                 ClearSpawnedEnemy();
                 return;
             }
+            _cardPlay?.BeginBattle(_activeBoard, _player);
             OnBattleStarted?.Invoke(_activeBoard);
             StartCoroutine(SetupTurnFlowRoutine());
         }
@@ -233,7 +243,7 @@ namespace M3P
             if (_activeBoard == null)
                 yield break;
 
-            _activeBoard.MoveCycleCompleted += HandleBoardMoveCycleCompleted;
+            _activeBoard.BoardActionResolved += HandleBoardActionResolved;
             _activeBoard.MatchWaveCompleted += HandleMatchWaveCompleted;
             BeginPlayerTurn();
         }
@@ -265,30 +275,56 @@ namespace M3P
             _battleWorld?.NotifyMatchWave(tilesDestroyed);
         }
 
-        void HandleBoardMoveCycleCompleted()
+        /// <summary>
+        /// A card no longer ends the turn on its own. The turn runs until the player is out of action
+        /// points, out of affordable cards and skills, or chooses to stop.
+        /// </summary>
+        void HandleBoardActionResolved()
         {
-            if (_activeBoard == null)
+            EndPlayerTurnIfExhausted();
+        }
+
+        void EndPlayerTurnIfExhausted()
+        {
+            if (!_isPlayerTurn || _activeBoard == null || PlayerHasLegalAction())
                 return;
 
-            if (_isPlayerTurn)
+            EndPlayerTurn();
+        }
+
+        /// <summary>Ends the turn on the player's request, banking nothing for unspent action points.</summary>
+        public void RequestEndTurn()
+        {
+            if (!_isPlayerTurn || _activeBoard == null || _activeBoard.IsResolving)
+                return;
+
+            EndPlayerTurn();
+        }
+
+        bool PlayerHasLegalAction()
+        {
+            if (_cardPlay != null && _cardPlay.HasPlayableCard())
+                return true;
+
+            return HasCastableSkill();
+        }
+
+        bool HasCastableSkill()
+        {
+            SoftStats softStats = _player?.Stats?.Soft;
+            SkillDefinition[] skills = _player?.Skills;
+
+            if (softStats == null || skills == null || _activeEnemy == null || !_activeEnemy.IsAlive)
+                return false;
+
+            for (int i = 0; i < skills.Length; i++)
             {
-                _isPlayerTurn = false;
-                _activeBoard.AllowPlayerInput = false;
-
-                if (_activeEnemy == null)
-                {
-                    Debug.LogWarning(
-                        $"{nameof(BattleManager)}: ensure {nameof(_enemyDefinitions)} are set and each has {nameof(EnemyDefinition.EnemyCharacterPrefab)}.",
-                        this);
-                    BeginPlayerTurn();
-                    return;
-                }
-
-                StartCoroutine(RunEnemyTurnRoutine());
-                return;
+                SkillDefinition skill = skills[i];
+                if (skill != null && skill.HasEnoughActionPoints(softStats) && skill.HasEnoughMana(softStats))
+                    return true;
             }
 
-            BeginPlayerTurn();
+            return false;
         }
 
         void BeginPlayerTurn()
@@ -299,6 +335,28 @@ namespace M3P
                 _activeBoard.AllowPlayerInput = true;
 
             _player?.OnTurnStarted();
+            _cardPlay?.BeginTurn();
+        }
+
+        void EndPlayerTurn()
+        {
+            _isPlayerTurn = false;
+
+            if (_activeBoard != null)
+                _activeBoard.AllowPlayerInput = false;
+
+            _cardPlay?.EndTurn();
+
+            if (_activeEnemy == null)
+            {
+                Debug.LogWarning(
+                    $"{nameof(BattleManager)}: ensure {nameof(_enemyDefinitions)} are set and each has {nameof(EnemyDefinition.EnemyCharacterPrefab)}.",
+                    this);
+                BeginPlayerTurn();
+                return;
+            }
+
+            StartCoroutine(RunEnemyTurnRoutine());
         }
 
         IEnumerator RunEnemyTurnRoutine()
@@ -308,8 +366,10 @@ namespace M3P
             if (_activeBoard == null || _isPlayerTurn)
                 yield break;
 
-            if (!_activeBoard.IsResolving)
-                BeginPlayerTurn();
+            while (_activeBoard.IsResolving)
+                yield return null;
+
+            BeginPlayerTurn();
         }
 
         /// <summary>Destroys the board created by <see cref="StartBattle"/>.</summary>
@@ -317,9 +377,11 @@ namespace M3P
         {
             StopAllCoroutines();
 
+            _cardPlay?.EndBattle();
+
             if (_activeBoard != null)
             {
-                _activeBoard.MoveCycleCompleted -= HandleBoardMoveCycleCompleted;
+                _activeBoard.BoardActionResolved -= HandleBoardActionResolved;
                 _activeBoard.MatchWaveCompleted -= HandleMatchWaveCompleted;
                 Destroy(_activeBoard.gameObject);
                 _activeBoard = null;

@@ -24,13 +24,24 @@ namespace M3P
         public int CurrentHealth;
         public int MaxActionPoints;
         public int CurrentActionPoints;
+        public int MaxHandSize;
         public List<TileTypeMana> ManaByBrokenTileType = new List<TileTypeMana>();
 
         public event Action Changed;
 
         public static int CalculateMaxHP(HardStats hard) => Mathf.Max(1, hard.Constitution * 20);
 
-        public static int CalculateMaxActionPoints(HardStats hard) => Mathf.Max(0, hard.Agility);
+        /// <summary>
+        /// Action points are the throughput of a turn: how much a build can actually spend.
+        /// Deliberately a slow curve, since one extra point multiplies with everything else in the deck.
+        /// </summary>
+        public static int CalculateMaxActionPoints(HardStats hard) => 2 + Mathf.Max(0, hard.Agility) / 2;
+
+        /// <summary>
+        /// Hand size is the selection of a turn: how many options are on the table to find an efficient
+        /// play. Paired with variable card costs so it stays distinct from action points.
+        /// </summary>
+        public static int CalculateMaxHandSize(HardStats hard) => 3 + Mathf.Max(0, hard.Intelligence) / 2;
 
         public SoftStats(HardStats hard)
         {
@@ -38,6 +49,7 @@ namespace M3P
             CurrentHealth = MaxHP;
             MaxActionPoints = CalculateMaxActionPoints(hard);
             CurrentActionPoints = MaxActionPoints;
+            MaxHandSize = CalculateMaxHandSize(hard);
         }
 
         public int GetManaForTileType(int tileTypeId)
@@ -101,6 +113,7 @@ namespace M3P
         {
             MaxHP = CalculateMaxHP(hard);
             CurrentHealth = MaxHP;
+            MaxHandSize = CalculateMaxHandSize(hard);
             ResetActionPoints(hard);
             ResetMana();
         }

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a2b3c4d5e6f70819a2b3c4d5e6f7081, type: 3}
+  m_Name: CardPaintGreen
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.BoardActionCardDefinition
+  _displayName: Paint Green
+  _description: Recolour the picked tile to green, manufacturing the mana a skill needs.
+  _artwork: {fileID: 0}
+  _actionPointCost: 2
+  _logic:
+    rid: 1000
+  references:
+    version: 2
+    RefIds:
+    - rid: 1000
+      type: {class: PaintTileLogic, ns: Match3, asm: Assembly-CSharp}
+      data:
+        _tileType: {fileID: 11400000, guid: 88078226c0e3e49458326c6f5b431834, type: 2}

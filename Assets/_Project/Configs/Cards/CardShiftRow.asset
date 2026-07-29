@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a2b3c4d5e6f70819a2b3c4d5e6f7081, type: 3}
+  m_Name: CardShiftRow
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.BoardActionCardDefinition
+  _displayName: Shift Row
+  _description: Slide the picked tile's row one cell right, wrapping around the edge.
+  _artwork: {fileID: 0}
+  _actionPointCost: 2
+  _logic:
+    rid: 1000
+  references:
+    version: 2
+    RefIds:
+    - rid: 1000
+      type: {class: ShiftRowLogic, ns: Match3, asm: Assembly-CSharp}
+      data:
+        _direction: 1
