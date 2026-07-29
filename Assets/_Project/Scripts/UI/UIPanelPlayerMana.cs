@@ -136,7 +136,12 @@ namespace M3P
             {
                 UIPanelPlayerManaBar bar = Instantiate(_barPrefab, _barContainer);
                 bar.name = $"ManaBar_Type{typeId}";
-                bar.Configure(typeId, _board.GetTileTypeSprite(typeId));
+                
+                Match3.TileTypeGraphics runeGraphics = _board.GetTileTypeRuneGraphics(typeId);
+                Sprite icon = _board.GetTileTypeSprite(typeId);
+                Material material = runeGraphics?.SpriteMaterial;
+                
+                bar.Configure(typeId, icon, material);
                 _barsByTypeId[typeId] = bar;
             }
         }

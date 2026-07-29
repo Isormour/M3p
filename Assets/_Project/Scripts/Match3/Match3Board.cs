@@ -81,6 +81,16 @@ namespace Match3
             return _config != null ? _config.GetTileTypeSprite(typeId) : null;
         }
 
+        public TileTypeGraphics GetTileTypeRuneGraphics(int typeId)
+        {
+            return _config != null ? _config.GetTileTypeRuneGraphics(typeId) : null;
+        }
+
+        public TileTypeGraphics GetTileTypeTileGraphics(int typeId)
+        {
+            return _config != null ? _config.GetTileTypeTileGraphics(typeId) : null;
+        }
+
         private static readonly ReadOnlyDictionary<int, int> EmptyDestroyedCounts =
             new ReadOnlyDictionary<int, int>(new Dictionary<int, int>());
 
@@ -212,6 +222,7 @@ namespace Match3
             }
 
             tile.Initialize(this, x, y, typeId);
+            tile.ApplyGraphics(definition);
             _tiles[x, y] = tile;
         }
 

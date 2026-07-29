@@ -4,6 +4,10 @@ namespace Match3
 {
     public class Match3Tile : MonoBehaviour
     {
+        [Header("Graphics")]
+        [SerializeField] private SpriteRenderer _tileRenderer;
+        [SerializeField] private SpriteRenderer _runeRenderer;
+        
         public int X { get; private set; }
         public int Y { get; private set; }
         public int TypeId { get; private set; }
@@ -16,6 +20,39 @@ namespace Match3
             Y = y;
             TypeId = typeId;
             _baseScale = transform.localScale;
+        }
+
+        public void ApplyGraphics(Match3TileTypeDefinition definition)
+        {
+            if (definition == null)
+            {
+                Debug.LogWarning($"{nameof(Match3Tile)}: Cannot apply graphics, definition is null.", this);
+                return;
+            }
+
+            ApplyGraphicsToRenderer(_tileRenderer, definition.TileGraphics);
+            ApplyGraphicsToRenderer(_runeRenderer, definition.RuneGraphics);
+        }
+
+        private void ApplyGraphicsToRenderer(SpriteRenderer renderer, TileTypeGraphics graphics)
+        {
+            if (renderer == null || graphics == null)
+                return;
+
+            if (graphics.MainSprite != null)
+            {
+                renderer.sprite = graphics.MainSprite;
+            }
+
+            if (graphics.SpriteMaterial != null)
+            {
+                renderer.material = graphics.SpriteMaterial;
+            }
+
+            if (graphics.NormalMap != null && renderer.material != null)
+            {
+                renderer.material.SetTexture("_BumpMap", graphics.NormalMap);
+            }
         }
 
         public void SetCoordinates(int x, int y)

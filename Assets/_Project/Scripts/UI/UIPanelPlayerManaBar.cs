@@ -1,3 +1,4 @@
+using Match3;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,7 +13,7 @@ namespace M3P
 
         public int TileTypeId => _tileTypeId;
 
-        public void Configure(int tileTypeId, Sprite icon)
+        public void Configure(int tileTypeId, Sprite icon, Material material = null)
         {
             _tileTypeId = tileTypeId;
 
@@ -25,6 +26,12 @@ namespace M3P
             _manaIcon.sprite = icon != null
                 ? icon
                 : Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
+            
+            if (material != null)
+            {
+                _manaIcon.material = material;
+            }
+            
             _manaIcon.enabled = true;
 
             _indicator.Bind(

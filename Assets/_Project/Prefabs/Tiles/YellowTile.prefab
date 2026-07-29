@@ -10,7 +10,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 741991790949495628, guid: 86d278037d047db45aa306903726cf59, type: 3}
       propertyPath: m_Name
-      value: OrangeTile
+      value: YellowTile
       objectReference: {fileID: 0}
     - target: {fileID: 1979942496211499266, guid: 86d278037d047db45aa306903726cf59, type: 3}
       propertyPath: m_Size.x
@@ -28,6 +28,10 @@ PrefabInstance:
       propertyPath: m_WasSpriteAssigned
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 1979942496211499266, guid: 86d278037d047db45aa306903726cf59, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 0d063f99e5cc3b54ca3cc2b96ddca29e, type: 2}
     - target: {fileID: 2016305729166609856, guid: 86d278037d047db45aa306903726cf59, type: 3}
       propertyPath: m_Mesh
       value: 

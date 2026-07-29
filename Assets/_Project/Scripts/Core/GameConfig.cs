@@ -31,5 +31,17 @@ namespace M3P
             Match3TileTypeDefinition definition = GetTileType(typeId);
             return definition != null ? definition.Color : Color.white;
         }
+
+        public Match3.TileTypeGraphics GetTileTypeRuneGraphics(int typeId)
+        {
+            Match3TileTypeDefinition definition = GetTileType(typeId);
+            return definition != null ? definition.RuneGraphics : null;
+        }
+
+        public Match3.TileTypeGraphics GetTileTypeTileGraphics(int typeId)
+        {
+            Match3TileTypeDefinition definition = GetTileType(typeId);
+            return definition != null ? definition.TileGraphics : null;
+        }
     }
 }

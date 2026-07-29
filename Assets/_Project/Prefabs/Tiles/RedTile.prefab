@@ -92,6 +92,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32aa56ee93a718d43929f5ad4d9801d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Match3.Match3Tile
+  _tileRenderer: {fileID: 1979942496211499266}
+  _runeRenderer: {fileID: 0}
 --- !u!1 &924243394272261861
 GameObject:
   m_ObjectHideFlags: 0
@@ -150,7 +152,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: 8bf0635086d92834a88cf904fe5e5fce, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
