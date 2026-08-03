@@ -83,11 +83,19 @@ namespace M3P
         {
             int index = _hand.IndexOf(card);
             if (index < 0)
-            {
                 return false;
-            }
 
-            _hand.RemoveAt(index);
+            return TryDiscardFromHandAt(index);
+        }
+
+        /// <summary>Moves the card at <paramref name="handIndex"/> from hand to the discard pile.</summary>
+        public bool TryDiscardFromHandAt(int handIndex)
+        {
+            if (handIndex < 0 || handIndex >= _hand.Count)
+                return false;
+
+            BoardActionCardDefinition card = _hand[handIndex];
+            _hand.RemoveAt(handIndex);
             _discardPile.Add(card);
             Changed?.Invoke();
             return true;

@@ -13,8 +13,10 @@ MonoBehaviour:
   m_Name: CardSwap
   m_EditorClassIdentifier: Assembly-CSharp::M3P.BoardActionCardDefinition
   _displayName: Swap
-  _description: Swap two neighbouring tiles. The move stands even if it makes no match.
-  _artwork: {fileID: 0}
+  _description: Swap two neighbouring tiles. The move stands even if it makes no
+    match.
+  _artwork: {fileID: 21300000, guid: c27c4034a811e694a9f13ff3c745f09c, type: 3}
+  _cardPrefab: {fileID: 0}
   _actionPointCost: 1
   _logic:
     rid: 1000
@@ -23,4 +25,4 @@ MonoBehaviour:
     RefIds:
     - rid: 1000
       type: {class: SwapTilesLogic, ns: Match3, asm: Assembly-CSharp}
-      data:
+      data: 

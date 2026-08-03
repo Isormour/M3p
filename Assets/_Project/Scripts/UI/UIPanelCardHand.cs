@@ -7,18 +7,17 @@ using UnityEngine.UI;
 namespace M3P
 {
     /// <summary>
-    /// Prototype hand UI: one button per card, an action point readout and an end turn button.
-    /// Builds its own hierarchy so it can be dropped straight onto a canvas without prefab wiring.
+    /// Hand UI: instantiates card prefabs from each <see cref="BoardActionCardDefinition"/>,
+    /// plus an action point readout and an end turn button.
     /// </summary>
     public sealed class UIPanelCardHand : MonoBehaviour
     {
-        static readonly Color CardIdleColor = new Color(0.16f, 0.17f, 0.22f, 0.95f);
-        static readonly Color CardSelectedColor = new Color(0.32f, 0.46f, 0.72f, 1f);
+        [SerializeField] UIBoardActionCard _defaultCardPrefab;
+        [SerializeField] float _sidePanelWidth = 110f;
+        [SerializeField] float _cardSpacing = 8f;
+        [SerializeField] float _sectionSpacing = 12f;
 
-        [SerializeField] float _cardWidth = 130f;
-        [SerializeField] float _cardHeight = 96f;
-
-        readonly List<GameObject> _cardButtons = new List<GameObject>();
+        readonly List<UIBoardActionCard> _cardViews = new List<UIBoardActionCard>();
 
         CardPlayController _cardPlay;
         RectTransform _handContainer;
@@ -43,7 +42,13 @@ namespace M3P
             }
 
             Unbind();
-            ClearCardButtons();
+            ClearCardViews();
+        }
+
+        void OnRectTransformDimensionsChange()
+        {
+            if (_handContainer != null)
+                ApplyCardLayout();
         }
 
         IEnumerator WatchControllerRoutine()
@@ -58,9 +63,9 @@ namespace M3P
                     _cardPlay = active;
 
                     if (_cardPlay != null)
-                        _cardPlay.Changed += Refresh;
+                        _cardPlay.Changed += HandleCardPlayChanged;
 
-                    Refresh();
+                    HandleCardPlayChanged();
                 }
 
                 RefreshInteractable();
@@ -71,14 +76,41 @@ namespace M3P
         void Unbind()
         {
             if (_cardPlay != null)
-                _cardPlay.Changed -= Refresh;
+                _cardPlay.Changed -= HandleCardPlayChanged;
 
             _cardPlay = null;
         }
 
+        void HandleCardPlayChanged()
+        {
+            if (NeedsHandRebuild())
+                Refresh();
+            else
+                RefreshInteractable();
+        }
+
+        bool NeedsHandRebuild()
+        {
+            if (_cardPlay == null)
+                return _cardViews.Count > 0;
+
+            IReadOnlyList<BoardActionCardDefinition> hand = _cardPlay.Deck.Hand;
+            if (hand.Count != _cardViews.Count)
+                return true;
+
+            for (int i = 0; i < hand.Count; i++)
+            {
+                UIBoardActionCard view = _cardViews[i];
+                if (view == null || view.HandIndex != i || view.Card != hand[i])
+                    return true;
+            }
+
+            return false;
+        }
+
         void Refresh()
         {
-            ClearCardButtons();
+            ClearCardViews();
 
             if (_cardPlay == null)
                 return;
@@ -90,32 +122,28 @@ namespace M3P
                 if (card == null)
                     continue;
 
-                CreateCardButton(card);
+                CreateCardView(card, i);
             }
 
+            ApplyCardLayout();
             RefreshInteractable();
         }
 
-        void CreateCardButton(BoardActionCardDefinition card)
+        void CreateCardView(BoardActionCardDefinition card, int handIndex)
         {
-            GameObject root = new GameObject($"Card_{card.name}", typeof(RectTransform), typeof(Image), typeof(Button));
-            root.transform.SetParent(_handContainer, false);
+            UIBoardActionCard prefab = card.CardPrefab != null ? card.CardPrefab : _defaultCardPrefab;
+            if (prefab == null)
+            {
+                Debug.LogError(
+                    $"{nameof(UIPanelCardHand)}: card '{card.name}' has no {nameof(BoardActionCardDefinition.CardPrefab)} and no {nameof(_defaultCardPrefab)} is assigned.",
+                    this);
+                return;
+            }
 
-            Image background = root.GetComponent<Image>();
-            background.color = _cardPlay.SelectedCard == card ? CardSelectedColor : CardIdleColor;
-
-            LayoutElement layout = root.AddComponent<LayoutElement>();
-            layout.preferredWidth = _cardWidth;
-            layout.preferredHeight = _cardHeight;
-
-            TextMeshProUGUI label = CreateLabel(root.transform, $"{card.DisplayName}\n<size=80%>{card.ActionPointCost} AP");
-            label.alignment = TextAlignmentOptions.Center;
-
-            Button button = root.GetComponent<Button>();
-            BoardActionCardDefinition captured = card;
-            button.onClick.AddListener(() => _cardPlay?.SelectCard(captured));
-
-            _cardButtons.Add(root);
+            UIBoardActionCard view = Instantiate(prefab, _handContainer);
+            view.name = $"Card_{card.name}_{handIndex + 1}";
+            view.Configure(card, _cardPlay, handIndex);
+            _cardViews.Add(view);
         }
 
         void RefreshInteractable()
@@ -144,29 +172,30 @@ namespace M3P
                 _endTurnButton.interactable = playerActing;
 
             IReadOnlyList<BoardActionCardDefinition> hand = _cardPlay.Deck.Hand;
-            int count = Mathf.Min(hand.Count, _cardButtons.Count);
+            int count = Mathf.Min(hand.Count, _cardViews.Count);
 
             for (int i = 0; i < count; i++)
             {
-                GameObject buttonRoot = _cardButtons[i];
-                if (buttonRoot == null)
+                UIBoardActionCard view = _cardViews[i];
+                if (view == null)
                     continue;
 
                 BoardActionCardDefinition card = hand[i];
-                buttonRoot.GetComponent<Button>().interactable = playerActing && _cardPlay.CanPlay(card);
-                buttonRoot.GetComponent<Image>().color = _cardPlay.SelectedCard == card ? CardSelectedColor : CardIdleColor;
+                bool selected = _cardPlay.SelectedHandIndex == i;
+                view.SetSelected(selected);
+                view.SetInteractable(playerActing && _cardPlay.CanPlay(card));
             }
         }
 
-        void ClearCardButtons()
+        void ClearCardViews()
         {
-            for (int i = 0; i < _cardButtons.Count; i++)
+            for (int i = 0; i < _cardViews.Count; i++)
             {
-                if (_cardButtons[i] != null)
-                    Destroy(_cardButtons[i]);
+                if (_cardViews[i] != null)
+                    Destroy(_cardViews[i].gameObject);
             }
 
-            _cardButtons.Clear();
+            _cardViews.Clear();
         }
 
         void EnsureLayout()
@@ -174,51 +203,100 @@ namespace M3P
             if (_handContainer != null)
                 return;
 
-            HorizontalLayoutGroup rootLayout = gameObject.GetComponent<HorizontalLayoutGroup>();
-            if (rootLayout == null)
-                rootLayout = gameObject.AddComponent<HorizontalLayoutGroup>();
-
-            rootLayout.spacing = 12f;
-            rootLayout.childAlignment = TextAnchor.MiddleCenter;
-            rootLayout.childControlWidth = true;
-            rootLayout.childControlHeight = true;
-            rootLayout.childForceExpandWidth = false;
-            rootLayout.childForceExpandHeight = false;
+            RemoveLayoutGroup(gameObject);
 
             GameObject actionPoints = new GameObject("ActionPoints", typeof(RectTransform));
             actionPoints.transform.SetParent(transform, false);
-            AddSize(actionPoints, 110f, _cardHeight);
+            SetupSidePanel((RectTransform)actionPoints.transform, true);
             _actionPointsLabel = CreateLabel(actionPoints.transform, "AP -");
             _actionPointsLabel.alignment = TextAlignmentOptions.Center;
 
             GameObject hand = new GameObject("Hand", typeof(RectTransform));
             hand.transform.SetParent(transform, false);
             _handContainer = (RectTransform)hand.transform;
-
-            HorizontalLayoutGroup handLayout = hand.AddComponent<HorizontalLayoutGroup>();
-            handLayout.spacing = 8f;
-            handLayout.childAlignment = TextAnchor.MiddleCenter;
-            handLayout.childControlWidth = true;
-            handLayout.childControlHeight = true;
-            handLayout.childForceExpandWidth = false;
-            handLayout.childForceExpandHeight = false;
-            hand.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            SetupHandContainer();
 
             GameObject endTurn = new GameObject("EndTurn", typeof(RectTransform), typeof(Image), typeof(Button));
             endTurn.transform.SetParent(transform, false);
             endTurn.GetComponent<Image>().color = new Color(0.42f, 0.2f, 0.2f, 0.95f);
-            AddSize(endTurn, 110f, _cardHeight);
+            SetupSidePanel((RectTransform)endTurn.transform, false);
             CreateLabel(endTurn.transform, "End Turn").alignment = TextAlignmentOptions.Center;
 
             _endTurnButton = endTurn.GetComponent<Button>();
             _endTurnButton.onClick.AddListener(() => BattleManager.Instance?.RequestEndTurn());
         }
 
-        static void AddSize(GameObject target, float width, float height)
+        void SetupSidePanel(RectTransform rect, bool left)
         {
-            LayoutElement layout = target.AddComponent<LayoutElement>();
-            layout.preferredWidth = width;
-            layout.preferredHeight = height;
+            rect.anchorMin = new Vector2(left ? 0f : 1f, 0.5f);
+            rect.anchorMax = new Vector2(left ? 0f : 1f, 0.5f);
+            rect.pivot = new Vector2(left ? 0f : 1f, 0.5f);
+            rect.anchoredPosition = new Vector2(left ? _sectionSpacing : -_sectionSpacing, 0f);
+            rect.sizeDelta = new Vector2(_sidePanelWidth, GetReferenceCardHeight());
+        }
+
+        void SetupHandContainer()
+        {
+            float horizontalInset = _sectionSpacing + _sidePanelWidth + _sectionSpacing;
+
+            _handContainer.anchorMin = new Vector2(0f, 0.5f);
+            _handContainer.anchorMax = new Vector2(1f, 0.5f);
+            _handContainer.pivot = new Vector2(0.5f, 0.5f);
+            _handContainer.anchoredPosition = Vector2.zero;
+            _handContainer.sizeDelta = new Vector2(-horizontalInset * 2f, GetReferenceCardHeight());
+        }
+
+        void ApplyCardLayout()
+        {
+            int count = _cardViews.Count;
+            if (count == 0)
+                return;
+
+            float totalWidth = 0f;
+            for (int i = 0; i < count; i++)
+            {
+                UIBoardActionCard view = _cardViews[i];
+                if (view == null)
+                    continue;
+
+                totalWidth += ((RectTransform)view.transform).sizeDelta.x;
+            }
+
+            totalWidth += (count - 1) * _cardSpacing;
+
+            float x = -totalWidth * 0.5f;
+
+            for (int i = 0; i < count; i++)
+            {
+                UIBoardActionCard view = _cardViews[i];
+                if (view == null)
+                    continue;
+
+                RectTransform rect = (RectTransform)view.transform;
+                float cardWidth = rect.sizeDelta.x;
+
+                rect.anchorMin = new Vector2(0.5f, 0.5f);
+                rect.anchorMax = new Vector2(0.5f, 0.5f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = new Vector2(x + cardWidth * 0.5f, 0f);
+
+                x += cardWidth + _cardSpacing;
+            }
+        }
+
+        float GetReferenceCardHeight()
+        {
+            if (_defaultCardPrefab == null)
+                return 96f;
+
+            return ((RectTransform)_defaultCardPrefab.transform).sizeDelta.y;
+        }
+
+        static void RemoveLayoutGroup(GameObject target)
+        {
+            HorizontalLayoutGroup layoutGroup = target.GetComponent<HorizontalLayoutGroup>();
+            if (layoutGroup != null)
+                Destroy(layoutGroup);
         }
 
         static TextMeshProUGUI CreateLabel(Transform parent, string text)

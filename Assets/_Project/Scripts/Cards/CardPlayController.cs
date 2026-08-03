@@ -22,6 +22,7 @@ namespace M3P
         Match3Board _board;
         PlayerBattleCharacter _player;
         BoardActionCardDefinition _selectedCard;
+        int _selectedHandIndex = -1;
         bool _isPlaying;
 
         /// <summary>Raised when the hand, the selection or the action point pool changes.</summary>
@@ -30,6 +31,8 @@ namespace M3P
         public BattleDeck Deck => _deck;
 
         public BoardActionCardDefinition SelectedCard => _selectedCard;
+
+        public int SelectedHandIndex => _selectedHandIndex;
 
         public bool IsPlaying => _isPlaying;
 
@@ -43,6 +46,7 @@ namespace M3P
             _board = board;
             _player = player;
             _selectedCard = null;
+            _selectedHandIndex = -1;
             _pickedTargets.Clear();
             _highlightedTiles.Clear();
 
@@ -115,9 +119,13 @@ namespace M3P
             return false;
         }
 
-        public void SelectCard(BoardActionCardDefinition card)
+        public void SelectCardAt(int handIndex)
         {
-            if (_selectedCard == card)
+            IReadOnlyList<BoardActionCardDefinition> hand = _deck.Hand;
+            if (handIndex < 0 || handIndex >= hand.Count)
+                return;
+
+            if (_selectedHandIndex == handIndex)
             {
                 CancelSelection();
                 return;
@@ -125,18 +133,16 @@ namespace M3P
 
             CancelSelection();
 
+            BoardActionCardDefinition card = hand[handIndex];
             if (!CanPlay(card))
-            {
                 return;
-            }
 
+            _selectedHandIndex = handIndex;
             _selectedCard = card;
             Changed?.Invoke();
 
             if (card.Targeting == CardTargeting.None)
-            {
-                StartCoroutine(PlayRoutine(card, new List<Vector2Int>()));
-            }
+                StartCoroutine(PlayRoutine(handIndex, new List<Vector2Int>()));
         }
 
         public void CancelSelection()
@@ -144,11 +150,10 @@ namespace M3P
             ClearHighlights();
             _pickedTargets.Clear();
 
-            if (_selectedCard == null)
-            {
+            if (_selectedHandIndex < 0)
                 return;
-            }
 
+            _selectedHandIndex = -1;
             _selectedCard = null;
             Changed?.Invoke();
         }
@@ -178,23 +183,27 @@ namespace M3P
                 return;
             }
 
-            StartCoroutine(PlayRoutine(_selectedCard, new List<Vector2Int>(_pickedTargets)));
+            StartCoroutine(PlayRoutine(_selectedHandIndex, new List<Vector2Int>(_pickedTargets)));
         }
 
-        IEnumerator PlayRoutine(BoardActionCardDefinition card, List<Vector2Int> targets)
+        IEnumerator PlayRoutine(int handIndex, List<Vector2Int> targets)
         {
             if (_board == null)
-            {
                 yield break;
-            }
 
+            IReadOnlyList<BoardActionCardDefinition> hand = _deck.Hand;
+            if (handIndex < 0 || handIndex >= hand.Count)
+                yield break;
+
+            BoardActionCardDefinition card = hand[handIndex];
             _isPlaying = true;
 
             _player?.Stats?.Soft?.TrySpendActionPoint(card.ActionPointCost);
-            _deck.TryDiscardFromHand(card);
+            _deck.TryDiscardFromHandAt(handIndex);
 
             ClearHighlights();
             _pickedTargets.Clear();
+            _selectedHandIndex = -1;
             _selectedCard = null;
             Changed?.Invoke();
 

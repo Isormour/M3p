@@ -28,5 +28,6 @@ namespace M3P
         [SerializeField] SkillDefinition[] _skills;
 
         public SkillDefinition[] Skills => _skills;
+        public GameObject EnemyModelPrefab;
     }
 }

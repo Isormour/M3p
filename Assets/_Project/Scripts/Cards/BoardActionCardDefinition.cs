@@ -14,6 +14,9 @@ namespace M3P
         [TextArea, SerializeField] string _description;
         [SerializeField] Sprite _artwork;
 
+        [Tooltip("UI prefab for this card in the hand. Root must have UIBoardActionCard.")]
+        [SerializeField] UIBoardActionCard _cardPrefab;
+
         [Tooltip("Action points spent when this card is played.")]
         [Min(0), SerializeField] int _actionPointCost = 1;
 
@@ -24,6 +27,8 @@ namespace M3P
         public string Description => _description;
 
         public Sprite Artwork => _artwork;
+
+        public UIBoardActionCard CardPrefab => _cardPrefab;
 
         public int ActionPointCost => _actionPointCost;
 
