@@ -35,10 +35,14 @@ namespace M3P
         [Tooltip("When enabled, begins a battle as soon as this component starts (scene load).")]
         [SerializeField] bool _startBattleImmediately;
 
+        [Header("UI")]
+        [SerializeField] UIEndBattlePanel _endBattlePanel;
+
         Match3Board _activeBoard;
         EnemyDefinition _activeEnemyDefinition;
         EnemyBattleCharacter _activeEnemy;
         bool _isPlayerTurn = true;
+        bool _battleResolved;
 
         readonly Dictionary<int, SkillDefinition> _definitionsBySkillId = new Dictionary<int, SkillDefinition>();
 
@@ -75,6 +79,9 @@ namespace M3P
             Instance = this;
             DontDestroyOnLoad(gameObject);
             RebuildSkillLookup();
+
+            if (_endBattlePanel == null)
+                _endBattlePanel = FindAnyObjectByType<UIEndBattlePanel>(FindObjectsInactive.Include);
         }
 
         void Start()
@@ -122,10 +129,23 @@ namespace M3P
 
         public void ExecuteSkill(SkillDefinition skill, BattleCharacter caster, BattleCharacter target)
         {
-            if (skill == null || target == null)
+            if (_battleResolved || skill == null || target == null)
                 return;
 
             skill.UseSkill(caster, target);
+            NotifySkillAnimation(skill, caster);
+            TryResolveBattleOutcome();
+        }
+
+        void NotifySkillAnimation(SkillDefinition skill, BattleCharacter caster)
+        {
+            if (_battleWorld == null || skill == null)
+                return;
+
+            if (caster == _player)
+                _battleWorld.NotifyPlayerSkillUsed(skill);
+            else if (caster == _activeEnemy)
+                _battleWorld.NotifyEnemySkillUsed(skill);
         }
 
         public bool TryExecuteSkill(SkillDefinition skill, BattleCharacter caster, BattleCharacter target)
@@ -140,13 +160,10 @@ namespace M3P
             if (!skill.TrySpendActionPoints(softStats) || !skill.TrySpendMana(softStats))
                 return false;
 
-            skill.UseSkill(caster, target);
+            ExecuteSkill(skill, caster, target);
 
             if (caster == _player)
-            {
-                _battleWorld?.NotifySkillUsed(skill);
                 EndPlayerTurnIfExhausted();
-            }
 
             return true;
         }
@@ -161,6 +178,9 @@ namespace M3P
             }
 
             EndBattle();
+
+            _battleResolved = false;
+            _endBattlePanel?.Hide();
 
             _player?.PrepareForBattle();
 
@@ -234,6 +254,8 @@ namespace M3P
             spawned.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             spawned.Configure(_activeEnemyDefinition);
             _activeEnemy = spawned;
+
+            _battleWorld?.SpawnEnemyModel(_activeEnemyDefinition.EnemyModelPrefab);
         }
 
         IEnumerator SetupTurnFlowRoutine()
@@ -254,7 +276,7 @@ namespace M3P
         /// </summary>
         void HandleMatchWaveCompleted(IReadOnlyList<MatchGroup> groups)
         {
-            if (!_isPlayerTurn || _activeEnemy == null || groups == null || groups.Count == 0)
+            if (_battleResolved || !_isPlayerTurn || _activeEnemy == null || groups == null || groups.Count == 0)
                 return;
 
             GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
@@ -273,6 +295,7 @@ namespace M3P
             }
 
             _battleWorld?.NotifyMatchWave(tilesDestroyed);
+            TryResolveBattleOutcome();
         }
 
         /// <summary>
@@ -281,12 +304,15 @@ namespace M3P
         /// </summary>
         void HandleBoardActionResolved()
         {
+            if (_battleResolved)
+                return;
+
             EndPlayerTurnIfExhausted();
         }
 
         void EndPlayerTurnIfExhausted()
         {
-            if (!_isPlayerTurn || _activeBoard == null || PlayerHasLegalAction())
+            if (_battleResolved || !_isPlayerTurn || _activeBoard == null || PlayerHasLegalAction())
                 return;
 
             EndPlayerTurn();
@@ -295,7 +321,7 @@ namespace M3P
         /// <summary>Ends the turn on the player's request, banking nothing for unspent action points.</summary>
         public void RequestEndTurn()
         {
-            if (!_isPlayerTurn || _activeBoard == null || _activeBoard.IsResolving)
+            if (_battleResolved || !_isPlayerTurn || _activeBoard == null || _activeBoard.IsResolving)
                 return;
 
             EndPlayerTurn();
@@ -329,6 +355,9 @@ namespace M3P
 
         void BeginPlayerTurn()
         {
+            if (_battleResolved)
+                return;
+
             _isPlayerTurn = true;
 
             if (_activeBoard != null)
@@ -340,6 +369,9 @@ namespace M3P
 
         void EndPlayerTurn()
         {
+            if (_battleResolved)
+                return;
+
             _isPlayerTurn = false;
 
             if (_activeBoard != null)
@@ -362,8 +394,9 @@ namespace M3P
         IEnumerator RunEnemyTurnRoutine()
         {
             yield return _activeEnemy.PlayTurn(_activeBoard);
+            TryResolveBattleOutcome();
 
-            if (_activeBoard == null || _isPlayerTurn)
+            if (_battleResolved || _activeBoard == null || _isPlayerTurn)
                 yield break;
 
             while (_activeBoard.IsResolving)
@@ -372,10 +405,53 @@ namespace M3P
             BeginPlayerTurn();
         }
 
+        void TryResolveBattleOutcome()
+        {
+            if (_battleResolved || _activeBoard == null)
+                return;
+
+            if (_player != null && !_player.IsAlive)
+            {
+                ResolveBattle(BattleOutcome.Lose);
+                return;
+            }
+
+            if (_activeEnemy != null && !_activeEnemy.IsAlive)
+                ResolveBattle(BattleOutcome.Win);
+        }
+
+        void ResolveBattle(BattleOutcome outcome)
+        {
+            if (_battleResolved)
+                return;
+
+            _battleResolved = true;
+            StopAllCoroutines();
+
+            if (_activeBoard != null)
+                _activeBoard.AllowPlayerInput = false;
+
+            _endBattlePanel?.Show(outcome);
+        }
+
+        /// <summary>Called when the player closes the end-of-battle panel.</summary>
+        public void DismissEndBattlePanel()
+        {
+            if (!_battleResolved)
+            {
+                _endBattlePanel?.Hide();
+                return;
+            }
+
+            EndBattle();
+        }
+
         /// <summary>Destroys the board created by <see cref="StartBattle"/>.</summary>
         public void EndBattle()
         {
             StopAllCoroutines();
+            _battleResolved = false;
+            _endBattlePanel?.Hide();
 
             _cardPlay?.EndBattle();
 
@@ -394,6 +470,8 @@ namespace M3P
 
         void ClearSpawnedEnemy()
         {
+            _battleWorld?.ClearEnemyModel();
+
             if (_activeEnemy != null)
             {
                 Destroy(_activeEnemy.gameObject);

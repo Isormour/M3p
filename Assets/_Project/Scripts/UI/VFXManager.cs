@@ -7,7 +7,7 @@ namespace M3P
     {
         [SerializeField] GameObject _particlePrefab;
         [SerializeField] BattleManager _battleManager;
-        [SerializeField] UIEnemyIcon _enemyIcon;
+        [SerializeField] Transform _particleTarget;
         [SerializeField] float _vfxLifetime = 2f;
 
         Match3Board _board;
@@ -69,9 +69,9 @@ namespace M3P
             if (attractor == null)
                 attractor = instance.GetComponentInChildren<ParticleAttractor>();
 
-            Transform portraitTarget = ResolvePortraitTarget();
-            if (attractor != null && portraitTarget != null)
-                attractor.SetTarget(portraitTarget);
+            Transform particleTarget = _particleTarget;
+            if (attractor != null && particleTarget != null)
+                attractor.SetTarget(particleTarget);
 
             if (_board != null)
             {
@@ -87,14 +87,6 @@ namespace M3P
             }
 
             Destroy(instance, _vfxLifetime);
-        }
-
-        Transform ResolvePortraitTarget()
-        {
-            if (_enemyIcon == null)
-                _enemyIcon = FindFirstObjectByType<UIEnemyIcon>();
-
-            return _enemyIcon != null ? _enemyIcon.PortraitTarget : null;
         }
     }
 }

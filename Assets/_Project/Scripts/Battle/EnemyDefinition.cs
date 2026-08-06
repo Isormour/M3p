@@ -27,7 +27,11 @@ namespace M3P
 
         [SerializeField] SkillDefinition[] _skills;
 
+        [Tooltip("Visual prefab spawned in the battle world. Root should have WorldCharacter.")]
+        [SerializeField] GameObject _enemyModelPrefab;
+
         public SkillDefinition[] Skills => _skills;
-        public GameObject EnemyModelPrefab;
+
+        public GameObject EnemyModelPrefab => _enemyModelPrefab;
     }
 }

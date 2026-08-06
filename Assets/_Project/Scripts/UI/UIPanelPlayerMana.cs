@@ -1,6 +1,6 @@
+using Match3;
 using System.Collections;
 using System.Collections.Generic;
-using Match3;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -136,11 +136,11 @@ namespace M3P
             {
                 UIPanelPlayerManaBar bar = Instantiate(_barPrefab, _barContainer);
                 bar.name = $"ManaBar_Type{typeId}";
-                
+
                 Match3.TileTypeGraphics runeGraphics = _board.GetTileTypeRuneGraphics(typeId);
                 Sprite icon = _board.GetTileTypeSprite(typeId);
                 Material material = runeGraphics?.SpriteMaterial;
-                
+
                 bar.Configure(typeId, icon, material);
                 _barsByTypeId[typeId] = bar;
             }
@@ -172,10 +172,10 @@ namespace M3P
             if (_barContainer == null)
                 return;
 
-            VerticalLayoutGroup layout = _barContainer.GetComponent<VerticalLayoutGroup>();
+            HorizontalLayoutGroup layout = _barContainer.GetComponent<HorizontalLayoutGroup>();
             if (layout == null)
             {
-                layout = _barContainer.gameObject.AddComponent<VerticalLayoutGroup>();
+                layout = _barContainer.gameObject.AddComponent<HorizontalLayoutGroup>();
                 layout.spacing = 6f;
                 layout.childAlignment = TextAnchor.UpperCenter;
                 layout.childControlWidth = true;
