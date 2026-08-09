@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Match3
 {
@@ -14,8 +15,8 @@ namespace Match3
     /// </summary>
     /// <remarks>
     /// Groups stay valid after their tiles are cleared, but <see cref="Tiles"/> then holds destroyed
-    /// objects. Consumers reacting to a resolved wave should only read <see cref="TypeId"/> and
-    /// <see cref="Size"/>.
+    /// objects. Consumers reacting to a resolved wave should only read <see cref="TypeId"/>,
+    /// <see cref="Size"/> and <see cref="Center"/>.
     /// </remarks>
     public sealed class MatchGroup
     {
@@ -26,6 +27,7 @@ namespace Match3
             TypeId = typeId;
             Orientation = orientation;
             _tiles = tiles;
+            Center = CalculateCenter(tiles);
         }
 
         public int TypeId { get; }
@@ -35,5 +37,27 @@ namespace Match3
         public IReadOnlyList<Match3Tile> Tiles => _tiles;
 
         public int Size => _tiles.Count;
+
+        /// <summary>
+        /// Where the run sat in the world. Captured up front because everything that reacts to a match
+        /// runs after its tiles have been destroyed, when their transforms can no longer be read.
+        /// </summary>
+        public Vector3 Center { get; }
+
+        static Vector3 CalculateCenter(List<Match3Tile> tiles)
+        {
+            if (tiles == null || tiles.Count == 0)
+            {
+                return Vector3.zero;
+            }
+
+            Vector3 sum = Vector3.zero;
+            for (int i = 0; i < tiles.Count; i++)
+            {
+                sum += tiles[i].transform.position;
+            }
+
+            return sum / tiles.Count;
+        }
     }
 }

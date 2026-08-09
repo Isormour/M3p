@@ -1,5 +1,6 @@
 using Match3;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -88,17 +89,17 @@ namespace M3P
                 return;
             }
 
-            SkillDefinition[] skills = _player.Skills;
-            if (skills == null || skills.Length == 0)
+            IReadOnlyList<SkillDefinition> skills = _player.Skills;
+            if (skills == null || skills.Count == 0)
             {
                 _skillBars = System.Array.Empty<UIPlayerPanelSkillsBar>();
                 return;
             }
 
-            var bars = new UIPlayerPanelSkillsBar[skills.Length];
+            var bars = new UIPlayerPanelSkillsBar[skills.Count];
             int barIndex = 0;
 
-            for (int i = 0; i < skills.Length; i++)
+            for (int i = 0; i < skills.Count; i++)
             {
                 SkillDefinition skill = skills[i];
                 if (skill == null)

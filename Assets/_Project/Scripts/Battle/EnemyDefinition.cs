@@ -14,6 +14,11 @@ namespace M3P
 
         public HardStats HardStats => _hardStats;
 
+        [Tooltip("Experience the player banks for winning this fight. Nothing is paid out for a loss.")]
+        [Min(0), SerializeField] int _experienceReward = 50;
+
+        public int ExperienceReward => _experienceReward;
+
         [SerializeField] Sprite _icon;
 
         [Tooltip("Visual / behaviour prefab for this enemy. Root must have EnemyBattleCharacter.")]

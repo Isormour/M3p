@@ -10,6 +10,13 @@ namespace M3P
         [SerializeField] Transform _particleTarget;
         [SerializeField] float _vfxLifetime = 2f;
 
+        [Header("Shards")]
+        [Tooltip("Played where a match long enough to drop shards was cleared.")]
+        [SerializeField] ShardVFX _shardPrefab;
+        [Tooltip("Where shards fly to, typically the shard counter. Defaults to the tile particle target.")]
+        [SerializeField] Transform _shardTarget;
+        [SerializeField] float _shardVfxLifetime = 2f;
+
         Match3Board _board;
 
         void Awake()
@@ -21,7 +28,10 @@ namespace M3P
         void OnEnable()
         {
             if (_battleManager != null)
+            {
                 _battleManager.OnBattleStarted += HandleBattleStarted;
+                _battleManager.ShardsEarned += HandleShardsEarned;
+            }
 
             if (_battleManager?.ActiveBoard != null)
                 BindBoard(_battleManager.ActiveBoard);
@@ -30,7 +40,10 @@ namespace M3P
         void OnDisable()
         {
             if (_battleManager != null)
+            {
                 _battleManager.OnBattleStarted -= HandleBattleStarted;
+                _battleManager.ShardsEarned -= HandleShardsEarned;
+            }
 
             UnbindBoard();
         }
@@ -65,13 +78,7 @@ namespace M3P
                 return;
 
             GameObject instance = Instantiate(_particlePrefab, worldPosition, Quaternion.identity);
-            ParticleAttractor attractor = instance.GetComponent<ParticleAttractor>();
-            if (attractor == null)
-                attractor = instance.GetComponentInChildren<ParticleAttractor>();
-
-            Transform particleTarget = _particleTarget;
-            if (attractor != null && particleTarget != null)
-                attractor.SetTarget(particleTarget);
+            BindAttractor(instance, _particleTarget);
 
             if (_board != null)
             {
@@ -87,6 +94,34 @@ namespace M3P
             }
 
             Destroy(instance, _vfxLifetime);
+        }
+
+        void HandleShardsEarned(ShardDrop drop)
+        {
+            if (_shardPrefab == null)
+                return;
+
+            ShardVFX instance = Instantiate(_shardPrefab, drop.WorldPosition, Quaternion.identity);
+
+            GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
+            instance.Setup(config != null ? config.GetTileType(drop.TileTypeId) : null, drop.Amount);
+
+            BindAttractor(instance.gameObject, _shardTarget != null ? _shardTarget : _particleTarget);
+
+            Destroy(instance.gameObject, _shardVfxLifetime);
+        }
+
+        static void BindAttractor(GameObject instance, Transform target)
+        {
+            if (target == null)
+                return;
+
+            ParticleAttractor attractor = instance.GetComponent<ParticleAttractor>();
+            if (attractor == null)
+                attractor = instance.GetComponentInChildren<ParticleAttractor>();
+
+            if (attractor != null)
+                attractor.SetTarget(target);
         }
     }
 }

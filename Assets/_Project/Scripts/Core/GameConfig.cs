@@ -9,6 +9,19 @@ namespace M3P
     {
         [SerializeField] Match3TileTypeDefinition[] _tileTypes;
 
+        [Header("Progression")]
+        [Tooltip("Experience curve and level-up rewards. Built-in defaults are used when left empty.")]
+        [SerializeField] LevelProgressionConfig _levelProgression;
+
+        [Tooltip("Every skill in the game, and the ids profiles use to reference them.")]
+        [SerializeField] SkillConfig _skills;
+
+        [Tooltip("Stats and skills a profile starts with, before anything has been saved.")]
+        [SerializeField] PlayerStartConfig _playerStart;
+
+        [Tooltip("How cleared matches convert into shards. Built-in defaults are used when left empty.")]
+        [SerializeField] MatchRewardRules _matchRewards;
+
         [Header("Basic Attack")]
         [Tooltip("Damage added per point of Strength.")]
         [SerializeField] int _damagePerStrength = 1;
@@ -19,6 +32,14 @@ namespace M3P
         Dictionary<Match3TileTypeDefinition, int> _tileTypeIds;
 
         public Match3TileTypeDefinition[] TileTypes => _tileTypes;
+
+        public LevelProgressionConfig LevelProgression => _levelProgression;
+
+        public SkillConfig Skills => _skills;
+
+        public PlayerStartConfig PlayerStart => _playerStart;
+
+        public MatchRewardRules MatchRewards => _matchRewards;
 
         public int TileTypeCount => _tileTypes != null ? _tileTypes.Length : 0;
 
@@ -40,6 +61,32 @@ namespace M3P
 
             EnsureTileTypeIds();
             return _tileTypeIds.TryGetValue(tileType, out int typeId) ? typeId : -1;
+        }
+
+        /// <summary>
+        /// Stable name a tile type is stored under in saves. Unlike the runtime id this survives
+        /// reordering <see cref="TileTypes"/>, so it is what the shard wallet keys on.
+        /// </summary>
+        public string GetTileTypeKey(int typeId)
+        {
+            Match3TileTypeDefinition definition = GetTileType(typeId);
+            return definition != null ? definition.name : null;
+        }
+
+        /// <summary>Runtime id for a saved tile type name, or -1 when no such tile type exists any more.</summary>
+        public int GetTileTypeIdByKey(string key)
+        {
+            if (string.IsNullOrEmpty(key))
+                return -1;
+
+            for (int i = 0; i < TileTypeCount; i++)
+            {
+                Match3TileTypeDefinition definition = _tileTypes[i];
+                if (definition != null && definition.name == key)
+                    return i;
+            }
+
+            return -1;
         }
 
         void EnsureTileTypeIds()

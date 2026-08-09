@@ -17,5 +17,46 @@ namespace M3P
             Constitution = constitution;
             Agility = agility;
         }
+
+        public int Get(EStatType stat)
+        {
+            switch (stat)
+            {
+                case EStatType.Strength:
+                    return Strength;
+                case EStatType.Intelligence:
+                    return Intelligence;
+                case EStatType.Constitution:
+                    return Constitution;
+                case EStatType.Agility:
+                    return Agility;
+                default:
+                    return 0;
+            }
+        }
+
+        /// <summary>Returns a copy with <paramref name="points"/> added to a single stat.</summary>
+        public HardStats WithPointsAdded(EStatType stat, int points = 1)
+        {
+            HardStats result = this;
+
+            switch (stat)
+            {
+                case EStatType.Strength:
+                    result.Strength += points;
+                    break;
+                case EStatType.Intelligence:
+                    result.Intelligence += points;
+                    break;
+                case EStatType.Constitution:
+                    result.Constitution += points;
+                    break;
+                case EStatType.Agility:
+                    result.Agility += points;
+                    break;
+            }
+
+            return result;
+        }
     }
 }

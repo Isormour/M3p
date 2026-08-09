@@ -22,9 +22,6 @@ namespace M3P
         [SerializeField] Transform _enemySpawnParent;
         [SerializeField] List<EnemyDefinition> _enemyDefinitions = new List<EnemyDefinition>();
 
-        [Header("Skills")]
-        [SerializeField] SkillDefinition[] _skillDefinitions;
-
         [Header("Cards")]
         [SerializeField] CardPlayController _cardPlay;
 
@@ -38,13 +35,14 @@ namespace M3P
         [Header("UI")]
         [SerializeField] UIEndBattlePanel _endBattlePanel;
 
+        readonly BattleSessionRewards _sessionRewards = new BattleSessionRewards();
+
         Match3Board _activeBoard;
         EnemyDefinition _activeEnemyDefinition;
         EnemyBattleCharacter _activeEnemy;
         bool _isPlayerTurn = true;
         bool _battleResolved;
-
-        readonly Dictionary<int, SkillDefinition> _definitionsBySkillId = new Dictionary<int, SkillDefinition>();
+        MatchRewardRules _fallbackMatchRewards;
 
         /// <summary>Board from the current battle, or null if no battle is running.</summary>
         public Match3Board ActiveBoard => _activeBoard;
@@ -61,12 +59,12 @@ namespace M3P
         /// <summary>Enemy data asset used for the current battle.</summary>
         public EnemyDefinition ActiveEnemyDefinition => _activeEnemyDefinition;
 
-        /// <summary>Skill definitions keyed by <see cref="SkillDefinition.SkillId"/>.</summary>
-        public IReadOnlyDictionary<int, SkillDefinition> DefinitionsBySkillId => _definitionsBySkillId;
-
         /// <summary>Deck and hand for the current battle.</summary>
         public CardPlayController CardPlay => _cardPlay;
         public Action<Match3Board> OnBattleStarted;
+
+        /// <summary>Raised for every match long enough to drop shards, at the spot it was cleared.</summary>
+        public event Action<ShardDrop> ShardsEarned;
 
         void Awake()
         {
@@ -78,7 +76,6 @@ namespace M3P
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            RebuildSkillLookup();
 
             if (_endBattlePanel == null)
                 _endBattlePanel = FindAnyObjectByType<UIEndBattlePanel>(FindObjectsInactive.Include);
@@ -100,31 +97,6 @@ namespace M3P
 
             Instance = null;
             EndBattle();
-        }
-
-        void RebuildSkillLookup()
-        {
-            _definitionsBySkillId.Clear();
-
-            if (_skillDefinitions == null)
-                return;
-
-            foreach (var def in _skillDefinitions)
-            {
-                if (def == null)
-                    continue;
-
-                int id = def.SkillId;
-                if (_definitionsBySkillId.ContainsKey(id))
-                    Debug.LogWarning($"{nameof(BattleManager)}: duplicate {nameof(SkillDefinition)} for SkillId {id}. Using last assignment.", this);
-
-                _definitionsBySkillId[id] = def;
-            }
-        }
-
-        public bool TryGetSkillDefinition(int skillId, out SkillDefinition definition)
-        {
-            return _definitionsBySkillId.TryGetValue(skillId, out definition);
         }
 
         public void ExecuteSkill(SkillDefinition skill, BattleCharacter caster, BattleCharacter target)
@@ -180,6 +152,7 @@ namespace M3P
             EndBattle();
 
             _battleResolved = false;
+            _sessionRewards.Reset();
             _endBattlePanel?.Hide();
 
             _player?.PrepareForBattle();
@@ -272,7 +245,7 @@ namespace M3P
 
         /// <summary>
         /// Resolves one basic attack per match group, so a cascade lands several separate hits while a
-        /// single long line lands one bigger hit.
+        /// single long line lands one bigger hit. Shards from the same wave are set aside for the win.
         /// </summary>
         void HandleMatchWaveCompleted(IReadOnlyList<MatchGroup> groups)
         {
@@ -283,6 +256,7 @@ namespace M3P
             if (config == null)
                 return;
 
+            MatchRewardRules matchRewards = ResolveMatchRewards(config);
             HardStats attacker = _player?.Stats != null ? _player.Stats.Hard : default;
             SoftStats targetStats = _activeEnemy.Stats?.Soft;
             int tilesDestroyed = 0;
@@ -292,10 +266,25 @@ namespace M3P
                 MatchGroup group = groups[i];
                 tilesDestroyed += group.Size;
                 targetStats?.TakeDamage(config.CalculateBasicAttackDamage(attacker, group.Size));
+
+                int shards = matchRewards.GetShardsForMatch(group.Size);
+                if (shards <= 0)
+                    continue;
+
+                _sessionRewards.AddShards(group.TypeId, shards);
+                ShardsEarned?.Invoke(new ShardDrop(group.Center, group.TypeId, shards));
             }
 
             _battleWorld?.NotifyMatchWave(tilesDestroyed);
             TryResolveBattleOutcome();
+        }
+
+        MatchRewardRules ResolveMatchRewards(GameConfig config)
+        {
+            if (config != null && config.MatchRewards != null)
+                return config.MatchRewards;
+
+            return _fallbackMatchRewards ??= MatchRewardRules.CreateDefault();
         }
 
         /// <summary>
@@ -338,12 +327,12 @@ namespace M3P
         bool HasCastableSkill()
         {
             SoftStats softStats = _player?.Stats?.Soft;
-            SkillDefinition[] skills = _player?.Skills;
+            IReadOnlyList<SkillDefinition> skills = _player?.Skills;
 
             if (softStats == null || skills == null || _activeEnemy == null || !_activeEnemy.IsAlive)
                 return false;
 
-            for (int i = 0; i < skills.Length; i++)
+            for (int i = 0; i < skills.Count; i++)
             {
                 SkillDefinition skill = skills[i];
                 if (skill != null && skill.HasEnoughActionPoints(softStats) && skill.HasEnoughMana(softStats))
@@ -431,7 +420,21 @@ namespace M3P
             if (_activeBoard != null)
                 _activeBoard.AllowPlayerInput = false;
 
-            _endBattlePanel?.Show(outcome);
+            _endBattlePanel?.Show(outcome, GrantBattleRewards(outcome));
+        }
+
+        /// <summary>
+        /// Banks the payout for a finished battle. Only a win rewards anything, so nothing is gained by
+        /// stretching out a fight that is already lost.
+        /// </summary>
+        BattleRewardResult GrantBattleRewards(BattleOutcome outcome)
+        {
+            ProgressionService progression = GameManager.Instance != null ? GameManager.Instance.Progression : null;
+            if (progression == null || outcome != BattleOutcome.Win)
+                return BattleRewardResult.None;
+
+            int experience = _activeEnemyDefinition != null ? _activeEnemyDefinition.ExperienceReward : 0;
+            return progression.ApplyBattleRewards(experience, _sessionRewards.ShardsByTileType);
         }
 
         /// <summary>Called when the player closes the end-of-battle panel.</summary>

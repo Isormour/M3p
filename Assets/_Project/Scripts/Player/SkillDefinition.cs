@@ -24,14 +24,11 @@ namespace M3P
     [CreateAssetMenu(fileName = "SkillDefinition", menuName = "M3P/Skill Definition", order = 0)]
     public class SkillDefinition : ScriptableObject
     {
-        [SerializeField] int _skillId;
         [SerializeField] TileTypeManaCost[] _manaCosts = Array.Empty<TileTypeManaCost>();
         [SerializeField] BattleEffect[] _effects = Array.Empty<BattleEffect>();
         [field: SerializeField] public string _animationName { private set; get; } = "BasicAttack";
 
         [NonSerialized] bool _loggedUnresolvedTileType;
-
-        public int SkillId => _skillId;
 
         public TileTypeManaCost[] ManaCosts => _manaCosts ?? Array.Empty<TileTypeManaCost>();
 
