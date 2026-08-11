@@ -15,6 +15,8 @@ namespace M3P
         public int UnspentStatPoints;
         public List<CharacterSkill> Skills = new List<CharacterSkill>();
         public List<ShardAmount> Shards = new List<ShardAmount>();
+        public List<int> UnlockedTalentIds = new List<int>();
+        public PendingTalentChoice PendingTalent;
         public HardStats HardStats;
 
         public PlayerProfile()
@@ -22,11 +24,49 @@ namespace M3P
             HardStats = new HardStats(1, 1, 1, 1);
         }
 
-        public CharacterStats CreateBattleStats()
+        public CharacterStats CreateBattleStats(StatProgressionConfig progression, TalentConfig talentConfig)
         {
-            CharacterStats stats = new CharacterStats(HardStats);
+            TalentBonuses talentBonuses = talentConfig != null
+                ? talentConfig.BuildBonuses(UnlockedTalentIds)
+                : TalentBonuses.None;
+
+            CharacterStats stats = new CharacterStats(HardStats, progression, talentBonuses);
             stats.RecalculateSoftStatsForBattle();
             return stats;
+        }
+
+        public bool HasTalentForMilestone(EStatType stat, int milestoneTier, TalentConfig talentConfig)
+        {
+            if (UnlockedTalentIds == null || talentConfig == null || milestoneTier <= 0)
+                return false;
+
+            for (int i = 0; i < UnlockedTalentIds.Count; i++)
+            {
+                if (!talentConfig.TryGetTalent(UnlockedTalentIds[i], out TalentDefinition talent))
+                    continue;
+
+                if (talent.Stat == stat && talent.MilestoneTier == milestoneTier)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public bool TryUnlockTalent(int talentId, TalentConfig talentConfig)
+        {
+            if (talentConfig == null || !PendingTalent.IsValid)
+                return false;
+
+            if (!talentConfig.TryGetTalent(talentId, out TalentDefinition talent))
+                return false;
+
+            if (talent.Stat != PendingTalent.Stat || talent.MilestoneTier != PendingTalent.MilestoneTier)
+                return false;
+
+            UnlockedTalentIds ??= new List<int>();
+            UnlockedTalentIds.Add(talentId);
+            PendingTalent = default;
+            return true;
         }
 
         /// <summary>Spends one level-up point on a stat. Returns false when there is nothing to spend.</summary>
@@ -82,6 +122,7 @@ namespace M3P
             UnspentStatPoints = Math.Max(0, UnspentStatPoints);
             Skills ??= new List<CharacterSkill>();
             Shards ??= new List<ShardAmount>();
+            UnlockedTalentIds ??= new List<int>();
         }
 
         public string ToJson(bool prettyPrint = true)
@@ -112,6 +153,10 @@ namespace M3P
             Shards = source.Shards != null
                 ? new List<ShardAmount>(source.Shards)
                 : new List<ShardAmount>();
+            UnlockedTalentIds = source.UnlockedTalentIds != null
+                ? new List<int>(source.UnlockedTalentIds)
+                : new List<int>();
+            PendingTalent = source.PendingTalent;
             HardStats = source.HardStats;
         }
 
@@ -123,6 +168,8 @@ namespace M3P
             public int UnspentStatPoints;
             public CharacterSkill[] Skills;
             public ShardAmount[] Shards;
+            public int[] UnlockedTalentIds;
+            public PendingTalentChoice PendingTalent;
             public HardStats HardStats;
 
             public static PlayerProfileSaveData FromProfile(PlayerProfile profile)
@@ -134,6 +181,10 @@ namespace M3P
                     UnspentStatPoints = profile.UnspentStatPoints,
                     Skills = profile.Skills != null ? profile.Skills.ToArray() : Array.Empty<CharacterSkill>(),
                     Shards = profile.Shards != null ? profile.Shards.ToArray() : Array.Empty<ShardAmount>(),
+                    UnlockedTalentIds = profile.UnlockedTalentIds != null
+                        ? profile.UnlockedTalentIds.ToArray()
+                        : Array.Empty<int>(),
+                    PendingTalent = profile.PendingTalent,
                     HardStats = profile.HardStats,
                 };
             }
@@ -151,6 +202,10 @@ namespace M3P
                     Shards = Shards != null
                         ? new List<ShardAmount>(Shards)
                         : new List<ShardAmount>(),
+                    UnlockedTalentIds = UnlockedTalentIds != null
+                        ? new List<int>(UnlockedTalentIds)
+                        : new List<int>(),
+                    PendingTalent = PendingTalent,
                     HardStats = HardStats,
                 };
             }

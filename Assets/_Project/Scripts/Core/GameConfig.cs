@@ -22,14 +22,21 @@ namespace M3P
         [Tooltip("How cleared matches convert into shards. Built-in defaults are used when left empty.")]
         [SerializeField] MatchRewardRules _matchRewards;
 
+        [Tooltip("How hard stats translate into HP, AP, hand size and damage scaling.")]
+        [SerializeField] StatProgressionConfig _statProgression;
+
+        [Tooltip("Every talent in the game, and the ids profiles use to remember picks.")]
+        [SerializeField] TalentConfig _talents;
+
         [Header("Basic Attack")]
-        [Tooltip("Damage added per point of Strength.")]
-        [SerializeField] int _damagePerStrength = 1;
+        [Tooltip("Flat damage before Strength scaling and match-length bonus.")]
+        [SerializeField] int _basePhysicalDamage = 1;
 
         [Tooltip("Damage added per matched tile above the minimum-2 threshold, so a match of 3 scores one step.")]
         [SerializeField] int _damagePerMatchedTile = 1;
 
         Dictionary<Match3TileTypeDefinition, int> _tileTypeIds;
+        StatProgressionConfig _fallbackStatProgression;
 
         public Match3TileTypeDefinition[] TileTypes => _tileTypes;
 
@@ -40,6 +47,13 @@ namespace M3P
         public PlayerStartConfig PlayerStart => _playerStart;
 
         public MatchRewardRules MatchRewards => _matchRewards;
+
+        public StatProgressionConfig StatProgression =>
+            _statProgression != null
+                ? _statProgression
+                : _fallbackStatProgression ??= StatProgressionConfig.CreateDefault();
+
+        public TalentConfig Talents => _talents;
 
         public int TileTypeCount => _tileTypes != null ? _tileTypes.Length : 0;
 
@@ -108,10 +122,12 @@ namespace M3P
         /// Damage of a single basic attack. One attack fires per match group, so a three-wave cascade
         /// resolves as three separate attacks rather than one larger hit.
         /// </summary>
-        public int CalculateBasicAttackDamage(HardStats attacker, int matchSize)
+        public int CalculateBasicAttackDamage(HardStats attacker, int matchSize, TalentBonuses talents = default)
         {
             int lengthBonus = _damagePerMatchedTile * (matchSize - (Match3Board.MinimumMatchSize - 1));
-            return Mathf.Max(1, attacker.Strength * _damagePerStrength + lengthBonus);
+            int raw = _basePhysicalDamage + lengthBonus;
+            float multiplier = StatProgression.GetPhysicalDamageMultiplier(attacker, talents);
+            return Mathf.Max(1, Mathf.RoundToInt(raw * multiplier));
         }
 
         void OnEnable()

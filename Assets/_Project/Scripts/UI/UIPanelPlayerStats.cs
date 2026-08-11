@@ -7,8 +7,7 @@ namespace M3P
 {
     /// <summary>
     /// Spends the points a level-up granted. Clicks build a pending allocation the player can take
-    /// back, and only closing the panel writes it into the profile — so lowering a stat here never
-    /// means refunding a point that was already committed.
+    /// back, and only Confirm writes it into the profile — closing the panel discards it.
     /// </summary>
     public sealed class UIPanelPlayerStats : MonoBehaviour
     {
@@ -18,6 +17,7 @@ namespace M3P
         [SerializeField] TextMeshProUGUI _levelLabel;
         [SerializeField] TextMeshProUGUI _unspentPointsLabel;
         [SerializeField] Button _closeButton;
+        [SerializeField] Button _confirmButton;
 
         [Tooltip("One row per stat, top to bottom.")]
         [SerializeField] UIPlayerStatControl[] _statControls = Array.Empty<UIPlayerStatControl>();
@@ -54,6 +54,9 @@ namespace M3P
 
             if (_closeButton != null)
                 _closeButton.onClick.AddListener(HandleCloseClicked);
+
+            if (_confirmButton != null)
+                _confirmButton.onClick.AddListener(HandleConfirmClicked);
         }
 
         void OnEnable()
@@ -67,8 +70,8 @@ namespace M3P
 
         void OnDisable()
         {
-            // Safety net for anything that hides the panel without going through Hide().
-            CommitPendingAllocation();
+            // Closing without Confirm must not write the allocation.
+            DiscardPendingAllocation();
 
             ProfileManager profiles = Profiles;
             if (profiles != null)
@@ -79,6 +82,9 @@ namespace M3P
         {
             if (_closeButton != null)
                 _closeButton.onClick.RemoveListener(HandleCloseClicked);
+
+            if (_confirmButton != null)
+                _confirmButton.onClick.RemoveListener(HandleConfirmClicked);
         }
 
         void OnValidate()
@@ -94,6 +100,9 @@ namespace M3P
 
             if (_closeButton == null)
                 _closeButton = FindDescendantComponent<Button>("CloseButton");
+
+            if (_confirmButton == null)
+                _confirmButton = FindDescendantComponent<Button>("ConfirmButton");
         }
 
         public void Show()
@@ -103,10 +112,10 @@ namespace M3P
             Refresh();
         }
 
-        /// <summary>Closes the panel, writing whatever was allocated into the profile.</summary>
+        /// <summary>Closes the panel without writing the pending allocation into the profile.</summary>
         public void Hide()
         {
-            CommitPendingAllocation();
+            DiscardPendingAllocation();
             Root.SetActive(false);
         }
 
@@ -189,6 +198,12 @@ namespace M3P
             Hide();
         }
 
+        void HandleConfirmClicked()
+        {
+            CommitPendingAllocation();
+            Root.SetActive(false);
+        }
+
         void CommitPendingAllocation()
         {
             if (TotalPending <= 0)
@@ -220,12 +235,16 @@ namespace M3P
                 return;
 
             int remainingPoints = Mathf.Max(0, profile.UnspentStatPoints - TotalPending);
+            int totalPending = TotalPending;
 
             if (_levelLabel != null)
                 _levelLabel.text = $"Level {profile.Level}";
 
             if (_unspentPointsLabel != null)
                 _unspentPointsLabel.text = $"Points: {remainingPoints}";
+
+            if (_confirmButton != null)
+                _confirmButton.interactable = totalPending > 0;
 
             for (int i = 0; i < _statControls.Length; i++)
             {

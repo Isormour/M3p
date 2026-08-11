@@ -23,13 +23,20 @@ namespace M3P
         {
             PlayerProfile profile = ResolveProfile();
             ResolveSkills(profile);
-            SetCharacterStats(profile.CreateBattleStats());
+            GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
+            SetCharacterStats(profile.CreateBattleStats(
+                config != null ? config.StatProgression : null,
+                config != null ? config.Talents : null));
         }
 
         public override void OnTurnStarted()
         {
             CharacterStats stats = Stats;
-            stats?.Soft?.ResetActionPoints(stats.Hard);
+            GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
+            stats?.Soft?.ResetActionPoints(
+                stats.Hard,
+                config != null ? config.StatProgression : null,
+                stats.TalentBonuses);
         }
 
         PlayerProfile ResolveProfile()

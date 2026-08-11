@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -23,19 +22,22 @@ namespace M3P
         [Header("Rewards")]
         [Tooltip("Hidden when the battle paid out nothing, such as after a loss.")]
         [SerializeField] GameObject _rewardsSection;
-        [SerializeField] TextMeshProUGUI _experienceText;
+        [SerializeField] RectTransform _rewardsContainer;
+        [SerializeField] UIEndPanelRewardIndicator _rewardIndicatorPrefab;
+
         [SerializeField] GameObject _levelUpSection;
         [SerializeField] TextMeshProUGUI _levelUpText;
         [SerializeField] TextMeshProUGUI _statPointsText;
 
-        [Tooltip("Hidden when no match was long enough to drop shards.")]
-        [SerializeField] GameObject _shardsSection;
-        [SerializeField] TextMeshProUGUI _shardsText;
+        readonly List<UIEndPanelRewardIndicator> _spawnedRewards = new List<UIEndPanelRewardIndicator>();
 
         void Awake()
         {
             if (_panelRoot == null)
                 _panelRoot = gameObject;
+
+            if (_rewardsContainer == null && _rewardsSection != null)
+                _rewardsContainer = _rewardsSection.transform as RectTransform;
 
             WireCloseButtons();
             Hide();
@@ -48,6 +50,9 @@ namespace M3P
 
             if (_loseButton == null && _loseSection != null)
                 _loseButton = _loseSection.GetComponentInChildren<Button>(true);
+
+            if (_rewardsContainer == null && _rewardsSection != null)
+                _rewardsContainer = _rewardsSection.transform as RectTransform;
         }
 
         public void Show(BattleOutcome outcome)
@@ -73,11 +78,13 @@ namespace M3P
 
         void ShowRewards(BattleRewardResult rewards)
         {
+            ClearSpawnedRewards();
+
             if (_rewardsSection != null)
                 _rewardsSection.SetActive(rewards.HasRewards);
 
-            if (_experienceText != null)
-                _experienceText.text = $"+{rewards.ExperienceGained} EXP";
+            if (rewards.HasRewards)
+                PopulateRewardIndicators(rewards);
 
             if (_levelUpSection != null)
                 _levelUpSection.SetActive(rewards.LeveledUp);
@@ -87,36 +94,64 @@ namespace M3P
 
             if (_statPointsText != null)
                 _statPointsText.text = $"+{rewards.StatPointsGained} stat points";
-
-            int shardsGained = rewards.TotalShardsGained;
-
-            if (_shardsSection != null)
-                _shardsSection.SetActive(shardsGained > 0);
-
-            if (_shardsText != null && shardsGained > 0)
-                _shardsText.text = FormatShards(rewards.ShardsGained);
         }
 
-        static string FormatShards(IReadOnlyList<ShardAmount> shards)
+        void PopulateRewardIndicators(BattleRewardResult rewards)
         {
-            StringBuilder builder = new StringBuilder();
+            if (_rewardIndicatorPrefab == null || _rewardsContainer == null)
+            {
+                Debug.LogError($"{nameof(UIEndBattlePanel)}: assign {nameof(_rewardIndicatorPrefab)} and {nameof(_rewardsContainer)}.", this);
+                return;
+            }
+
+            // Experience and shards come from BattleSessionRewards, banked into BattleRewardResult on a win.
+            if (rewards.ExperienceGained > 0)
+                SpawnReward(null, rewards.ExperienceGained, "EXP");
+
+            GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
+            IReadOnlyList<ShardAmount> shards = rewards.ShardsGained;
 
             for (int i = 0; i < shards.Count; i++)
             {
                 if (shards[i].Amount <= 0)
                     continue;
 
-                if (builder.Length > 0)
-                    builder.Append("   ");
+                SpawnReward(ResolveShardIcon(config, shards[i].TileType), shards[i].Amount, shards[i].TileType);
+            }
+        }
 
-                builder.Append(shards[i].TileType).Append(" x").Append(shards[i].Amount);
+        void SpawnReward(Sprite icon, int amount, string nameSuffix)
+        {
+            UIEndPanelRewardIndicator indicator = Instantiate(_rewardIndicatorPrefab, _rewardsContainer);
+            indicator.name = $"Reward_{nameSuffix}";
+            indicator.Configure(icon, amount);
+            _spawnedRewards.Add(indicator);
+        }
+
+        static Sprite ResolveShardIcon(GameConfig config, string tileTypeKey)
+        {
+            if (config == null || string.IsNullOrEmpty(tileTypeKey))
+                return null;
+
+            int typeId = config.GetTileTypeIdByKey(tileTypeKey);
+            return typeId >= 0 ? config.GetTileTypeSprite(typeId) : null;
+        }
+
+        void ClearSpawnedRewards()
+        {
+            for (int i = 0; i < _spawnedRewards.Count; i++)
+            {
+                if (_spawnedRewards[i] != null)
+                    Destroy(_spawnedRewards[i].gameObject);
             }
 
-            return builder.ToString();
+            _spawnedRewards.Clear();
         }
 
         public void Hide()
         {
+            ClearSpawnedRewards();
+
             if (_panelRoot != null)
                 _panelRoot.SetActive(false);
             else

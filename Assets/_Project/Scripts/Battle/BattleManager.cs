@@ -42,6 +42,7 @@ namespace M3P
         EnemyBattleCharacter _activeEnemy;
         bool _isPlayerTurn = true;
         bool _battleResolved;
+        BattleOutcome _lastOutcome;
         MatchRewardRules _fallbackMatchRewards;
 
         /// <summary>Board from the current battle, or null if no battle is running.</summary>
@@ -75,7 +76,7 @@ namespace M3P
             }
 
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            // Scene-local: Map <-> Battle reloads need fresh serialized references each visit.
 
             if (_endBattlePanel == null)
                 _endBattlePanel = FindAnyObjectByType<UIEndBattlePanel>(FindObjectsInactive.Include);
@@ -152,12 +153,12 @@ namespace M3P
             EndBattle();
 
             _battleResolved = false;
-            _sessionRewards.Reset();
             _endBattlePanel?.Hide();
 
             _player?.PrepareForBattle();
 
-            PickRandomEnemyDefinition();
+            ResolveEnemyDefinition();
+            _sessionRewards.Begin(_activeEnemyDefinition);
             SpawnEnemyBattleCharacter();
 
             Transform parent = _boardParent != null ? _boardParent : transform;
@@ -179,6 +180,19 @@ namespace M3P
             _cardPlay?.BeginBattle(_activeBoard, _player);
             OnBattleStarted?.Invoke(_activeBoard);
             StartCoroutine(SetupTurnFlowRoutine());
+        }
+
+        void ResolveEnemyDefinition()
+        {
+            // Map encounters win: the enemy on EncounterConfig is authoritative for that fight.
+            EnemyDefinition fromMap = MapRunState.Active != null ? MapRunState.Active.PendingEnemy : null;
+            if (fromMap != null)
+            {
+                _activeEnemyDefinition = fromMap;
+                return;
+            }
+
+            PickRandomEnemyDefinition();
         }
 
         void PickRandomEnemyDefinition()
@@ -258,6 +272,7 @@ namespace M3P
 
             MatchRewardRules matchRewards = ResolveMatchRewards(config);
             HardStats attacker = _player?.Stats != null ? _player.Stats.Hard : default;
+            TalentBonuses talents = _player?.Stats?.TalentBonuses ?? TalentBonuses.None;
             SoftStats targetStats = _activeEnemy.Stats?.Soft;
             int tilesDestroyed = 0;
 
@@ -265,7 +280,7 @@ namespace M3P
             {
                 MatchGroup group = groups[i];
                 tilesDestroyed += group.Size;
-                targetStats?.TakeDamage(config.CalculateBasicAttackDamage(attacker, group.Size));
+                targetStats?.TakeDamage(config.CalculateBasicAttackDamage(attacker, group.Size, talents));
 
                 int shards = matchRewards.GetShardsForMatch(group.Size);
                 if (shards <= 0)
@@ -415,6 +430,7 @@ namespace M3P
                 return;
 
             _battleResolved = true;
+            _lastOutcome = outcome;
             StopAllCoroutines();
 
             if (_activeBoard != null)
@@ -433,8 +449,7 @@ namespace M3P
             if (progression == null || outcome != BattleOutcome.Win)
                 return BattleRewardResult.None;
 
-            int experience = _activeEnemyDefinition != null ? _activeEnemyDefinition.ExperienceReward : 0;
-            return progression.ApplyBattleRewards(experience, _sessionRewards.ShardsByTileType);
+            return progression.ApplyBattleRewards(_sessionRewards.Experience, _sessionRewards.ShardsByTileType);
         }
 
         /// <summary>Called when the player closes the end-of-battle panel.</summary>
@@ -446,7 +461,15 @@ namespace M3P
                 return;
             }
 
+            MapRunState mapRun = MapRunState.Active;
+            bool returnToMap = mapRun != null && mapRun.HasPendingBattle;
+            if (returnToMap)
+                mapRun.ResolveBattle(_lastOutcome == BattleOutcome.Win);
+
             EndBattle();
+
+            if (returnToMap)
+                SceneFlow.LoadMap();
         }
 
         /// <summary>Destroys the board created by <see cref="StartBattle"/>.</summary>

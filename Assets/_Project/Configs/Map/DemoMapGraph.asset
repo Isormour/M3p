@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1b2c3d4e5f6478890a1b2c3d4e5f602, type: 3}
+  m_Name: DemoMapGraph
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.MapGraphDefinition
+  _startNodeId: start
+  _nodes:
+  - Id: start
+    Encounter: {fileID: 11400000, guid: a1b2c3d4e5f6478890a1b2c3d4e5f651, type: 2}
+    Type: 0
+    Position: {x: 0, y: 0}
+  - Id: battle_a
+    Encounter: {fileID: 11400000, guid: a1b2c3d4e5f6478890a1b2c3d4e5f652, type: 2}
+    Type: 1
+    Position: {x: -3, y: 3}
+  - Id: battle_b
+    Encounter: {fileID: 11400000, guid: a1b2c3d4e5f6478890a1b2c3d4e5f652, type: 2}
+    Type: 1
+    Position: {x: 3, y: 3}
+  - Id: chest_a
+    Encounter: {fileID: 11400000, guid: a1b2c3d4e5f6478890a1b2c3d4e5f655, type: 2}
+    Type: 3
+    Position: {x: -5, y: 6}
+  - Id: shop_a
+    Encounter: {fileID: 11400000, guid: a1b2c3d4e5f6478890a1b2c3d4e5f654, type: 2}
+    Type: 2
+    Position: {x: 5, y: 6}
+  - Id: battle_c
+    Encounter: {fileID: 11400000, guid: a1b2c3d4e5f6478890a1b2c3d4e5f652, type: 2}
+    Type: 1
+    Position: {x: 0, y: 6}
+  - Id: chest_b
+    Encounter: {fileID: 11400000, guid: a1b2c3d4e5f6478890a1b2c3d4e5f655, type: 2}
+    Type: 3
+    Position: {x: -2, y: 9}
+  - Id: shop_b
+    Encounter: {fileID: 11400000, guid: a1b2c3d4e5f6478890a1b2c3d4e5f654, type: 2}
+    Type: 2
+    Position: {x: 2, y: 9}
+  - Id: battle_boss
+    Encounter: {fileID: 11400000, guid: a1b2c3d4e5f6478890a1b2c3d4e5f653, type: 2}
+    Type: 1
+    Position: {x: 0, y: 12}
+  _edges:
+  - FromId: start
+    ToId: battle_a
+  - FromId: start
+    ToId: battle_b
+  - FromId: battle_a
+    ToId: chest_a
+  - FromId: battle_a
+    ToId: battle_c
+  - FromId: battle_b
+    ToId: shop_a
+  - FromId: battle_b
+    ToId: battle_c
+  - FromId: chest_a
+    ToId: chest_b
+  - FromId: shop_a
+    ToId: shop_b
+  - FromId: battle_c
+    ToId: chest_b
+  - FromId: battle_c
+    ToId: shop_b
+  - FromId: chest_b
+    ToId: battle_boss
+  - FromId: shop_b
+    ToId: battle_boss

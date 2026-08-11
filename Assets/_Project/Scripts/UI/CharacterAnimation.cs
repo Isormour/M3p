@@ -17,4 +17,10 @@ public class CharacterAnimation : MonoBehaviour
     {
 
     }
+    void FootL()
+    {
+    }
+    void FootR()
+    {
+    }
 }

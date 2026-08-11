@@ -29,27 +29,14 @@ namespace M3P
 
         public event Action Changed;
 
-        public static int CalculateMaxHP(HardStats hard) => Mathf.Max(1, hard.Constitution * 20);
-
-        /// <summary>
-        /// Action points are the throughput of a turn: how much a build can actually spend.
-        /// Deliberately a slow curve, since one extra point multiplies with everything else in the deck.
-        /// </summary>
-        public static int CalculateMaxActionPoints(HardStats hard) => 2 + Mathf.Max(0, hard.Agility) / 2;
-
-        /// <summary>
-        /// Hand size is the selection of a turn: how many options are on the table to find an efficient
-        /// play. Paired with variable card costs so it stays distinct from action points.
-        /// </summary>
-        public static int CalculateMaxHandSize(HardStats hard) => 3 + Mathf.Max(0, hard.Intelligence) / 2;
-
-        public SoftStats(HardStats hard)
+        public SoftStats(HardStats hard, StatProgressionConfig progression, TalentBonuses talents = default)
         {
-            MaxHP = CalculateMaxHP(hard);
+            progression ??= StatProgressionConfig.CreateDefault();
+            MaxHP = progression.CalculateMaxHp(hard, talents);
             CurrentHealth = MaxHP;
-            MaxActionPoints = CalculateMaxActionPoints(hard);
+            MaxActionPoints = progression.CalculateMaxActionPoints(hard, talents);
             CurrentActionPoints = MaxActionPoints;
-            MaxHandSize = CalculateMaxHandSize(hard);
+            MaxHandSize = progression.CalculateMaxHandSize(hard, talents);
         }
 
         public int GetManaForTileType(int tileTypeId)
@@ -109,18 +96,20 @@ namespace M3P
             NotifyChanged();
         }
 
-        public void RecalculateFromHard(HardStats hard)
+        public void RecalculateFromHard(HardStats hard, StatProgressionConfig progression, TalentBonuses talents = default)
         {
-            MaxHP = CalculateMaxHP(hard);
+            progression ??= StatProgressionConfig.CreateDefault();
+            MaxHP = progression.CalculateMaxHp(hard, talents);
             CurrentHealth = MaxHP;
-            MaxHandSize = CalculateMaxHandSize(hard);
-            ResetActionPoints(hard);
+            MaxHandSize = progression.CalculateMaxHandSize(hard, talents);
+            ResetActionPoints(hard, progression, talents);
             ResetMana();
         }
 
-        public void ResetActionPoints(HardStats hard)
+        public void ResetActionPoints(HardStats hard, StatProgressionConfig progression, TalentBonuses talents = default)
         {
-            MaxActionPoints = CalculateMaxActionPoints(hard);
+            progression ??= StatProgressionConfig.CreateDefault();
+            MaxActionPoints = progression.CalculateMaxActionPoints(hard, talents);
             CurrentActionPoints = MaxActionPoints;
             NotifyChanged();
         }
@@ -146,9 +135,9 @@ namespace M3P
             NotifyChanged();
         }
 
-        public SoftStats Clone(HardStats hard)
+        public SoftStats Clone(HardStats hard, StatProgressionConfig progression, TalentBonuses talents = default)
         {
-            return new SoftStats(hard)
+            return new SoftStats(hard, progression, talents)
             {
                 CurrentHealth = CurrentHealth,
                 CurrentActionPoints = CurrentActionPoints,

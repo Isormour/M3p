@@ -22,7 +22,10 @@ namespace M3P
             if (definition == null)
                 return;
 
-            CharacterStats stats = new CharacterStats(definition.HardStats);
+            GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
+            CharacterStats stats = new CharacterStats(
+                definition.HardStats,
+                config != null ? config.StatProgression : null);
             stats.RecalculateSoftStatsForBattle();
             SetCharacterStats(stats);
 

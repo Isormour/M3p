@@ -6,13 +6,19 @@ namespace M3P
     [Serializable]
     public class CharacterStats
     {
+        StatProgressionConfig _progression;
+        TalentBonuses _talentBonuses;
+
         public HardStats Hard;
         public SoftStats Soft;
+        public TalentBonuses TalentBonuses => _talentBonuses;
 
-        public CharacterStats(HardStats hard)
+        public CharacterStats(HardStats hard, StatProgressionConfig progression, TalentBonuses talentBonuses = default)
         {
             Hard = hard;
-            Soft = new SoftStats(hard);
+            _progression = progression ?? StatProgressionConfig.CreateDefault();
+            _talentBonuses = talentBonuses;
+            Soft = new SoftStats(hard, _progression, _talentBonuses);
         }
 
         public int MaxHealth => Soft != null ? Soft.MaxHP : 1;
@@ -21,7 +27,7 @@ namespace M3P
 
         public void RecalculateSoftStatsForBattle()
         {
-            Soft?.RecalculateFromHard(Hard);
+            Soft?.RecalculateFromHard(Hard, _progression, _talentBonuses);
         }
     }
 }

@@ -26,6 +26,11 @@ namespace M3P
                 ? _config.LevelProgression
                 : _fallbackLevelProgression ??= LevelProgressionConfig.CreateDefault();
 
+        public StatProgressionConfig StatProgression =>
+            _config != null ? _config.StatProgression : StatProgressionConfig.CreateDefault();
+
+        public TalentConfig Talents => _config != null ? _config.Talents : null;
+
         /// <summary>
         /// Adds what a won battle produced and pays out any levels it crossed, then commits the result.
         /// Callers only pass a reward for a win, so a fight the player is losing is never worth
@@ -107,11 +112,52 @@ namespace M3P
             if (profile.UnspentStatPoints < points)
                 return false;
 
+            int valueBefore = profile.HardStats.Get(stat);
+
             for (int i = 0; i < points; i++)
                 profile.TrySpendStatPoint(stat);
 
+            UpdatePendingTalentAfterAllocation(profile, stat, valueBefore, profile.HardStats.Get(stat));
+
             _profiles.Save();
             return true;
+        }
+
+        /// <summary>Commits a talent pick for the profile's pending milestone.</summary>
+        public bool TryChooseTalent(int talentId)
+        {
+            PlayerProfile profile = _profiles.CurrentProfile;
+            TalentConfig talents = Talents;
+
+            if (!profile.TryUnlockTalent(talentId, talents))
+                return false;
+
+            _profiles.Save();
+            return true;
+        }
+
+        void UpdatePendingTalentAfterAllocation(
+            PlayerProfile profile,
+            EStatType stat,
+            int valueBefore,
+            int valueAfter)
+        {
+            StatProgressionConfig progression = StatProgression;
+            TalentConfig talents = Talents;
+            int interval = progression.MilestoneInterval;
+
+            for (int value = valueBefore + 1; value <= valueAfter; value++)
+            {
+                if (value % interval != 0)
+                    continue;
+
+                int tier = value / interval;
+                if (talents != null && profile.HasTalentForMilestone(stat, tier, talents))
+                    continue;
+
+                profile.PendingTalent = new PendingTalentChoice(stat, tier);
+                return;
+            }
         }
     }
 }
