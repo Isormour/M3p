@@ -11,6 +11,7 @@ namespace M3P
         [SerializeField] UIPanelSkills _playerSkillsPanel;
         [SerializeField] UISimpleIndicator _playerHP;
         [SerializeField] UISimpleIndicator _playerActionPoints;
+        [SerializeField] UISimpleIndicator _playerShield;
 
         Coroutine _watchBattleRoutine;
 
@@ -18,6 +19,7 @@ namespace M3P
 
         void Awake()
         {
+            ResolveShieldIndicator();
             ApplyPlayer();
         }
 
@@ -45,6 +47,8 @@ namespace M3P
 
             if (_playerSkillsPanel == null)
                 _playerSkillsPanel = GetComponentInChildren<UIPanelSkills>(true);
+
+            ResolveShieldIndicator();
         }
 
         public void SetPlayer(PlayerBattleCharacter player)
@@ -114,12 +118,41 @@ namespace M3P
                     handler => softStats.Changed += handler,
                     handler => softStats.Changed -= handler);
             }
+
+            ResolveShieldIndicator();
+            if (_playerShield != null)
+            {
+                _playerShield.Bind(
+                    () => softStats.CurrentShield,
+                    () => softStats.CurrentShield > 0 ? softStats.CurrentShield : 1,
+                    handler => softStats.Changed += handler,
+                    handler => softStats.Changed -= handler,
+                    (current, _) => current.ToString());
+            }
         }
 
         void UnbindIndicators()
         {
             _playerHP?.Unbind();
             _playerActionPoints?.Unbind();
+            _playerShield?.Unbind();
+        }
+
+        void ResolveShieldIndicator()
+        {
+            if (_playerShield != null)
+                return;
+
+            UISimpleIndicator[] indicators = GetComponentsInChildren<UISimpleIndicator>(true);
+            for (int i = 0; i < indicators.Length; i++)
+            {
+                UISimpleIndicator indicator = indicators[i];
+                if (indicator != null && indicator.gameObject.name == "ShieldIndicator")
+                {
+                    _playerShield = indicator;
+                    return;
+                }
+            }
         }
     }
 }

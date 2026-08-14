@@ -26,6 +26,8 @@ namespace M3P
     {
         [SerializeField] TileTypeManaCost[] _manaCosts = Array.Empty<TileTypeManaCost>();
         [SerializeField] BattleEffect[] _effects = Array.Empty<BattleEffect>();
+        [Tooltip("Turns before this skill can be cast again. Zero means it can be reused immediately.")]
+        [Min(0), SerializeField] int _cooldown;
         [field: SerializeField] public string _animationName { private set; get; } = "BasicAttack";
 
         [NonSerialized] bool _loggedUnresolvedTileType;
@@ -33,6 +35,23 @@ namespace M3P
         public TileTypeManaCost[] ManaCosts => _manaCosts ?? Array.Empty<TileTypeManaCost>();
 
         public BattleEffect[] Effects => _effects ?? Array.Empty<BattleEffect>();
+
+        /// <summary>True when any effect is aimed at the opponent rather than the caster.</summary>
+        public bool AffectsOpponent()
+        {
+            BattleEffect[] effects = Effects;
+            for (int i = 0; i < effects.Length; i++)
+            {
+                BattleEffect effect = effects[i];
+                if (effect != null && effect.Target == EEffectTarget.Opponent)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>Turns the caster must wait after using this skill before casting it again. Zero skips the lockout.</summary>
+        public int Cooldown => Mathf.Max(0, _cooldown);
 
         public int GetManaCostForTileType(Match3TileTypeDefinition tileType)
         {

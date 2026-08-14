@@ -31,7 +31,9 @@ namespace M3P
                 ? config.StatProgression
                 : StatProgressionConfig.CreateDefault();
 
-            HardStats casterHard = context.Caster?.Stats?.Hard ?? default;
+            HardStats casterHard = context.Caster != null
+                ? context.Caster.GetEffectiveHard()
+                : default;
             TalentBonuses talents = context.Caster?.Stats?.TalentBonuses ?? TalentBonuses.None;
             return progression.ScaleMagicEffect(casterHard, _amount, talents);
         }

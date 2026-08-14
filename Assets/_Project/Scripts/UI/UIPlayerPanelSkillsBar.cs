@@ -36,7 +36,7 @@ namespace M3P
                 return;
             }
 
-            _skillNameLabel.text = skill != null ? skill.name : string.Empty;
+            RefreshSkillName();
 
             if (skill == null || _costLabelPrefab == null)
             {
@@ -87,6 +87,13 @@ namespace M3P
             if (manager == null || !manager.IsPlayerTurn)
                 return;
 
+            if (!_player.IsSkillReady(_skill))
+            {
+                manager.TryReduceSkillCooldown(_skill, _player);
+                RefreshInteractable();
+                return;
+            }
+
             BattleCharacter target = manager.ActiveEnemy;
             if (target == null)
                 return;
@@ -120,13 +127,32 @@ namespace M3P
             if (_button == null)
                 _button = GetComponent<Button>();
 
+            RefreshSkillName();
+
             if (_button == null)
                 return;
 
-            _button.interactable = CanUseSkill();
+            _button.interactable = CanInteractWithSkill();
         }
 
-        bool CanUseSkill()
+        void RefreshSkillName()
+        {
+            if (_skillNameLabel == null)
+                return;
+
+            if (_skill == null)
+            {
+                _skillNameLabel.text = string.Empty;
+                return;
+            }
+
+            int remaining = _player != null ? _player.GetRemainingCooldown(_skill) : 0;
+            _skillNameLabel.text = remaining > 0
+                ? $"{_skill.name} ({remaining})"
+                : _skill.name;
+        }
+
+        bool CanInteractWithSkill()
         {
             if (_skill == null || _player?.Stats?.Soft == null)
                 return false;
@@ -134,6 +160,9 @@ namespace M3P
             BattleManager manager = BattleManager.Instance;
             if (manager == null || !manager.IsPlayerTurn)
                 return false;
+
+            if (!_player.IsSkillReady(_skill))
+                return _player.CanReduceSkillCooldown(_skill);
 
             BattleCharacter target = manager.ActiveEnemy;
             if (target == null || !target.IsAlive)

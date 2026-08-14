@@ -3,10 +3,12 @@ using UnityEngine;
 
 namespace M3P
 {
-    public sealed class MapNodeView : MonoBehaviour
+    public class MapNode : MonoBehaviour
     {
         [SerializeField] float _labelHeight = 0.85f;
         [SerializeField] bool _tintRenderers = true;
+        [field: SerializeField] public Transform camTarget { get; private set; }
+
 
         Renderer[] _renderers;
         Material[] _materials;
@@ -22,7 +24,7 @@ namespace M3P
         public MapNodeType NodeType { get; private set; }
         public EncounterConfig Encounter { get; private set; }
 
-        public void Configure(string nodeId, EncounterConfig encounter, MapNodeType type, Color color)
+        public virtual void Configure(string nodeId, EncounterConfig encounter, MapNodeType type, Color color)
         {
             NodeId = nodeId;
             Encounter = encounter;

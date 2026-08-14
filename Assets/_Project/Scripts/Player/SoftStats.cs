@@ -22,6 +22,7 @@ namespace M3P
     {
         public int MaxHP;
         public int CurrentHealth;
+        public int CurrentShield;
         public int MaxActionPoints;
         public int CurrentActionPoints;
         public int MaxHandSize;
@@ -34,6 +35,7 @@ namespace M3P
             progression ??= StatProgressionConfig.CreateDefault();
             MaxHP = progression.CalculateMaxHp(hard, talents);
             CurrentHealth = MaxHP;
+            CurrentShield = 0;
             MaxActionPoints = progression.CalculateMaxActionPoints(hard, talents);
             CurrentActionPoints = MaxActionPoints;
             MaxHandSize = progression.CalculateMaxHandSize(hard, talents);
@@ -83,7 +85,16 @@ namespace M3P
             if (amount <= 0)
                 return;
 
-            CurrentHealth = Math.Max(0, CurrentHealth - amount);
+            if (CurrentShield > 0)
+            {
+                int absorbed = Math.Min(CurrentShield, amount);
+                CurrentShield -= absorbed;
+                amount -= absorbed;
+            }
+
+            if (amount > 0)
+                CurrentHealth = Math.Max(0, CurrentHealth - amount);
+
             NotifyChanged();
         }
 
@@ -96,11 +107,21 @@ namespace M3P
             NotifyChanged();
         }
 
+        public void AddShield(int amount)
+        {
+            if (amount <= 0)
+                return;
+
+            CurrentShield += amount;
+            NotifyChanged();
+        }
+
         public void RecalculateFromHard(HardStats hard, StatProgressionConfig progression, TalentBonuses talents = default)
         {
             progression ??= StatProgressionConfig.CreateDefault();
             MaxHP = progression.CalculateMaxHp(hard, talents);
             CurrentHealth = MaxHP;
+            CurrentShield = 0;
             MaxHandSize = progression.CalculateMaxHandSize(hard, talents);
             ResetActionPoints(hard, progression, talents);
             ResetMana();
@@ -140,6 +161,7 @@ namespace M3P
             return new SoftStats(hard, progression, talents)
             {
                 CurrentHealth = CurrentHealth,
+                CurrentShield = CurrentShield,
                 CurrentActionPoints = CurrentActionPoints,
                 ManaByBrokenTileType = ManaByBrokenTileType != null
                     ? new List<TileTypeMana>(ManaByBrokenTileType)

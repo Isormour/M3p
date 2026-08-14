@@ -10,7 +10,12 @@ namespace M3P
         Win,
         Lose
     }
-
+    public enum ERewardType
+    {
+        None,
+        Exp,
+        Shard,
+    }
     public sealed class UIEndBattlePanel : MonoBehaviour
     {
         [SerializeField] GameObject _panelRoot;
@@ -30,6 +35,7 @@ namespace M3P
         [SerializeField] TextMeshProUGUI _statPointsText;
 
         readonly List<UIEndPanelRewardIndicator> _spawnedRewards = new List<UIEndPanelRewardIndicator>();
+        [SerializeField] public RewardToIcon[] spriteTable;
 
         void Awake()
         {
@@ -106,7 +112,7 @@ namespace M3P
 
             // Experience and shards come from BattleSessionRewards, banked into BattleRewardResult on a win.
             if (rewards.ExperienceGained > 0)
-                SpawnReward(null, rewards.ExperienceGained, "EXP");
+                SpawnReward(GetSprite(ERewardType.Exp), rewards.ExperienceGained, "EXP");
 
             GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
             IReadOnlyList<ShardAmount> shards = rewards.ShardsGained;
@@ -186,6 +192,26 @@ namespace M3P
 
             if (_loseButton != null)
                 _loseButton.onClick.RemoveListener(HandleCloseClicked);
+        }
+
+
+        public Sprite GetSprite(ERewardType rewardType)
+        {
+            Sprite sprite = null;
+            for (int i = 0; i < spriteTable.Length; i++)
+            {
+                if (rewardType == spriteTable[i].rewardType)
+                {
+                    return spriteTable[i].spr;
+                }
+            }
+            return sprite;
+        }
+        [System.Serializable]
+        public struct RewardToIcon
+        {
+            public ERewardType rewardType;
+            public Sprite spr;
         }
     }
 }

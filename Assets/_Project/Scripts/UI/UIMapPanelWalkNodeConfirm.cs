@@ -14,6 +14,7 @@ namespace M3P
         [SerializeField] Button _confirmButton;
 
         Action _onConfirm;
+        Action _onCancel;
         bool _initialized;
 
         public bool IsOpen => Root.activeInHierarchy;
@@ -72,23 +73,30 @@ namespace M3P
             }
         }
 
-        /// <summary>Shows the panel. <paramref name="onConfirm"/> runs only if Confirm is pressed.</summary>
-        public void Show(Action onConfirm)
+        /// <summary>
+        /// Shows the panel. <paramref name="onConfirm"/> runs only if Confirm is pressed;
+        /// <paramref name="onCancel"/> runs only if Close is pressed.
+        /// </summary>
+        public void Show(Action onConfirm, Action onCancel = null)
         {
             Initialize();
             _onConfirm = onConfirm;
+            _onCancel = onCancel;
             Root.SetActive(true);
         }
 
         public void Hide()
         {
             _onConfirm = null;
+            _onCancel = null;
             Root.SetActive(false);
         }
 
         void HandleCloseClicked()
         {
+            Action cancel = _onCancel;
             Hide();
+            cancel?.Invoke();
         }
 
         void HandleConfirmClicked()

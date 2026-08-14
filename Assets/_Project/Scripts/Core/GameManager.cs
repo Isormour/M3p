@@ -71,7 +71,7 @@ namespace M3P
         }
 
         [ContextMenu("Reset Profile Save")]
-        void ResetProfileSave()
+        public void ResetProfileSave()
         {
             ProfileManager.ResetToStartingProfile();
             Debug.Log($"{nameof(GameManager)}: profile save cleared ({M3P.ProfileManager.SavePath}).", this);

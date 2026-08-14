@@ -41,8 +41,8 @@ namespace M3P.Editor
                 renderer.sharedMaterial = new Material(shader) { color = color };
             }
 
-            if (root.GetComponent<MapNodeView>() == null)
-                root.AddComponent<MapNodeView>();
+            if (root.GetComponent<MapNode>() == null)
+                root.AddComponent<MapNode>();
 
             PrefabUtility.SaveAsPrefabAsset(root, path);
             Object.DestroyImmediate(root);

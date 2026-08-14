@@ -64,8 +64,13 @@ namespace M3P
         public CardPlayController CardPlay => _cardPlay;
         public Action<Match3Board> OnBattleStarted;
 
+        /// <summary>Raised after a skill is applied, including enemy turns.</summary>
+        public event Action<SkillDefinition, BattleCharacter, BattleCharacter> SkillExecuted;
+
         /// <summary>Raised for every match long enough to drop shards, at the spot it was cleared.</summary>
         public event Action<ShardDrop> ShardsEarned;
+
+        public BattleWorld BattleWorld => _battleWorld;
 
         void Awake()
         {
@@ -107,6 +112,7 @@ namespace M3P
 
             skill.UseSkill(caster, target);
             NotifySkillAnimation(skill, caster);
+            SkillExecuted?.Invoke(skill, caster, target);
             TryResolveBattleOutcome();
         }
 
@@ -121,9 +127,38 @@ namespace M3P
                 _battleWorld.NotifyEnemySkillUsed(skill);
         }
 
+        static void SnapshotVitals(BattleCharacter character, out int health, out int shield)
+        {
+            SoftStats soft = character?.Stats?.Soft;
+            health = soft != null ? soft.CurrentHealth : 0;
+            shield = soft != null ? soft.CurrentShield : 0;
+        }
+
+        void NotifyHitReaction(BattleCharacter character, int healthBefore, int shieldBefore)
+        {
+            if (_battleWorld == null || character == null)
+                return;
+
+            SoftStats soft = character.Stats?.Soft;
+            if (soft == null)
+                return;
+
+            if (soft.CurrentHealth >= healthBefore && soft.CurrentShield >= shieldBefore)
+                return;
+
+            bool died = !character.IsAlive;
+            if (character == _player)
+                _battleWorld.NotifyPlayerHit(died);
+            else if (character == _activeEnemy)
+                _battleWorld.NotifyEnemyHit(died);
+        }
+
         public bool TryExecuteSkill(SkillDefinition skill, BattleCharacter caster, BattleCharacter target)
         {
             if (skill == null || caster == null || target == null || !target.IsAlive)
+                return false;
+
+            if (!caster.IsSkillReady(skill))
                 return false;
 
             SoftStats softStats = caster.Stats?.Soft;
@@ -134,10 +169,24 @@ namespace M3P
                 return false;
 
             ExecuteSkill(skill, caster, target);
+            caster.StartSkillCooldown(skill);
 
             if (caster == _player)
                 EndPlayerTurnIfExhausted();
 
+            return true;
+        }
+
+        /// <summary>Spends 1 AP to reduce the remaining cooldown of a player skill by 1.</summary>
+        public bool TryReduceSkillCooldown(SkillDefinition skill, PlayerBattleCharacter player)
+        {
+            if (_battleResolved || !_isPlayerTurn || skill == null || player == null || player != _player)
+                return false;
+
+            if (!player.TryReduceSkillCooldownWithActionPoint(skill))
+                return false;
+
+            EndPlayerTurnIfExhausted();
             return true;
         }
 
@@ -271,7 +320,7 @@ namespace M3P
                 return;
 
             MatchRewardRules matchRewards = ResolveMatchRewards(config);
-            HardStats attacker = _player?.Stats != null ? _player.Stats.Hard : default;
+            HardStats attacker = _player != null ? _player.GetEffectiveHard() : default;
             TalentBonuses talents = _player?.Stats?.TalentBonuses ?? TalentBonuses.None;
             SoftStats targetStats = _activeEnemy.Stats?.Soft;
             int tilesDestroyed = 0;
@@ -336,7 +385,10 @@ namespace M3P
             if (_cardPlay != null && _cardPlay.HasPlayableCard())
                 return true;
 
-            return HasCastableSkill();
+            if (HasCastableSkill())
+                return true;
+
+            return HasReducibleSkillCooldown();
         }
 
         bool HasCastableSkill()
@@ -350,7 +402,28 @@ namespace M3P
             for (int i = 0; i < skills.Count; i++)
             {
                 SkillDefinition skill = skills[i];
-                if (skill != null && skill.HasEnoughActionPoints(softStats) && skill.HasEnoughMana(softStats))
+                if (skill != null
+                    && _player.IsSkillReady(skill)
+                    && skill.HasEnoughActionPoints(softStats)
+                    && skill.HasEnoughMana(softStats))
+                    return true;
+            }
+
+            return false;
+        }
+
+        bool HasReducibleSkillCooldown()
+        {
+            SoftStats softStats = _player?.Stats?.Soft;
+            IReadOnlyList<SkillDefinition> skills = _player?.Skills;
+
+            if (softStats == null || skills == null || !softStats.HasActionPoints(1))
+                return false;
+
+            for (int i = 0; i < skills.Count; i++)
+            {
+                SkillDefinition skill = skills[i];
+                if (skill != null && _player.GetRemainingCooldown(skill) > 0)
                     return true;
             }
 
@@ -367,7 +440,14 @@ namespace M3P
             if (_activeBoard != null)
                 _activeBoard.AllowPlayerInput = true;
 
+            SnapshotVitals(_player, out int playerHealth, out int playerShield);
             _player?.OnTurnStarted();
+            NotifyHitReaction(_player, playerHealth, playerShield);
+            TryResolveBattleOutcome();
+
+            if (_battleResolved)
+                return;
+
             _cardPlay?.BeginTurn();
         }
 
@@ -382,6 +462,7 @@ namespace M3P
                 _activeBoard.AllowPlayerInput = false;
 
             _cardPlay?.EndTurn();
+            _player?.TickSkillCooldowns();
 
             if (_activeEnemy == null)
             {
@@ -397,7 +478,16 @@ namespace M3P
 
         IEnumerator RunEnemyTurnRoutine()
         {
+            SnapshotVitals(_activeEnemy, out int enemyHealth, out int enemyShield);
+            _activeEnemy?.OnTurnStarted();
+            NotifyHitReaction(_activeEnemy, enemyHealth, enemyShield);
+            TryResolveBattleOutcome();
+
+            if (_battleResolved)
+                yield break;
+
             yield return _activeEnemy.PlayTurn(_activeBoard);
+            _activeEnemy?.TickSkillCooldowns();
             TryResolveBattleOutcome();
 
             if (_battleResolved || _activeBoard == null || _isPlayerTurn)

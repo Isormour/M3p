@@ -19,6 +19,8 @@ namespace M3P
         public void Configure(EnemyDefinition definition)
         {
             _definition = definition;
+            ClearStatuses();
+            ClearSkillCooldowns();
             if (definition == null)
                 return;
 
@@ -51,10 +53,11 @@ namespace M3P
 
             foreach (SkillDefinition skill in _definition.Skills)
             {
-                if (skill == null)
+                if (skill == null || !IsSkillReady(skill))
                     continue;
 
                 manager.ExecuteSkill(skill, this, target);
+                StartSkillCooldown(skill);
             }
         }
     }

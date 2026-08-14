@@ -38,6 +38,7 @@ namespace M3P
         [SerializeField] float _cameraHeight = 14f;
         [SerializeField] float _cameraDistance = 10f;
         [SerializeField] float _cameraPitch = 55f;
+        [SerializeField] MapCamera _mapCam;
 
         [Header("Rewards")]
         [SerializeField] int _chestExperience = 15;
@@ -46,7 +47,7 @@ namespace M3P
         [Tooltip("Shown before the token walks to a neighbour. Confirm moves; Close cancels.")]
         [SerializeField] UIMapPanelWalkNodeConfirm _walkNodeConfirmPanel;
 
-        readonly Dictionary<string, MapNodeView> _nodeViews = new Dictionary<string, MapNodeView>();
+        readonly Dictionary<string, MapNode> _nodeViews = new Dictionary<string, MapNode>();
         readonly Dictionary<string, Vector3> _nodePositions = new Dictionary<string, Vector3>();
 
         MapGraphDefinition _activeGraph;
@@ -107,11 +108,11 @@ namespace M3P
             if (!Physics.Raycast(ray, out RaycastHit hit, 500f))
                 return;
 
-            MapNodeView node = hit.collider.GetComponentInParent<MapNodeView>();
+            MapNode node = hit.collider.GetComponentInParent<MapNode>();
             if (node == null)
                 return;
 
-            HandleNodeClicked(node.NodeId);
+            HandleNodeClicked(node.NodeId, node);
         }
 
         void OnDestroy()
@@ -184,9 +185,9 @@ namespace M3P
 
                 MapNodeType type = node.ResolvedType;
                 GameObject nodeObject = SpawnNodeMarker(node, nodesRoot, worldPos);
-                var view = nodeObject.GetComponent<MapNodeView>();
+                var view = nodeObject.GetComponent<MapNode>();
                 if (view == null)
-                    view = nodeObject.AddComponent<MapNodeView>();
+                    view = nodeObject.AddComponent<MapNode>();
 
                 view.Configure(node.Id, node.Encounter, type, ColorForType(type));
                 _nodeViews[node.Id] = view;
@@ -322,7 +323,7 @@ namespace M3P
                 ? _activeGraph.GetNeighborIds(run.CurrentNodeId)
                 : new List<string>();
 
-            foreach (KeyValuePair<string, MapNodeView> pair in _nodeViews)
+            foreach (KeyValuePair<string, MapNode> pair in _nodeViews)
             {
                 bool isCurrent = pair.Key == run.CurrentNodeId;
                 bool reachable = neighbors.Contains(pair.Key);
@@ -339,7 +340,7 @@ namespace M3P
             _walkNodeConfirmPanel = FindAnyObjectByType<UIMapPanelWalkNodeConfirm>(FindObjectsInactive.Include);
         }
 
-        void HandleNodeClicked(string nodeId)
+        void HandleNodeClicked(string nodeId, MapNode node)
         {
             MapRunState run = Run;
             if (nodeId == run.CurrentNodeId)
@@ -357,6 +358,7 @@ namespace M3P
 
             if (!_nodePositions.TryGetValue(nodeId, out Vector3 target))
                 return;
+            _mapCam.SetTarget(node);
 
             PromptWalkTo(nodeId, target);
         }
@@ -374,7 +376,13 @@ namespace M3P
                 return;
             }
 
-            _walkNodeConfirmPanel.Show(() => BeginWalkTo(nodeId, target));
+            _walkNodeConfirmPanel.Show(
+                () => BeginWalkTo(nodeId, target),
+                () =>
+                {
+                    if (_mapCam != null)
+                        _mapCam.RestorePrevious();
+                });
         }
 
         void BeginWalkTo(string nodeId, Vector3 target)

@@ -23,6 +23,8 @@ namespace M3P
         {
             PlayerProfile profile = ResolveProfile();
             ResolveSkills(profile);
+            ClearSkillCooldowns();
+            ClearStatuses();
             GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
             SetCharacterStats(profile.CreateBattleStats(
                 config != null ? config.StatProgression : null,
@@ -31,12 +33,37 @@ namespace M3P
 
         public override void OnTurnStarted()
         {
+            base.OnTurnStarted();
+
             CharacterStats stats = Stats;
             GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
             stats?.Soft?.ResetActionPoints(
                 stats.Hard,
                 config != null ? config.StatProgression : null,
                 stats.TalentBonuses);
+        }
+
+        /// <summary>Spends 1 action point to reduce a skill's remaining cooldown by 1.</summary>
+        public bool TryReduceSkillCooldownWithActionPoint(SkillDefinition skill)
+        {
+            if (skill == null || GetRemainingCooldown(skill) <= 0)
+                return false;
+
+            SoftStats softStats = Stats?.Soft;
+            if (softStats == null || !softStats.TrySpendActionPoint(1))
+                return false;
+
+            SetRemainingCooldown(skill, GetRemainingCooldown(skill) - 1);
+            return true;
+        }
+
+        public bool CanReduceSkillCooldown(SkillDefinition skill)
+        {
+            SoftStats softStats = Stats?.Soft;
+            return skill != null
+                && GetRemainingCooldown(skill) > 0
+                && softStats != null
+                && softStats.HasActionPoints(1);
         }
 
         PlayerProfile ResolveProfile()

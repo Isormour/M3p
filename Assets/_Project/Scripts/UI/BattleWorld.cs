@@ -7,10 +7,24 @@ namespace M3P
         [SerializeField] GameObject _playerObject;
         [Tooltip("Parent for spawned enemy models; defaults to this transform.")]
         [SerializeField] Transform _enemyModelParent;
+        [Tooltip("Chest-height point on the player. Defaults to the player object.")]
+        [SerializeField] Transform _playerVfxPoint;
+        [Tooltip("Chest-height point on the enemy. Defaults to the enemy model parent.")]
+        [SerializeField] Transform _enemyVfxPoint;
 
         WorldCharacter _playerCharacter;
         WorldCharacter _enemyCharacter;
         GameObject _spawnedEnemyModel;
+
+        public Transform PlayerVfxPoint =>
+            _playerVfxPoint != null
+                ? _playerVfxPoint
+                : (_playerObject != null ? _playerObject.transform : null);
+
+        public Transform EnemyVfxPoint =>
+            _enemyVfxPoint != null
+                ? _enemyVfxPoint
+                : (_enemyCharacter != null ? _enemyCharacter.transform : _enemyModelParent);
 
         void Awake()
         {
@@ -55,6 +69,16 @@ namespace M3P
         {
             if (tilesDestroyed > 0)
                 _playerCharacter?.PlayAttack("BasicAttack");
+        }
+
+        public void NotifyPlayerHit(bool died)
+        {
+            _playerCharacter?.PlayHitReaction(died);
+        }
+
+        public void NotifyEnemyHit(bool died)
+        {
+            _enemyCharacter?.PlayHitReaction(died);
         }
 
         static void PlayCharacterAttack(WorldCharacter character, SkillDefinition skill)
