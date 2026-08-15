@@ -183,7 +183,7 @@ namespace M3P
                 BoardActionCardDefinition card = hand[i];
                 bool selected = _cardPlay.SelectedHandIndex == i;
                 view.SetSelected(selected);
-                view.SetInteractable(playerActing && _cardPlay.CanPlay(card));
+                view.SetInteractable(playerActing && (selected || _cardPlay.CanPlay(card)));
             }
         }
 

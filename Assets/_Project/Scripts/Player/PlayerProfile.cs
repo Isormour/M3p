@@ -108,6 +108,64 @@ namespace M3P
                 Shards.Add(new ShardAmount(tileType, amount));
         }
 
+        /// <summary>True when the wallet covers every positive entry in <paramref name="costs"/>.</summary>
+        public bool CanAffordCraftCost(IReadOnlyList<TileTypeShardCost> costs)
+        {
+            if (costs == null)
+                return true;
+
+            for (int i = 0; i < costs.Count; i++)
+            {
+                TileTypeShardCost cost = costs[i];
+                if (cost.Amount <= 0 || cost.TileType == null)
+                    continue;
+
+                if (GetShards(cost.TileType.name) < cost.Amount)
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Spends the craft cost and adds one owned copy. Returns false when the wallet cannot cover it.
+        /// The new copy is not added to the battle deck; the cards panel does that.
+        /// </summary>
+        public bool TryCraftCard(int cardId, IReadOnlyList<TileTypeShardCost> costs)
+        {
+            if (cardId == CardConfig.InvalidCardId || !CanAffordCraftCost(costs))
+                return false;
+
+            if (costs != null)
+            {
+                for (int i = 0; i < costs.Count; i++)
+                {
+                    TileTypeShardCost cost = costs[i];
+                    if (cost.Amount <= 0 || cost.TileType == null)
+                        continue;
+
+                    TrySpendShards(cost.TileType.name, cost.Amount);
+                }
+            }
+
+            Cards ??= new List<OwnedCard>();
+            Cards.Add(new OwnedCard(cardId));
+            return true;
+        }
+
+        bool TrySpendShards(string tileType, int amount)
+        {
+            if (amount <= 0)
+                return true;
+
+            int index = IndexOfShards(tileType);
+            if (index < 0 || Shards[index].Amount < amount)
+                return false;
+
+            Shards[index] = new ShardAmount(tileType, Shards[index].Amount - amount);
+            return true;
+        }
+
         int IndexOfShards(string tileType)
         {
             if (Shards == null || string.IsNullOrEmpty(tileType))

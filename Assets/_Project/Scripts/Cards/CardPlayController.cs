@@ -22,6 +22,9 @@ namespace M3P
         BoardActionCardDefinition _selectedCard;
         int _selectedHandIndex = -1;
         bool _isPlaying;
+        bool _awaitingChoice;
+        UICardChoiceOverlay _choiceOverlay;
+        readonly List<CardChoiceOption> _choiceBuffer = new List<CardChoiceOption>();
 
         /// <summary>Raised when the hand, the selection or the action point pool changes.</summary>
         public event Action Changed;
@@ -32,7 +35,7 @@ namespace M3P
 
         public int SelectedHandIndex => _selectedHandIndex;
 
-        public bool IsPlaying => _isPlaying;
+        public bool IsPlaying => _isPlaying || _awaitingChoice;
 
         /// <summary>Cells already picked for the selected card.</summary>
         public IReadOnlyList<Vector2Int> PickedTargets => _pickedTargets;
@@ -134,13 +137,20 @@ namespace M3P
             Changed?.Invoke();
 
             if (card.Targeting == CardTargeting.None)
-                StartCoroutine(PlayRoutine(handIndex, new List<Vector2Int>()));
+            {
+                if (card.Logic.ExtraChoice != CardExtraChoice.None)
+                    PromptExtraChoice(handIndex, new List<Vector2Int>());
+                else
+                    StartCoroutine(PlayRoutine(handIndex, new List<Vector2Int>(), 0));
+            }
         }
 
         public void CancelSelection()
         {
+            HideChoiceOverlay();
             ClearHighlights();
             _pickedTargets.Clear();
+            _awaitingChoice = false;
 
             if (_selectedHandIndex < 0)
                 return;
@@ -152,7 +162,7 @@ namespace M3P
 
         void HandleTileClicked(Match3Tile tile)
         {
-            if (_selectedCard == null || _isPlaying || tile == null)
+            if (_selectedCard == null || _isPlaying || _awaitingChoice || tile == null)
             {
                 return;
             }
@@ -175,10 +185,81 @@ namespace M3P
                 return;
             }
 
-            StartCoroutine(PlayRoutine(_selectedHandIndex, new List<Vector2Int>(_pickedTargets)));
+            int handIndex = _selectedHandIndex;
+            List<Vector2Int> targets = new List<Vector2Int>(_pickedTargets);
+            if (logic.ExtraChoice != CardExtraChoice.None)
+                PromptExtraChoice(handIndex, targets);
+            else
+                StartCoroutine(PlayRoutine(handIndex, targets, 0));
         }
 
-        IEnumerator PlayRoutine(int handIndex, List<Vector2Int> targets)
+        void PromptExtraChoice(int handIndex, List<Vector2Int> targets)
+        {
+            BoardActionLogic logic = _selectedCard != null ? _selectedCard.Logic : null;
+            if (logic == null)
+                return;
+
+            logic.CollectExtraChoices(_board, _choiceBuffer);
+            if (_choiceBuffer.Count == 0)
+            {
+                StartCoroutine(PlayRoutine(handIndex, targets, 0));
+                return;
+            }
+
+            Transform parent = FindOverlayParent();
+            if (parent == null)
+            {
+                Debug.LogError($"{nameof(CardPlayController)}: no Canvas found for the extra card choice.", this);
+                StartCoroutine(PlayRoutine(handIndex, targets, _choiceBuffer[0].Value));
+                return;
+            }
+
+            HideChoiceOverlay();
+            _awaitingChoice = true;
+            string title = logic.ExtraChoice == CardExtraChoice.GravityDirection ? "Kierunek" : "Kolor";
+            _choiceOverlay = UICardChoiceOverlay.Show(
+                parent,
+                title,
+                _choiceBuffer,
+                value => HandleExtraChoicePicked(handIndex, targets, value),
+                CancelSelection);
+            Changed?.Invoke();
+        }
+
+        void HandleExtraChoicePicked(int handIndex, List<Vector2Int> targets, int extraChoice)
+        {
+            HideChoiceOverlay();
+            _awaitingChoice = false;
+            StartCoroutine(PlayRoutine(handIndex, targets, extraChoice));
+        }
+
+        void HideChoiceOverlay()
+        {
+            if (_choiceOverlay == null)
+                return;
+
+            _choiceOverlay.Dismiss();
+            _choiceOverlay = null;
+        }
+
+        Transform FindOverlayParent()
+        {
+            Canvas[] canvases = FindObjectsByType<Canvas>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            Canvas best = null;
+            for (int i = 0; i < canvases.Length; i++)
+            {
+                Canvas canvas = canvases[i];
+                if (canvas == null || !canvas.isActiveAndEnabled)
+                    continue;
+
+                if (best == null || canvas.sortingOrder >= best.sortingOrder)
+                    best = canvas;
+            }
+
+            return best != null ? best.transform : null;
+        }
+
+        IEnumerator PlayRoutine(int handIndex, List<Vector2Int> targets, int extraChoice)
         {
             if (_board == null)
                 yield break;
@@ -189,17 +270,19 @@ namespace M3P
 
             BoardActionCardDefinition card = hand[handIndex];
             _isPlaying = true;
+            _awaitingChoice = false;
 
             _player?.Stats?.Soft?.TrySpendActionPoint(card.ActionPointCost);
             _deck.TryDiscardFromHandAt(handIndex);
 
+            HideChoiceOverlay();
             ClearHighlights();
             _pickedTargets.Clear();
             _selectedHandIndex = -1;
             _selectedCard = null;
             Changed?.Invoke();
 
-            yield return _board.ExecuteActionRoutine(card.Logic, targets);
+            yield return _board.ExecuteActionRoutine(card.Logic, targets, extraChoice);
 
             _isPlaying = false;
             Changed?.Invoke();
@@ -256,6 +339,7 @@ namespace M3P
 
         void OnDestroy()
         {
+            HideChoiceOverlay();
             UnbindBoard();
         }
     }

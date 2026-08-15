@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace M3P
 {
     /// <summary>
-    /// Map HUD wrapper: <c>ButtonPanelStats</c> and <c>ButtonPanelCards</c> show or hide their panels.
+    /// Map HUD wrapper: stats, deck, and crafting buttons show or hide their panels.
     /// </summary>
     public sealed class UIMapPlayerStats : MonoBehaviour
     {
@@ -12,6 +12,8 @@ namespace M3P
         [SerializeField] UIPanelPlayerStats _statsPanel;
         [SerializeField] Button _togglePanelCardsButton;
         [SerializeField] UIPanelPlayerCards _cardsPanel;
+        [SerializeField] Button _togglePanelCraftingButton;
+        [SerializeField] UIPanelCardCrafting _craftingPanel;
         [SerializeField] bool _startHidden = true;
 
         void Awake()
@@ -24,6 +26,9 @@ namespace M3P
             if (_togglePanelCardsButton != null)
                 _togglePanelCardsButton.onClick.AddListener(HandleToggleCardsClicked);
 
+            if (_togglePanelCraftingButton != null)
+                _togglePanelCraftingButton.onClick.AddListener(HandleToggleCraftingClicked);
+
             if (_startHidden)
             {
                 if (_statsPanel != null)
@@ -31,6 +36,9 @@ namespace M3P
 
                 if (_cardsPanel != null)
                     _cardsPanel.Hide();
+
+                if (_craftingPanel != null)
+                    _craftingPanel.Hide();
             }
         }
 
@@ -41,6 +49,9 @@ namespace M3P
 
             if (_togglePanelCardsButton != null)
                 _togglePanelCardsButton.onClick.RemoveListener(HandleToggleCardsClicked);
+
+            if (_togglePanelCraftingButton != null)
+                _togglePanelCraftingButton.onClick.RemoveListener(HandleToggleCraftingClicked);
         }
 
         void OnValidate()
@@ -56,19 +67,17 @@ namespace M3P
             if (_togglePanelCardsButton == null)
                 _togglePanelCardsButton = FindChildButton("ButtonPanelCards");
 
+            if (_togglePanelCraftingButton == null)
+                _togglePanelCraftingButton = FindChildButton("ButtonPanelCraftingCards");
+
             if (_statsPanel == null)
                 _statsPanel = GetComponentInChildren<UIPanelPlayerStats>(true);
 
             if (_cardsPanel == null)
-            {
-                _cardsPanel = GetComponentInChildren<UIPanelPlayerCards>(true);
-                if (_cardsPanel == null)
-                {
-                    Canvas canvas = GetComponentInParent<Canvas>();
-                    if (canvas != null)
-                        _cardsPanel = canvas.GetComponentInChildren<UIPanelPlayerCards>(true);
-                }
-            }
+                _cardsPanel = FindPanelOnCanvas<UIPanelPlayerCards>();
+
+            if (_craftingPanel == null)
+                _craftingPanel = FindPanelOnCanvas<UIPanelCardCrafting>();
         }
 
         void HandleToggleStatsClicked()
@@ -91,6 +100,30 @@ namespace M3P
             }
 
             _cardsPanel.Toggle();
+        }
+
+        void HandleToggleCraftingClicked()
+        {
+            if (_craftingPanel == null)
+            {
+                Debug.LogError($"{nameof(UIMapPlayerStats)}: assign {nameof(_craftingPanel)} on the prefab.", this);
+                return;
+            }
+
+            _craftingPanel.Toggle();
+        }
+
+        T FindPanelOnCanvas<T>() where T : MonoBehaviour
+        {
+            T panel = GetComponentInChildren<T>(true);
+            if (panel != null)
+                return panel;
+
+            Canvas canvas = GetComponentInParent<Canvas>();
+            if (canvas != null)
+                return canvas.GetComponentInChildren<T>(true);
+
+            return null;
         }
 
         Button FindChildButton(string childName)

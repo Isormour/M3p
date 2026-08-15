@@ -7,10 +7,34 @@ namespace Match3
         [Header("Graphics")]
         [SerializeField] private SpriteRenderer _tileRenderer;
         [SerializeField] private SpriteRenderer _runeRenderer;
-        
+
         public int X { get; private set; }
         public int Y { get; private set; }
         public int TypeId { get; private set; }
+
+        /// <summary>Anchored tiles keep their cell during shuffle, gravity and cycles.</summary>
+        public bool IsLocked { get; private set; }
+
+        /// <summary>Negative board objects that <c>Purge</c> can remove.</summary>
+        public bool IsNegative { get; private set; }
+
+        /// <summary>A blocker occupying this cell. Purge can strip it; colour-change cannot, unless allowed.</summary>
+        public bool IsBlockade { get; private set; }
+
+        /// <summary>An opponent-created piece. Purge can remove it; colour-change cannot, unless allowed.</summary>
+        public bool IsEnemyElement { get; private set; }
+
+        /// <summary>When false, Change Color and Wild Transmutation cannot target this tile.</summary>
+        public bool AllowsColorChange { get; private set; } = true;
+
+        /// <summary>When false, Destroy cards cannot target this tile.</summary>
+        public bool CanDestroy { get; private set; } = true;
+
+        public bool CanRecolor => AllowsColorChange;
+
+        public bool IsPurgeable => IsNegative || IsBlockade || IsEnemyElement;
+
+        public bool CanMove => !IsLocked && !IsBlockade;
 
         Vector3 _baseScale;
 
@@ -20,6 +44,7 @@ namespace Match3
             Y = y;
             TypeId = typeId;
             _baseScale = transform.localScale;
+            ApplyFlags(false, false, false, false, true, true);
         }
 
         public void ApplyGraphics(Match3TileTypeDefinition definition)
@@ -64,6 +89,32 @@ namespace Match3
         public void SetType(int typeId)
         {
             TypeId = typeId;
+        }
+
+        public void ApplyFlags(
+            bool isLocked,
+            bool isNegative,
+            bool isBlockade,
+            bool isEnemyElement,
+            bool allowsColorChange,
+            bool canDestroy)
+        {
+            IsLocked = isLocked;
+            IsNegative = isNegative;
+            IsBlockade = isBlockade;
+            IsEnemyElement = isEnemyElement;
+            AllowsColorChange = allowsColorChange;
+            CanDestroy = canDestroy;
+        }
+
+        public void ClearNegativeOverlay()
+        {
+            IsNegative = false;
+            IsBlockade = false;
+            IsEnemyElement = false;
+            AllowsColorChange = true;
+            CanDestroy = true;
+            IsLocked = false;
         }
 
         public void SetSelected(bool selected)
