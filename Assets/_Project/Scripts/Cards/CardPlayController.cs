@@ -12,10 +12,8 @@ namespace M3P
     /// </summary>
     public sealed class CardPlayController : MonoBehaviour
     {
-        [Tooltip("Cards the player starts a battle with.")]
-        [SerializeField] DeckDefinition _startingDeck;
-
         readonly BattleDeck _deck = new BattleDeck();
+        readonly List<BoardActionCardDefinition> _resolvedDeck = new List<BoardActionCardDefinition>();
         readonly List<Vector2Int> _pickedTargets = new List<Vector2Int>();
         readonly List<Match3Tile> _highlightedTiles = new List<Match3Tile>();
 
@@ -55,13 +53,7 @@ namespace M3P
                 _board.TileClicked += HandleTileClicked;
             }
 
-            _deck.Reset(_startingDeck);
-
-            if (_startingDeck == null)
-            {
-                Debug.LogError($"{nameof(CardPlayController)}: assign {nameof(_startingDeck)} or the player will have no cards.", this);
-            }
-
+            LoadDeckFromProfile();
             Changed?.Invoke();
         }
 
@@ -234,6 +226,32 @@ namespace M3P
             }
 
             _board = null;
+        }
+
+        void LoadDeckFromProfile()
+        {
+            PlayerProfile profile = _player != null ? _player.Profile : null;
+            CardConfig cardConfig = GameManager.Instance != null ? GameManager.Instance.Config?.Cards : null;
+
+            if (profile == null || cardConfig == null)
+            {
+                Debug.LogError(
+                    $"{nameof(CardPlayController)}: the battle deck comes from the player profile. Load through {nameof(GameManager)} with a {nameof(CardConfig)} assigned, or the player will have no cards.",
+                    this);
+                _deck.Reset(null);
+                return;
+            }
+
+            cardConfig.ResolveDeck(profile, _resolvedDeck);
+
+            if (_resolvedDeck.Count == 0)
+            {
+                Debug.LogError(
+                    $"{nameof(CardPlayController)}: the current deck has no cards that {nameof(CardConfig)} can resolve. Add cards in the cards panel, or start a new profile from {nameof(PlayerStartConfig)}.",
+                    this);
+            }
+
+            _deck.Reset(_resolvedDeck);
         }
 
         void OnDestroy()

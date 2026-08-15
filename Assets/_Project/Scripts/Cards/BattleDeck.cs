@@ -25,14 +25,22 @@ namespace M3P
 
         public int TotalCardCount => _drawPile.Count + _hand.Count + _discardPile.Count;
 
-        /// <summary>Rebuilds every pile from a deck asset and shuffles. Call once when a battle starts.</summary>
-        public void Reset(DeckDefinition definition)
+        /// <summary>Rebuilds every pile from the cards a profile owns and shuffles. Call once when a battle starts.</summary>
+        public void Reset(IReadOnlyList<BoardActionCardDefinition> cards)
         {
             _drawPile.Clear();
             _hand.Clear();
             _discardPile.Clear();
 
-            definition?.BuildCardList(_drawPile);
+            if (cards != null)
+            {
+                for (int i = 0; i < cards.Count; i++)
+                {
+                    if (cards[i] != null)
+                        _drawPile.Add(cards[i]);
+                }
+            }
+
             Shuffle(_drawPile);
             Changed?.Invoke();
         }

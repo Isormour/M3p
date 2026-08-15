@@ -16,7 +16,10 @@ namespace M3P
         [Tooltip("Every skill in the game, and the ids profiles use to reference them.")]
         [SerializeField] SkillConfig _skills;
 
-        [Tooltip("Stats and skills a profile starts with, before anything has been saved.")]
+        [Tooltip("Every board-action card in the game, and the ids profiles use to reference them.")]
+        [SerializeField] CardConfig _cards;
+
+        [Tooltip("Stats, skills and starter deck a profile starts with, before anything has been saved.")]
         [SerializeField] PlayerStartConfig _playerStart;
 
         [Tooltip("How cleared matches convert into shards. Built-in defaults are used when left empty.")]
@@ -43,6 +46,8 @@ namespace M3P
         public LevelProgressionConfig LevelProgression => _levelProgression;
 
         public SkillConfig Skills => _skills;
+
+        public CardConfig Cards => _cards;
 
         public PlayerStartConfig PlayerStart => _playerStart;
 

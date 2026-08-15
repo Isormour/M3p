@@ -45,12 +45,19 @@ namespace M3P
         /// <summary>Reads the save, falling back to the authored starting build on a first run.</summary>
         public PlayerProfile Load()
         {
-            PlayerProfile profile = HasSave
+            bool hadSave = HasSave;
+            PlayerProfile profile = hadSave
                 ? PlayerProfile.FromJson(File.ReadAllText(SavePath))
                 : CreateStartingProfile();
 
             profile.NormalizeAfterLoad();
+            int cardsBeforeSeed = profile.Cards.Count;
+            _config?.PlayerStart?.EnsureStarterCards(profile, _config.Cards);
             SetCurrentProfile(profile);
+
+            if (hadSave && profile.Cards.Count > cardsBeforeSeed)
+                Save();
+
             return profile;
         }
 
@@ -83,11 +90,11 @@ namespace M3P
             if (start == null)
             {
                 Debug.LogError(
-                    $"{nameof(ProfileManager)}: assign {nameof(GameConfig.PlayerStart)} on {nameof(GameConfig)} or new characters begin with no skills.");
+                    $"{nameof(ProfileManager)}: assign {nameof(GameConfig.PlayerStart)} on {nameof(GameConfig)} or new characters begin with no skills or cards.");
                 return new PlayerProfile();
             }
 
-            return start.CreateProfile(_config.Skills);
+            return start.CreateProfile(_config.Skills, _config.Cards);
         }
 
         void SetCurrentProfile(PlayerProfile profile)

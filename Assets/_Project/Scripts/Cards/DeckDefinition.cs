@@ -5,8 +5,8 @@ using UnityEngine;
 namespace M3P
 {
     /// <summary>
-    /// The list of cards a character brings into battle. Copies are expressed as a count so a starting
-    /// deck of five swaps is one entry rather than five.
+    /// Authoring format for a deck. Used to seed a new profile from <see cref="PlayerStartConfig"/>;
+    /// battles draw from the copies stored on the profile, not from this asset.
     /// </summary>
     [CreateAssetMenu(fileName = "Deck", menuName = "M3P/Deck", order = 21)]
     public class DeckDefinition : ScriptableObject

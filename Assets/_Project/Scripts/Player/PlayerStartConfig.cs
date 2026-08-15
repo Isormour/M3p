@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace M3P
 {
     /// <summary>
     /// The build a character begins the game with, used to seed a profile that has never been saved.
-    /// Skills are authored as assets here and stored as ids in the profile.
+    /// Skills and the starter deck are authored as assets here and stored as ids in the profile.
     /// </summary>
     [CreateAssetMenu(fileName = "PlayerStartConfig", menuName = "M3P/Player Start Config", order = 2)]
     public class PlayerStartConfig : ScriptableObject
@@ -15,14 +16,41 @@ namespace M3P
         [Tooltip("Skills the character owns from the first battle. Each must be registered in the skill config.")]
         [SerializeField] SkillDefinition[] _skills = Array.Empty<SkillDefinition>();
 
+        [Tooltip("Copied into a new profile as owned cards. Each copy becomes its own entry with empty upgrades.")]
+        [SerializeField] DeckDefinition _starterDeck;
+
         public HardStats HardStats => _hardStats;
 
         public SkillDefinition[] Skills => _skills ?? Array.Empty<SkillDefinition>();
 
-        public PlayerProfile CreateProfile(SkillConfig skillConfig)
+        public DeckDefinition StarterDeck => _starterDeck;
+
+        public PlayerProfile CreateProfile(SkillConfig skillConfig, CardConfig cardConfig)
         {
             PlayerProfile profile = new PlayerProfile { HardStats = _hardStats };
+            CopyStartingSkills(profile, skillConfig);
+            CopyStarterDeck(profile, cardConfig);
+            return profile;
+        }
 
+        /// <summary>
+        /// Fills an empty card list from the starter deck. Used for new profiles and for saves written
+        /// before cards lived on the profile.
+        /// </summary>
+        public void EnsureStarterCards(PlayerProfile profile, CardConfig cardConfig)
+        {
+            if (profile == null)
+                return;
+
+            profile.Cards ??= new List<OwnedCard>();
+            if (profile.Cards.Count > 0)
+                return;
+
+            CopyStarterDeck(profile, cardConfig);
+        }
+
+        void CopyStartingSkills(PlayerProfile profile, SkillConfig skillConfig)
+        {
             SkillDefinition[] skills = Skills;
             for (int i = 0; i < skills.Length; i++)
             {
@@ -41,8 +69,50 @@ namespace M3P
 
                 profile.Skills.Add(new CharacterSkill(skillId, 1, skill.name));
             }
+        }
 
-            return profile;
+        void CopyStarterDeck(PlayerProfile profile, CardConfig cardConfig)
+        {
+            profile.Cards.Clear();
+
+            if (_starterDeck == null)
+            {
+                Debug.LogError(
+                    $"{nameof(PlayerStartConfig)} '{name}': assign {nameof(_starterDeck)} or new characters begin with no cards.",
+                    this);
+                return;
+            }
+
+            if (cardConfig == null)
+            {
+                Debug.LogError(
+                    $"{nameof(PlayerStartConfig)} '{name}': assign {nameof(CardConfig)} on {nameof(GameConfig)} or starter cards cannot be saved to a profile.",
+                    this);
+                return;
+            }
+
+            DeckDefinition.Entry[] entries = _starterDeck.Entries;
+            for (int i = 0; i < entries.Length; i++)
+            {
+                BoardActionCardDefinition card = entries[i].Card;
+                if (card == null)
+                    continue;
+
+                int cardId = cardConfig.GetCardId(card);
+                if (cardId == CardConfig.InvalidCardId)
+                {
+                    Debug.LogError(
+                        $"{nameof(PlayerStartConfig)} '{name}': card '{card.name}' is not registered in {nameof(CardConfig)}, so it cannot be saved to a profile.",
+                        this);
+                    continue;
+                }
+
+                int copies = Mathf.Max(1, entries[i].Copies);
+                for (int copy = 0; copy < copies; copy++)
+                    profile.Cards.Add(new OwnedCard(cardId));
+            }
+
+            profile.FillDeckWithAllOwnedCards();
         }
     }
 }

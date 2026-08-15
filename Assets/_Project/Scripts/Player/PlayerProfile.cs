@@ -14,6 +14,14 @@ namespace M3P
 
         public int UnspentStatPoints;
         public List<CharacterSkill> Skills = new List<CharacterSkill>();
+        public List<OwnedCard> Cards = new List<OwnedCard>();
+
+        /// <summary>
+        /// Indices into <see cref="Cards"/> that form the battle deck. Null means every owned copy
+        /// is in the deck, which is how saves written before the deck was separate behave.
+        /// </summary>
+        public List<int> Deck;
+
         public List<ShardAmount> Shards = new List<ShardAmount>();
         public List<int> UnlockedTalentIds = new List<int>();
         public PendingTalentChoice PendingTalent;
@@ -114,13 +122,17 @@ namespace M3P
             return -1;
         }
 
-        /// <summary>Fills in fields a save written before levels existed never stored.</summary>
+        /// <summary>Fills in fields a save written before levels or cards existed never stored.</summary>
         public void NormalizeAfterLoad()
         {
             Level = Math.Max(LevelProgressionConfig.FirstLevel, Level);
             Experience = Math.Max(0, Experience);
             UnspentStatPoints = Math.Max(0, UnspentStatPoints);
             Skills ??= new List<CharacterSkill>();
+            Cards ??= new List<OwnedCard>();
+            for (int i = 0; i < Cards.Count; i++)
+                Cards[i] = Cards[i].Normalized();
+            DropInvalidDeckIndices();
             Shards ??= new List<ShardAmount>();
             UnlockedTalentIds ??= new List<int>();
         }
@@ -150,6 +162,8 @@ namespace M3P
             Skills = source.Skills != null
                 ? new List<CharacterSkill>(source.Skills)
                 : new List<CharacterSkill>();
+            Cards = CloneCards(source.Cards);
+            Deck = source.Deck != null ? new List<int>(source.Deck) : null;
             Shards = source.Shards != null
                 ? new List<ShardAmount>(source.Shards)
                 : new List<ShardAmount>();
@@ -167,6 +181,8 @@ namespace M3P
             public int Experience;
             public int UnspentStatPoints;
             public CharacterSkill[] Skills;
+            public OwnedCard[] Cards;
+            public int[] Deck;
             public ShardAmount[] Shards;
             public int[] UnlockedTalentIds;
             public PendingTalentChoice PendingTalent;
@@ -180,6 +196,8 @@ namespace M3P
                     Experience = profile.Experience,
                     UnspentStatPoints = profile.UnspentStatPoints,
                     Skills = profile.Skills != null ? profile.Skills.ToArray() : Array.Empty<CharacterSkill>(),
+                    Cards = CloneCardArray(profile.Cards),
+                    Deck = profile.Deck != null ? profile.Deck.ToArray() : null,
                     Shards = profile.Shards != null ? profile.Shards.ToArray() : Array.Empty<ShardAmount>(),
                     UnlockedTalentIds = profile.UnlockedTalentIds != null
                         ? profile.UnlockedTalentIds.ToArray()
@@ -199,6 +217,8 @@ namespace M3P
                     Skills = Skills != null
                         ? new List<CharacterSkill>(Skills)
                         : new List<CharacterSkill>(),
+                    Cards = CloneCards(Cards),
+                    Deck = Deck != null ? new List<int>(Deck) : null,
                     Shards = Shards != null
                         ? new List<ShardAmount>(Shards)
                         : new List<ShardAmount>(),
@@ -209,6 +229,113 @@ namespace M3P
                     HardStats = HardStats,
                 };
             }
+        }
+
+        /// <summary>
+        /// Owned copies currently in the battle deck. Null deck means every owned copy is included.
+        /// </summary>
+        public IReadOnlyList<int> GetDeckIndices()
+        {
+            if (Deck != null)
+                return Deck;
+
+            if (Cards == null || Cards.Count == 0)
+                return Array.Empty<int>();
+
+            int[] indices = new int[Cards.Count];
+            for (int i = 0; i < Cards.Count; i++)
+                indices[i] = i;
+
+            return indices;
+        }
+
+        public bool IsOwnedCardInDeck(int ownedIndex)
+        {
+            if (Cards == null || ownedIndex < 0 || ownedIndex >= Cards.Count)
+                return false;
+
+            if (Deck == null)
+                return true;
+
+            return Deck.Contains(ownedIndex);
+        }
+
+        public bool TryAddOwnedCardToDeck(int ownedIndex)
+        {
+            if (Cards == null || ownedIndex < 0 || ownedIndex >= Cards.Count)
+                return false;
+
+            EnsureDeckList();
+            if (Deck.Contains(ownedIndex))
+                return false;
+
+            Deck.Add(ownedIndex);
+            return true;
+        }
+
+        public bool TryRemoveDeckCardAt(int deckIndex)
+        {
+            EnsureDeckList();
+            if (deckIndex < 0 || deckIndex >= Deck.Count)
+                return false;
+
+            Deck.RemoveAt(deckIndex);
+            return true;
+        }
+
+        public void FillDeckWithAllOwnedCards()
+        {
+            Deck = new List<int>(Cards != null ? Cards.Count : 0);
+            if (Cards == null)
+                return;
+
+            for (int i = 0; i < Cards.Count; i++)
+                Deck.Add(i);
+        }
+
+        void EnsureDeckList()
+        {
+            if (Deck != null)
+                return;
+
+            FillDeckWithAllOwnedCards();
+        }
+
+        void DropInvalidDeckIndices()
+        {
+            if (Deck == null)
+                return;
+
+            int cardCount = Cards != null ? Cards.Count : 0;
+            for (int i = Deck.Count - 1; i >= 0; i--)
+            {
+                if (Deck[i] < 0 || Deck[i] >= cardCount)
+                    Deck.RemoveAt(i);
+            }
+        }
+
+        static List<OwnedCard> CloneCards(IReadOnlyList<OwnedCard> source)
+        {
+            if (source == null || source.Count == 0)
+                return new List<OwnedCard>();
+
+            List<OwnedCard> copy = new List<OwnedCard>(source.Count);
+            for (int i = 0; i < source.Count; i++)
+                copy.Add(source[i].Clone());
+
+            return copy;
+        }
+
+        static OwnedCard[] CloneCardArray(List<OwnedCard> source)
+        {
+            if (source == null || source.Count == 0)
+                return Array.Empty<OwnedCard>();
+
+            OwnedCard[] copy = new OwnedCard[source.Count];
+            for (int i = 0; i < source.Count; i++)
+                copy[i] = source[i].Clone();
+
+            return copy;
         }
     }
 }

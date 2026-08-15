@@ -15,6 +15,9 @@ namespace M3P.Editor
             EditorGUILayout.LabelField("Profile Debug", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox($"Save: {ProfileManager.SavePath}", MessageType.None);
 
+            if (GUILayout.Button("Open Profile Debug"))
+                ProfileDebugWindow.Open();
+
             using (new EditorGUI.DisabledScope(target is GameManager gm && gm.Config == null))
             {
                 if (GUILayout.Button("Reset Profile Save"))
