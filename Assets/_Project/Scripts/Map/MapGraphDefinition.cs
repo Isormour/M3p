@@ -14,7 +14,7 @@ namespace M3P
             [Tooltip("Stable id used by run state and edges.")]
             public string Id;
 
-            [Tooltip("Encounter played on this node. Type, marker and battle enemy come from here.")]
+            [Tooltip("Encounter played on this node. Type, battle enemy and chest loot come from here.")]
             public EncounterConfig Encounter;
 
             [Tooltip("Fallback type used only when Encounter is missing.")]

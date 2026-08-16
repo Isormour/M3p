@@ -335,6 +335,9 @@ PrefabInstance:
       addedObject: {fileID: 7373685481035455058}
     - targetCorrespondingSourceObject: {fileID: 6798302305238021843, guid: be91303a738ae5f47a01d776462527b1, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 4988123456789012343}
+    - targetCorrespondingSourceObject: {fileID: 6798302305238021843, guid: be91303a738ae5f47a01d776462527b1, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 6349995921595494880}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 7611441365035773941, guid: be91303a738ae5f47a01d776462527b1, type: 3}
@@ -364,6 +367,8 @@ MonoBehaviour:
   _cardsPanel: {fileID: 0}
   _togglePanelCraftingButton: {fileID: 6565332645131231318}
   _craftingPanel: {fileID: 0}
+  _togglePanelTileCraftingButton: {fileID: 4988123456789012342}
+  _tileCraftingPanel: {fileID: 0}
   _startHidden: 1
 --- !u!224 &7849897930215425718 stripped
 RectTransform:
@@ -601,6 +606,125 @@ RectTransform:
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6919602546829717338, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
   m_PrefabInstance: {fileID: 6565332645131231317}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+--- !u!1001 &4988123456789012341
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 7849897930215425718}
+    m_Modifications:
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 160
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 41.28
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 207.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5329892341224069621, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_Name
+      value: ButtonPanelCraftingTiles
+      objectReference: {fileID: 0}
+    - target: {fileID: 5637177414963919604, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+      propertyPath: m_text
+      value: 'Tiles crafting
+
+'
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+--- !u!224 &4988123456789012343 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+  m_PrefabInstance: {fileID: 4988123456789012341}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4988123456789012342 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6919602546829717338, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
+  m_PrefabInstance: {fileID: 4988123456789012341}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1

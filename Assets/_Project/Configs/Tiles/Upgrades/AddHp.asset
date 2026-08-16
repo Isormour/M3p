@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1c3e5f708294b6d8e0f1a2b3c4d5e70, type: 3}
+  m_Name: AddHp
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.TileUpgradeDefinition
+  _displayName: Extra HP
+  _description: When this tile is cleared, restore 1 HP.
+  _icon: {fileID: 21300000, guid: 01373bedcaa1bb94790e67bd8121869d, type: 3}
+  _craftCost:
+  - TileType: {fileID: 11400000, guid: 88078226c0e3e49458326c6f5b431834, type: 2}
+    Amount: 2
+  _logic:
+    rid: 1000
+  references:
+    version: 2
+    RefIds:
+    - rid: 1000
+      type: {class: AddHpUpgradeLogic, ns: M3P, asm: Assembly-CSharp}
+      data:
+        _amount: 1

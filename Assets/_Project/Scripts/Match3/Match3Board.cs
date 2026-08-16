@@ -40,6 +40,7 @@ namespace Match3
 
         private GameConfig _config;
         private Match3Tile[,] _tiles;
+        private readonly List<TileSpawnSpec> _spawnSpecs = new List<TileSpawnSpec>();
         private bool _isResolving;
         private int _currentCombo;
         private int _bestCombo;
@@ -60,6 +61,7 @@ namespace Match3
         struct BoardTileSnapshot
         {
             public int TypeId;
+            public int[] UpgradeIds;
             public bool IsLocked;
             public bool IsNegative;
             public bool IsBlockade;
@@ -244,25 +246,25 @@ namespace Match3
             {
                 for (int y = 0; y < height; y++)
                 {
-                    int typeId = GetRandomTypeAvoidingImmediateMatch(x, y);
-                    SpawnTile(x, y, typeId);
+                    TileSpawnSpec spec = GetRandomSpecAvoidingImmediateMatch(x, y);
+                    SpawnTile(x, y, spec.TypeId, spec.UpgradeIds);
                 }
             }
         }
 
-        private int GetRandomTypeAvoidingImmediateMatch(int x, int y)
+        private TileSpawnSpec GetRandomSpecAvoidingImmediateMatch(int x, int y)
         {
             int attempts = 0;
-            int typeId;
+            TileSpawnSpec spec;
 
             do
             {
-                typeId = Random.Range(0, _config.TileTypeCount);
+                spec = PickSpawnSpec();
                 attempts++;
             }
-            while (CreatesInitialMatch(x, y, typeId) && attempts < 16);
+            while (CreatesInitialMatch(x, y, spec.TypeId) && attempts < 16);
 
-            return typeId;
+            return spec;
         }
 
         private bool CreatesInitialMatch(int x, int y, int typeId)
@@ -288,7 +290,7 @@ namespace Match3
             return false;
         }
 
-        private void SpawnTile(int x, int y, int typeId)
+        private void SpawnTile(int x, int y, int typeId, int[] upgradeIds = null)
         {
             Match3TileTypeDefinition definition = _config.GetTileType(typeId);
             GameObject prefab = definition.Prefab;
@@ -306,8 +308,8 @@ namespace Match3
                 instance.AddComponent<BoxCollider2D>();
             }
 
-            tile.Initialize(this, x, y, typeId);
-            tile.ApplyGraphics(definition);
+            tile.Initialize(this, x, y, typeId, upgradeIds);
+            tile.ApplyGraphics(definition, _config != null ? _config.TileUpgrades : null);
             _tiles[x, y] = tile;
         }
 
@@ -628,7 +630,7 @@ namespace Match3
                         continue;
                     }
 
-                    SpawnTile(x, y, snapshot.TypeId);
+                    SpawnTile(x, y, snapshot.TypeId, snapshot.UpgradeIds);
                     Match3Tile spawned = _tiles[x, y];
                     spawned?.ApplyFlags(
                         snapshot.IsLocked,
@@ -655,9 +657,10 @@ namespace Match3
                 return false;
             }
 
+            int[] upgradeIds = tile.UpgradeIds;
             _tiles[x, y] = null;
             Destroy(tile.gameObject);
-            SpawnTile(x, y, typeId);
+            SpawnTile(x, y, typeId, upgradeIds);
             return true;
         }
 
@@ -749,7 +752,13 @@ namespace Match3
         /// </summary>
         private void ClearTiles(HashSet<Match3Tile> tiles, bool grantEnergy = true)
         {
+            if (grantEnergy)
+                _config?.TileUpgrades?.ExpandClears(this, tiles);
+
             _destroyedThisWave.Clear();
+
+            BattleCharacter player = BattleManager.Instance != null ? BattleManager.Instance.Player : null;
+            BattleCharacter opponent = BattleManager.Instance != null ? BattleManager.Instance.ActiveEnemy : null;
 
             foreach (Match3Tile tile in tiles)
             {
@@ -763,6 +772,9 @@ namespace Match3
                 {
                     AddDestroyedCount(typeId, _destroyedThisWave);
                     AddDestroyedCount(typeId, _destroyedTypeCountsThisResolve);
+                    _config?.TileUpgrades?.ApplyCleared(
+                        tile.UpgradeIds,
+                        new TileUpgradeContext(player, opponent, typeId, tile.transform.position));
                 }
 
                 TileDestroyed?.Invoke(tile.transform.position, typeId);
@@ -855,8 +867,8 @@ namespace Match3
                         continue;
                     }
 
-                    int typeId = Random.Range(0, _config.TileTypeCount);
-                    SpawnTile(x, y, typeId);
+                    TileSpawnSpec spec = PickSpawnSpec();
+                    SpawnTile(x, y, spec.TypeId, spec.UpgradeIds);
                     Match3Tile tile = _tiles[x, y];
                     tile.transform.position = GetRefillSpawnPosition(x, y);
                     Vector3 targetPos = GridToWorld(x, y);
@@ -1088,6 +1100,7 @@ namespace Match3
                     _rewindSnapshot[x, y] = new BoardTileSnapshot
                     {
                         TypeId = tile.TypeId,
+                        UpgradeIds = tile.UpgradeIds,
                         IsLocked = tile.IsLocked,
                         IsNegative = tile.IsNegative,
                         IsBlockade = tile.IsBlockade,
@@ -1246,6 +1259,13 @@ namespace Match3
                 return false;
             }
 
+            BuildSpawnPool();
+            if (_spawnSpecs.Count == 0)
+            {
+                message = "No tile types are available to spawn. Assign a tile deck on the profile, or tile types on GameConfig.";
+                return false;
+            }
+
             Match3TileTypeDefinition[] tileTypes = _config.TileTypes;
             for (int i = 0; i < tileTypes.Length; i++)
             {
@@ -1265,6 +1285,33 @@ namespace Match3
 
             message = null;
             return true;
+        }
+
+        void BuildSpawnPool()
+        {
+            _spawnSpecs.Clear();
+
+            PlayerProfile profile = GameManager.Instance != null
+                ? GameManager.Instance.ProfileManager?.CurrentProfile
+                : null;
+            _config.ResolveTileDeckSpawns(profile, _spawnSpecs);
+
+            if (_spawnSpecs.Count > 0)
+                return;
+
+            for (int i = 0; i < _config.TileTypeCount; i++)
+            {
+                if (_config.GetTileType(i) != null)
+                    _spawnSpecs.Add(new TileSpawnSpec(i, Array.Empty<int>()));
+            }
+        }
+
+        TileSpawnSpec PickSpawnSpec()
+        {
+            if (_spawnSpecs.Count == 0)
+                return new TileSpawnSpec(Random.Range(0, Mathf.Max(1, _config.TileTypeCount)), Array.Empty<int>());
+
+            return _spawnSpecs[Random.Range(0, _spawnSpecs.Count)];
         }
     }
 }

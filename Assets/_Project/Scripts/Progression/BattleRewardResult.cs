@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace M3P
 {
     /// <summary>
-    /// What a finished battle paid out and where it left the profile. Produced by
-    /// <see cref="ProgressionService.ApplyBattleRewards"/> and read by the end-of-battle UI.
+    /// What a finished battle or opened chest paid out, and where it left the profile. Produced by
+    /// <see cref="ProgressionService"/> and read by the end-of-battle UI.
     /// </summary>
     public readonly struct BattleRewardResult
     {

@@ -65,6 +65,15 @@ namespace M3P
             HandleStatsChanged();
         }
 
+        public void SetIcon(Sprite icon)
+        {
+            if (_fill == null)
+                return;
+
+            _fill.sprite = icon;
+            _fill.enabled = icon != null;
+        }
+
         void HandleStatsChanged()
         {
             int newValue = GetCurrentValue();
@@ -74,7 +83,9 @@ namespace M3P
                 return;
             }
             
-            _rotation.StartRotate();
+            if (_rotation != null)
+                _rotation.StartRotate();
+
             RefreshDisplay(playParticles: true);
         }
 

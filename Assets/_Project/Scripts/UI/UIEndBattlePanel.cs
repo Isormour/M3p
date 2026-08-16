@@ -140,7 +140,7 @@ namespace M3P
                 return null;
 
             int typeId = config.GetTileTypeIdByKey(tileTypeKey);
-            return typeId >= 0 ? config.GetTileTypeSprite(typeId) : null;
+            return typeId >= 0 ? config.GetTileTypeShardIcon(typeId) : null;
         }
 
         void ClearSpawnedRewards()

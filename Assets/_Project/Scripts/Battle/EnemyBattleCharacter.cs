@@ -10,6 +10,7 @@ namespace M3P
 
         public override EEffectSource EffectSource => EEffectSource.Enemy;
 
+        [Tooltip("Delay before the first attack, and between extra attacks from Agility.")]
         [SerializeField] float _thinkSeconds = 0.35f;
 
         EnemyDefinition _definition;
@@ -40,7 +41,8 @@ namespace M3P
         {
             yield return new WaitForSeconds(_thinkSeconds);
 
-            if (_definition?.Skills == null || _definition.Skills.Length == 0)
+            SkillDefinition[] skills = _definition?.Skills;
+            if (skills == null || skills.Length == 0)
                 yield break;
 
             BattleManager manager = BattleManager.Instance;
@@ -51,14 +53,46 @@ namespace M3P
             if (target == null)
                 yield break;
 
-            foreach (SkillDefinition skill in _definition.Skills)
+            int attackCount = Mathf.Max(0, GetEffectiveHard().Agility);
+            int searchStart = 0;
+            for (int attack = 0; attack < attackCount; attack++)
             {
-                if (skill == null || !IsSkillReady(skill))
-                    continue;
+                if (!IsAlive || target == null || !target.IsAlive)
+                    yield break;
+
+                if (!TryGetReadySkill(skills, searchStart, out SkillDefinition skill, out int usedIndex))
+                    yield break;
 
                 manager.ExecuteSkill(skill, this, target);
                 StartSkillCooldown(skill);
+                searchStart = usedIndex + 1;
+
+                if (attack < attackCount - 1)
+                    yield return new WaitForSeconds(_thinkSeconds);
             }
+        }
+
+        bool TryGetReadySkill(SkillDefinition[] skills, int searchStart, out SkillDefinition skill, out int index)
+        {
+            skill = null;
+            index = -1;
+            if (skills == null)
+                return false;
+
+            int count = skills.Length;
+            for (int offset = 0; offset < count; offset++)
+            {
+                int candidateIndex = (searchStart + offset) % count;
+                SkillDefinition candidate = skills[candidateIndex];
+                if (candidate == null || !IsSkillReady(candidate))
+                    continue;
+
+                skill = candidate;
+                index = candidateIndex;
+                return true;
+            }
+
+            return false;
         }
     }
 }

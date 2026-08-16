@@ -52,10 +52,14 @@ namespace M3P
 
             profile.NormalizeAfterLoad();
             int cardsBeforeSeed = profile.Cards.Count;
+            int tilesBeforeSeed = profile.Tiles.Count;
             _config?.PlayerStart?.EnsureStarterCards(profile, _config.Cards);
+            _config?.PlayerStart?.EnsureStarterTiles(profile, _config.Tiles);
             SetCurrentProfile(profile);
 
-            if (hadSave && profile.Cards.Count > cardsBeforeSeed)
+            bool seededCards = profile.Cards.Count > cardsBeforeSeed;
+            bool seededTiles = profile.Tiles.Count > tilesBeforeSeed;
+            if (!hadSave || seededCards || seededTiles)
                 Save();
 
             return profile;
@@ -90,11 +94,11 @@ namespace M3P
             if (start == null)
             {
                 Debug.LogError(
-                    $"{nameof(ProfileManager)}: assign {nameof(GameConfig.PlayerStart)} on {nameof(GameConfig)} or new characters begin with no skills or cards.");
+                    $"{nameof(ProfileManager)}: assign {nameof(GameConfig.PlayerStart)} on {nameof(GameConfig)} or new characters begin with no skills, cards or tiles.");
                 return new PlayerProfile();
             }
 
-            return start.CreateProfile(_config.Skills, _config.Cards);
+            return start.CreateProfile(_config.Skills, _config.Cards, _config.Tiles);
         }
 
         void SetCurrentProfile(PlayerProfile profile)

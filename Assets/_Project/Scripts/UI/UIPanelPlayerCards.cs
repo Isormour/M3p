@@ -9,10 +9,8 @@ namespace M3P
     /// Map HUD panel: owned cards on the left, the current battle deck on the right.
     /// Clicking an owned card adds that copy to the deck; clicking a deck card removes it.
     /// </summary>
-    public sealed class UIPanelPlayerCards : MonoBehaviour
+    public sealed class UIPanelPlayerCards : UIPanelClosable
     {
-        [SerializeField] GameObject _panelRoot;
-        [SerializeField] Button _closeButton;
         [SerializeField] Transform _ownedCardsGroup;
         [SerializeField] Transform _cardsInDeckGroup;
         [SerializeField] Button _cardInDeckPrefab;
@@ -20,29 +18,6 @@ namespace M3P
 
         readonly List<UIBoardActionCard> _ownedViews = new List<UIBoardActionCard>();
         readonly List<Button> _deckViews = new List<Button>();
-
-        bool _initialized;
-
-        void Awake()
-        {
-            Initialize();
-        }
-
-        /// <summary>
-        /// Also runs from <see cref="Show"/>, because a panel that starts inactive never reaches
-        /// <see cref="Awake"/> until something opens it.
-        /// </summary>
-        void Initialize()
-        {
-            if (_initialized)
-                return;
-
-            _initialized = true;
-            ResolveRefs();
-
-            if (_closeButton != null)
-                _closeButton.onClick.AddListener(HandleCloseClicked);
-        }
 
         void OnEnable()
         {
@@ -62,50 +37,19 @@ namespace M3P
             ClearViews();
         }
 
-        void OnDestroy()
+        public override void Show()
         {
-            if (_closeButton != null)
-                _closeButton.onClick.RemoveListener(HandleCloseClicked);
-        }
-
-        void OnValidate()
-        {
-            ResolveRefs();
-        }
-
-        public void Show()
-        {
-            Initialize();
-            Root.SetActive(true);
+            base.Show();
             Refresh();
         }
-
-        public void Hide()
-        {
-            Root.SetActive(false);
-        }
-
-        public void Toggle()
-        {
-            if (Root.activeSelf)
-                Hide();
-            else
-                Show();
-        }
-
-        GameObject Root => _panelRoot != null ? _panelRoot : gameObject;
 
         static ProfileManager Profiles => GameManager.Instance != null ? GameManager.Instance.ProfileManager : null;
 
         static CardConfig Cards => GameManager.Instance != null ? GameManager.Instance.Config?.Cards : null;
 
-        void ResolveRefs()
+        protected override void ResolveRefs()
         {
-            if (_panelRoot == null)
-                _panelRoot = gameObject;
-
-            if (_closeButton == null)
-                _closeButton = FindDescendantButton("CloseButton");
+            base.ResolveRefs();
 
             Transform ownedRoot = FindDescendant("OwnedCards");
             if (ownedRoot != null)
@@ -126,11 +70,6 @@ namespace M3P
                 else if (_cardsInDeckGroup == null)
                     _cardsInDeckGroup = deckRoot;
             }
-        }
-
-        void HandleCloseClicked()
-        {
-            Hide();
         }
 
         void Refresh()
@@ -259,31 +198,6 @@ namespace M3P
             }
 
             _deckViews.Clear();
-        }
-
-        Transform FindDescendant(string childName)
-        {
-            Transform[] children = GetComponentsInChildren<Transform>(true);
-            for (int i = 0; i < children.Length; i++)
-            {
-                if (children[i].name == childName)
-                    return children[i];
-            }
-
-            return null;
-        }
-
-        Button FindDescendantButton(string childName)
-        {
-            Transform child = FindDescendant(childName);
-            if (child == null)
-                return null;
-
-            Button button = child.GetComponent<Button>();
-            if (button != null)
-                return button;
-
-            return child.GetComponentInChildren<Button>(true);
         }
     }
 }

@@ -22,6 +22,7 @@ namespace M3P.Editor
         [SerializeField] bool _showHardStats = true;
         [SerializeField] bool _showSkills = true;
         [SerializeField] bool _showCards = true;
+        [SerializeField] bool _showTiles = true;
         [SerializeField] bool _showShards = true;
         [SerializeField] bool _showTalents = true;
 
@@ -76,6 +77,7 @@ namespace M3P.Editor
             DrawCombatPreview();
             DrawSkills();
             DrawCards();
+            DrawTiles();
             DrawShards();
             DrawTalents();
             EditorGUILayout.EndScrollView();
@@ -294,6 +296,89 @@ namespace M3P.Editor
             }
         }
 
+        void DrawTiles()
+        {
+            _working.Tiles ??= new List<OwnedTile>();
+            _showTiles = EditorGUILayout.Foldout(_showTiles, $"Tiles ({_working.Tiles.Count})", true);
+            if (!_showTiles)
+                return;
+
+            TileConfig tiles = _config != null ? _config.Tiles : null;
+            int removeAt = -1;
+
+            using (new EditorGUI.IndentLevelScope())
+            {
+                IReadOnlyList<int> deck = _working.GetTileDeckIndices();
+                EditorGUILayout.LabelField("Tile Deck", $"{deck.Count} in battle pool");
+
+                for (int i = 0; i < _working.Tiles.Count; i++)
+                {
+                    OwnedTile owned = _working.Tiles[i].Normalized();
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        Match3TileTypeDefinition current = tiles != null ? tiles.GetTile(owned.TileId) : null;
+                        Match3TileTypeDefinition picked = (Match3TileTypeDefinition)EditorGUILayout.ObjectField(
+                            current, typeof(Match3TileTypeDefinition), false);
+
+                        if (picked != current)
+                            owned = AssignTile(owned, picked, tiles);
+
+                        bool inDeck = _working.IsOwnedTileInDeck(i);
+                        bool nextInDeck = EditorGUILayout.Toggle(inDeck, GUILayout.Width(18f));
+                        if (nextInDeck != inDeck)
+                        {
+                            if (nextInDeck)
+                                _working.TryAddOwnedTileToDeck(i);
+                            else
+                            {
+                                int deckIndex = IndexOfOwnedInTileDeck(i);
+                                if (deckIndex >= 0)
+                                    _working.TryRemoveTileDeckAt(deckIndex);
+                            }
+
+                            MarkDirty();
+                        }
+
+                        if (owned.UpgradeCount > 0)
+                            EditorGUILayout.LabelField($"up {owned.UpgradeCount}", GUILayout.Width(40f));
+
+                        if (GUILayout.Button("–", GUILayout.Width(22f)))
+                            removeAt = i;
+                    }
+
+                    if (tiles != null && tiles.GetTile(owned.TileId) == null && owned.TileId != TileConfig.InvalidTileId)
+                        EditorGUILayout.HelpBox($"Tile id {owned.TileId} is missing from {nameof(TileConfig)}.", MessageType.Warning);
+
+                    owned = DrawOwnedTileUpgrades(i, owned);
+                    _working.Tiles[i] = owned;
+                }
+
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("Add Tile"))
+                        ShowAddTileMenu(tiles);
+
+                    if (GUILayout.Button("Add Empty", GUILayout.Width(90f)))
+                    {
+                        _working.Tiles.Add(new OwnedTile(TileConfig.InvalidTileId));
+                        MarkDirty();
+                    }
+
+                    if (GUILayout.Button("Fill Deck", GUILayout.Width(80f)))
+                    {
+                        _working.FillTileDeckWithAllOwnedTiles();
+                        MarkDirty();
+                    }
+                }
+            }
+
+            if (removeAt >= 0)
+            {
+                _working.TryRemoveOwnedTileAt(removeAt);
+                MarkDirty();
+            }
+        }
+
         void DrawShards()
         {
             _working.Shards ??= new List<ShardAmount>();
@@ -497,6 +582,122 @@ namespace M3P.Editor
             return new OwnedCard(id, owned.UpgradeIds);
         }
 
+        OwnedTile AssignTile(OwnedTile owned, Match3TileTypeDefinition picked, TileConfig tiles)
+        {
+            if (picked == null)
+            {
+                MarkDirty();
+                return new OwnedTile(TileConfig.InvalidTileId, owned.UpgradeIds);
+            }
+
+            int id = tiles != null ? tiles.GetTileId(picked) : TileConfig.InvalidTileId;
+            if (id == TileConfig.InvalidTileId)
+            {
+                EditorUtility.DisplayDialog(
+                    "Unknown Tile",
+                    $"'{picked.name}' is not registered in {nameof(TileConfig)}, so it cannot be saved to a profile.",
+                    "OK");
+                return owned;
+            }
+
+            MarkDirty();
+            return new OwnedTile(id, owned.UpgradeIds);
+        }
+
+        OwnedTile DrawOwnedTileUpgrades(int ownedIndex, OwnedTile owned)
+        {
+            TileUpgradeConfig upgrades = _config != null ? _config.TileUpgrades : null;
+            using (new EditorGUI.IndentLevelScope())
+            {
+                int count = owned.UpgradeCount;
+                for (int slot = 0; slot < count; slot++)
+                {
+                    int upgradeId = owned.UpgradeIds[slot];
+                    TileUpgradeDefinition current = upgrades != null ? upgrades.GetUpgrade(upgradeId) : null;
+                    TileUpgradeDefinition picked = (TileUpgradeDefinition)EditorGUILayout.ObjectField(
+                        $"Upgrade {slot + 1}", current, typeof(TileUpgradeDefinition), false);
+
+                    if (current == null && upgradeId != TileUpgradeConfig.InvalidUpgradeId)
+                        EditorGUILayout.HelpBox(
+                            $"Upgrade id {upgradeId} is missing from {nameof(TileUpgradeConfig)}.",
+                            MessageType.Warning);
+
+                    if (picked == current)
+                        continue;
+
+                    if (picked == null)
+                    {
+                        MarkDirty();
+                        return owned.WithoutUpgradeAt(slot);
+                    }
+
+                    if (!TryResolveUpgradeId(picked, upgrades, out int nextId))
+                        continue;
+
+                    MarkDirty();
+                    return owned.WithUpgradeAt(slot, nextId);
+                }
+
+                if (!owned.CanAcceptUpgrade)
+                    return owned;
+
+                TileUpgradeDefinition add = (TileUpgradeDefinition)EditorGUILayout.ObjectField(
+                    $"Upgrade {count + 1} (x{TileUpgradeDefinition.GetCraftCostMultiplier(count)})",
+                    null,
+                    typeof(TileUpgradeDefinition),
+                    false);
+                if (add == null || !TryResolveUpgradeId(add, upgrades, out int addId))
+                    return owned;
+
+                if (!_working.TryAddTileUpgrade(ownedIndex, addId, add.CraftCost))
+                {
+                    EditorUtility.DisplayDialog(
+                        "Cannot Craft Upgrade",
+                        "This tile has no free upgrade slot, or the profile cannot afford the shard cost.",
+                        "OK");
+                    return owned;
+                }
+
+                MarkDirty();
+                return _working.Tiles[ownedIndex];
+            }
+        }
+
+        bool TryResolveUpgradeId(TileUpgradeDefinition picked, TileUpgradeConfig upgrades, out int upgradeId)
+        {
+            upgradeId = TileUpgradeConfig.InvalidUpgradeId;
+            if (upgrades == null)
+            {
+                EditorUtility.DisplayDialog(
+                    "Missing Tile Upgrade Config",
+                    $"Assign {nameof(TileUpgradeConfig)} on {nameof(GameConfig)} before attaching upgrades.",
+                    "OK");
+                return false;
+            }
+
+            upgradeId = upgrades.GetUpgradeId(picked);
+            if (upgradeId != TileUpgradeConfig.InvalidUpgradeId)
+                return true;
+
+            EditorUtility.DisplayDialog(
+                "Unknown Tile Upgrade",
+                $"'{picked.name}' is not registered in {nameof(TileUpgradeConfig)}, so it cannot be saved to a profile.",
+                "OK");
+            return false;
+        }
+
+        int IndexOfOwnedInTileDeck(int ownedIndex)
+        {
+            IReadOnlyList<int> deck = _working.GetTileDeckIndices();
+            for (int i = 0; i < deck.Count; i++)
+            {
+                if (deck[i] == ownedIndex)
+                    return i;
+            }
+
+            return -1;
+        }
+
         int AssignTalentId(TalentDefinition picked, TalentConfig talents)
         {
             if (picked == null)
@@ -567,6 +768,36 @@ namespace M3P.Editor
                 menu.AddItem(new GUIContent(cardName), false, () =>
                 {
                     _working.Cards.Add(new OwnedCard(cardId));
+                    MarkDirty();
+                    Repaint();
+                });
+            }
+
+            menu.ShowAsContext();
+        }
+
+        void ShowAddTileMenu(TileConfig tiles)
+        {
+            if (tiles == null || tiles.Entries.Length == 0)
+            {
+                _working.Tiles.Add(new OwnedTile(TileConfig.InvalidTileId));
+                MarkDirty();
+                return;
+            }
+
+            GenericMenu menu = new GenericMenu();
+            TileConfig.Entry[] entries = tiles.Entries;
+            for (int i = 0; i < entries.Length; i++)
+            {
+                Match3TileTypeDefinition tile = entries[i].Tile;
+                if (tile == null || entries[i].Id == TileConfig.InvalidTileId)
+                    continue;
+
+                int tileId = entries[i].Id;
+                string tileName = tile.name;
+                menu.AddItem(new GUIContent(tileName), false, () =>
+                {
+                    _working.Tiles.Add(new OwnedTile(tileId));
                     MarkDirty();
                     Repaint();
                 });
@@ -724,6 +955,7 @@ namespace M3P.Editor
             {
                 PlayerProfile loaded = PlayerProfile.FromJson(File.ReadAllText(ProfileManager.SavePath));
                 _config?.PlayerStart?.EnsureStarterCards(loaded, _config.Cards);
+                _config?.PlayerStart?.EnsureStarterTiles(loaded, _config.Tiles);
                 return loaded;
             }
 
@@ -736,7 +968,7 @@ namespace M3P.Editor
             if (start == null)
                 return new PlayerProfile();
 
-            return start.CreateProfile(_config.Skills, _config.Cards);
+            return start.CreateProfile(_config.Skills, _config.Cards, _config.Tiles);
         }
 
         static PlayerProfile CloneProfile(PlayerProfile source)

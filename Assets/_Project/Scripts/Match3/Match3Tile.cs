@@ -1,3 +1,5 @@
+using System;
+using M3P;
 using UnityEngine;
 
 namespace Match3
@@ -6,11 +8,17 @@ namespace Match3
     {
         [Header("Graphics")]
         [SerializeField] private SpriteRenderer _tileRenderer;
-        [SerializeField] private SpriteRenderer _runeRenderer;
+        [SerializeField] private TileSlot _slotUp;
+        [SerializeField] private TileSlot _slotDown;
+        [SerializeField] private TileSlot _slotLeft;
+        [SerializeField] private TileSlot _slotRight;
 
         public int X { get; private set; }
         public int Y { get; private set; }
         public int TypeId { get; private set; }
+
+        /// <summary>Crafted upgrades copied from the owned tile that spawned this piece.</summary>
+        public int[] UpgradeIds { get; private set; } = Array.Empty<int>();
 
         /// <summary>Anchored tiles keep their cell during shuffle, gravity and cycles.</summary>
         public bool IsLocked { get; private set; }
@@ -37,26 +45,73 @@ namespace Match3
         public bool CanMove => !IsLocked && !IsBlockade;
 
         Vector3 _baseScale;
+        TileUpgradeConfig _upgrades;
 
-        public void Initialize(Match3Board board, int x, int y, int typeId)
+        void Awake()
+        {
+            ApplyUpgradeSlots();
+        }
+
+        public void Initialize(Match3Board board, int x, int y, int typeId, int[] upgradeIds = null)
         {
             X = x;
             Y = y;
             TypeId = typeId;
+            UpgradeIds = CloneUpgradeIds(upgradeIds);
             _baseScale = transform.localScale;
             ApplyFlags(false, false, false, false, true, true);
+            ApplyUpgradeSlots();
         }
 
-        public void ApplyGraphics(Match3TileTypeDefinition definition)
+        public void ApplyGraphics(Match3TileTypeDefinition definition, TileUpgradeConfig upgrades = null)
         {
+            if (upgrades != null)
+                _upgrades = upgrades;
+
             if (definition == null)
             {
                 Debug.LogWarning($"{nameof(Match3Tile)}: Cannot apply graphics, definition is null.", this);
+                ApplyUpgradeSlots();
                 return;
             }
 
             ApplyGraphicsToRenderer(_tileRenderer, definition.TileGraphics);
-            ApplyGraphicsToRenderer(_runeRenderer, definition.RuneGraphics);
+            ApplyUpgradeSlots();
+        }
+
+        void ApplyUpgradeSlots()
+        {
+            ApplyUpgradeSlot(_slotUp, 0);
+            ApplyUpgradeSlot(_slotDown, 1);
+            ApplyUpgradeSlot(_slotLeft, 2);
+            ApplyUpgradeSlot(_slotRight, 3);
+        }
+
+        void ApplyUpgradeSlot(TileSlot slot, int index)
+        {
+            if (slot == null)
+                return;
+
+            int upgradeId = UpgradeIdAt(index);
+            if (upgradeId == TileUpgradeConfig.InvalidUpgradeId)
+            {
+                slot.Hide();
+                return;
+            }
+
+            Sprite icon = null;
+            if (_upgrades != null && _upgrades.TryGetUpgrade(upgradeId, out TileUpgradeDefinition upgrade))
+                icon = upgrade.Icon;
+
+            slot.Show(icon);
+        }
+
+        int UpgradeIdAt(int index)
+        {
+            if (UpgradeIds == null || index < 0 || index >= UpgradeIds.Length)
+                return TileUpgradeConfig.InvalidUpgradeId;
+
+            return UpgradeIds[index];
         }
 
         private void ApplyGraphicsToRenderer(SpriteRenderer renderer, TileTypeGraphics graphics)
@@ -120,6 +175,16 @@ namespace Match3
         public void SetSelected(bool selected)
         {
             transform.localScale = selected ? _baseScale * 1.12f : _baseScale;
+        }
+
+        static int[] CloneUpgradeIds(int[] upgradeIds)
+        {
+            if (upgradeIds == null || upgradeIds.Length == 0)
+                return Array.Empty<int>();
+
+            int[] copy = new int[upgradeIds.Length];
+            Array.Copy(upgradeIds, copy, upgradeIds.Length);
+            return copy;
         }
     }
 }
