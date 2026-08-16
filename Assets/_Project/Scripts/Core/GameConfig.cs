@@ -19,7 +19,13 @@ namespace M3P
         [Tooltip("Every board-action card in the game, and the ids profiles use to reference them.")]
         [SerializeField] CardConfig _cards;
 
-        [Tooltip("Stats, skills and starter deck a profile starts with, before anything has been saved.")]
+        [Tooltip("Every tile type a profile can own, and the ids profiles use to reference them.")]
+        [SerializeField] TileConfig _tiles;
+
+        [Tooltip("Every tile upgrade in the game, and the ids owned tiles store.")]
+        [SerializeField] TileUpgradeConfig _tileUpgrades;
+
+        [Tooltip("Stats, skills, starter card deck and starter tile deck a profile starts with, before anything has been saved.")]
         [SerializeField] PlayerStartConfig _playerStart;
 
         [Tooltip("How cleared matches convert into shards. Built-in defaults are used when left empty.")]
@@ -48,6 +54,10 @@ namespace M3P
         public SkillConfig Skills => _skills;
 
         public CardConfig Cards => _cards;
+
+        public TileConfig Tiles => _tiles;
+
+        public TileUpgradeConfig TileUpgrades => _tileUpgrades;
 
         public PlayerStartConfig PlayerStart => _playerStart;
 
@@ -108,6 +118,48 @@ namespace M3P
             return -1;
         }
 
+        /// <summary>
+        /// Turns the profile's tile deck into runtime type ids the board can spawn. Copies whose
+        /// type is missing from <see cref="TileTypes"/> are skipped.
+        /// </summary>
+        public void ResolveTileDeckTypeIds(PlayerProfile profile, List<int> destination)
+        {
+            destination.Clear();
+            List<TileSpawnSpec> specs = new List<TileSpawnSpec>();
+            ResolveTileDeckSpawns(profile, specs);
+            for (int i = 0; i < specs.Count; i++)
+                destination.Add(specs[i].TypeId);
+        }
+
+        /// <summary>
+        /// Turns the profile's tile deck into spawn specs, including crafted upgrades on each copy.
+        /// </summary>
+        public void ResolveTileDeckSpawns(PlayerProfile profile, List<TileSpawnSpec> destination)
+        {
+            destination.Clear();
+
+            if (_tiles == null || profile?.Tiles == null)
+                return;
+
+            IReadOnlyList<int> deck = profile.GetTileDeckIndices();
+            for (int i = 0; i < deck.Count; i++)
+            {
+                int ownedIndex = deck[i];
+                if (ownedIndex < 0 || ownedIndex >= profile.Tiles.Count)
+                    continue;
+
+                OwnedTile owned = profile.Tiles[ownedIndex].Normalized();
+                if (!_tiles.TryGetTile(owned.TileId, out Match3TileTypeDefinition definition))
+                    continue;
+
+                int typeId = GetTileTypeId(definition);
+                if (typeId < 0)
+                    continue;
+
+                destination.Add(new TileSpawnSpec(typeId, owned.UpgradeIds));
+            }
+        }
+
         void EnsureTileTypeIds()
         {
             if (_tileTypeIds != null)
@@ -149,6 +201,12 @@ namespace M3P
         {
             Match3TileTypeDefinition definition = GetTileType(typeId);
             return definition != null ? definition.Sprite : null;
+        }
+
+        public Sprite GetTileTypeShardIcon(int typeId)
+        {
+            Match3TileTypeDefinition definition = GetTileType(typeId);
+            return definition != null ? definition.ResolveShardIcon() : null;
         }
 
         public Color GetTileTypeColor(int typeId)

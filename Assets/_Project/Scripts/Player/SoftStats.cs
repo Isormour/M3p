@@ -150,6 +150,15 @@ namespace M3P
             return true;
         }
 
+        public void AddActionPoints(int amount)
+        {
+            if (amount <= 0)
+                return;
+
+            CurrentActionPoints += amount;
+            NotifyChanged();
+        }
+
         public void ResetMana()
         {
             ManaByBrokenTileType.Clear();

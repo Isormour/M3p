@@ -26,12 +26,10 @@ namespace M3P
             _manaIcon.sprite = icon != null
                 ? icon
                 : Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
-            
+
             if (material != null)
-            {
                 _manaIcon.material = material;
-            }
-            
+
             _manaIcon.enabled = true;
 
             _indicator.Bind(

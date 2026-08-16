@@ -9,21 +9,21 @@ namespace M3P
     /// Spends the points a level-up granted. Clicks build a pending allocation the player can take
     /// back, and only Confirm writes it into the profile — closing the panel discards it.
     /// </summary>
-    public sealed class UIPanelPlayerStats : MonoBehaviour
+    public sealed class UIPanelPlayerStats : UIPanelClosable
     {
         static readonly int StatTypeCount = Enum.GetValues(typeof(EStatType)).Length;
 
-        [SerializeField] GameObject _panelRoot;
         [SerializeField] TextMeshProUGUI _levelLabel;
         [SerializeField] TextMeshProUGUI _unspentPointsLabel;
-        [SerializeField] Button _closeButton;
+
         [SerializeField] Button _confirmButton;
 
         [Tooltip("One row per stat, top to bottom.")]
         [SerializeField] UIPlayerStatControl[] _statControls = Array.Empty<UIPlayerStatControl>();
 
         [Tooltip("Which stat each row above represents.")]
-        [SerializeField] EStatType[] _statOrder =
+        [SerializeField]
+        EStatType[] _statOrder =
         {
             EStatType.Strength,
             EStatType.Constitution,
@@ -33,27 +33,9 @@ namespace M3P
 
         readonly int[] _pendingByStat = new int[StatTypeCount];
 
-        bool _initialized;
-
-        void Awake()
+        protected override void OnInitialize()
         {
-            Initialize();
-        }
-
-        /// <summary>
-        /// Also runs from <see cref="Show"/>, because a panel that starts inactive never reaches
-        /// <see cref="Awake"/> until something opens it.
-        /// </summary>
-        void Initialize()
-        {
-            if (_initialized)
-                return;
-
-            _initialized = true;
             BindControls();
-
-            if (_closeButton != null)
-                _closeButton.onClick.AddListener(HandleCloseClicked);
 
             if (_confirmButton != null)
                 _confirmButton.onClick.AddListener(HandleConfirmClicked);
@@ -78,56 +60,34 @@ namespace M3P
                 profiles.ProfileChanged -= Refresh;
         }
 
-        void OnDestroy()
+        protected override void OnDestroy()
         {
-            if (_closeButton != null)
-                _closeButton.onClick.RemoveListener(HandleCloseClicked);
+            base.OnDestroy();
 
             if (_confirmButton != null)
                 _confirmButton.onClick.RemoveListener(HandleConfirmClicked);
         }
 
-        void OnValidate()
+        protected override void OnValidate()
         {
             if (_statControls == null || _statControls.Length == 0)
                 _statControls = GetComponentsInChildren<UIPlayerStatControl>(true);
 
-            if (_levelLabel == null)
-                _levelLabel = FindDescendantComponent<TextMeshProUGUI>("LabelValue");
-
-            if (_unspentPointsLabel == null)
-                _unspentPointsLabel = FindDescendantComponent<TextMeshProUGUI>("LabelInspendPoints");
-
-            if (_closeButton == null)
-                _closeButton = FindDescendantComponent<Button>("CloseButton");
-
-            if (_confirmButton == null)
-                _confirmButton = FindDescendantComponent<Button>("ConfirmButton");
+            base.OnValidate();
         }
 
-        public void Show()
+        public override void Show()
         {
-            Initialize();
-            Root.SetActive(true);
+            base.Show();
             Refresh();
         }
 
         /// <summary>Closes the panel without writing the pending allocation into the profile.</summary>
-        public void Hide()
+        public override void Hide()
         {
             DiscardPendingAllocation();
-            Root.SetActive(false);
+            base.Hide();
         }
-
-        public void Toggle()
-        {
-            if (Root.activeSelf)
-                Hide();
-            else
-                Show();
-        }
-
-        GameObject Root => _panelRoot != null ? _panelRoot : gameObject;
 
         /// <summary>Drops the allocation without spending anything, for a cancel button.</summary>
         public void DiscardPendingAllocation()
@@ -137,6 +97,20 @@ namespace M3P
         }
 
         static ProfileManager Profiles => GameManager.Instance != null ? GameManager.Instance.ProfileManager : null;
+
+        protected override void ResolveRefs()
+        {
+            base.ResolveRefs();
+
+            if (_levelLabel == null)
+                _levelLabel = FindDescendantComponent<TextMeshProUGUI>("LabelValue");
+
+            if (_unspentPointsLabel == null)
+                _unspentPointsLabel = FindDescendantComponent<TextMeshProUGUI>("LabelInspendPoints");
+
+            if (_confirmButton == null)
+                _confirmButton = FindDescendantComponent<Button>("ConfirmButton");
+        }
 
         static ProgressionService Progression => GameManager.Instance != null ? GameManager.Instance.Progression : null;
 
@@ -191,11 +165,6 @@ namespace M3P
 
             _pendingByStat[(int)stat]--;
             Refresh();
-        }
-
-        void HandleCloseClicked()
-        {
-            Hide();
         }
 
         void HandleConfirmClicked()
@@ -255,18 +224,6 @@ namespace M3P
                 int pending = _pendingByStat[(int)control.Stat];
                 control.Refresh(profile.HardStats.Get(control.Stat) + pending, pending, remainingPoints > 0);
             }
-        }
-
-        T FindDescendantComponent<T>(string childName) where T : Component
-        {
-            Transform[] children = GetComponentsInChildren<Transform>(true);
-            for (int i = 0; i < children.Length; i++)
-            {
-                if (children[i].name == childName)
-                    return children[i].GetComponentInChildren<T>(true);
-            }
-
-            return null;
         }
     }
 }

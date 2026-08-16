@@ -39,25 +39,54 @@ namespace M3P
         public BattleRewardResult ApplyBattleRewards(int experience, IReadOnlyDictionary<int, int> shardsByTileType = null)
         {
             PlayerProfile profile = _profiles.CurrentProfile;
-            LevelProgressionConfig levelProgression = LevelProgression;
-            experience = Mathf.Max(0, experience);
+            GrantExperience(profile, experience, out int grantedExperience, out int statPoints, out int levelBefore, out int levelAfter);
+            return CommitRewards(profile, grantedExperience, statPoints, levelBefore, levelAfter, BankShards(profile, shardsByTileType));
+        }
 
-            int levelBefore = profile.Level;
-            profile.Experience += experience;
+        /// <summary>
+        /// Banks map-loot such as a chest: experience plus shards authored against tile type assets.
+        /// </summary>
+        public BattleRewardResult ApplyRewards(int experience, IReadOnlyList<TileTypeShardCost> shards = null)
+        {
+            PlayerProfile profile = _profiles.CurrentProfile;
+            GrantExperience(profile, experience, out int grantedExperience, out int statPoints, out int levelBefore, out int levelAfter);
+            return CommitRewards(profile, grantedExperience, statPoints, levelBefore, levelAfter, BankShards(profile, shards));
+        }
+
+        void GrantExperience(
+            PlayerProfile profile,
+            int experience,
+            out int grantedExperience,
+            out int statPoints,
+            out int levelBefore,
+            out int levelAfter)
+        {
+            LevelProgressionConfig levelProgression = LevelProgression;
+            grantedExperience = Mathf.Max(0, experience);
+            levelBefore = profile.Level;
+            profile.Experience += grantedExperience;
 
             // Never walk a level back: a retuned curve must not take away points already spent.
-            int levelAfter = Mathf.Max(levelBefore, levelProgression.GetLevelForTotalExperience(profile.Experience));
-            int statPoints = (levelAfter - levelBefore) * levelProgression.StatPointsPerLevel;
+            levelAfter = Mathf.Max(levelBefore, levelProgression.GetLevelForTotalExperience(profile.Experience));
+            statPoints = (levelAfter - levelBefore) * levelProgression.StatPointsPerLevel;
 
             profile.Level = levelAfter;
             profile.UnspentStatPoints += statPoints;
+        }
 
-            ShardAmount[] shardsGained = BankShards(profile, shardsByTileType);
-
+        BattleRewardResult CommitRewards(
+            PlayerProfile profile,
+            int grantedExperience,
+            int statPoints,
+            int levelBefore,
+            int levelAfter,
+            ShardAmount[] shardsGained)
+        {
+            LevelProgressionConfig levelProgression = LevelProgression;
             _profiles.Save();
 
             return new BattleRewardResult(
-                experience,
+                grantedExperience,
                 statPoints,
                 levelBefore,
                 levelAfter,
@@ -95,6 +124,42 @@ namespace M3P
             }
 
             return granted.ToArray();
+        }
+
+        /// <summary>
+        /// Banks shards authored against tile type assets, so map loot does not depend on board runtime ids.
+        /// </summary>
+        ShardAmount[] BankShards(PlayerProfile profile, IReadOnlyList<TileTypeShardCost> shards)
+        {
+            if (shards == null || shards.Count == 0)
+                return Array.Empty<ShardAmount>();
+
+            Dictionary<string, int> granted = new Dictionary<string, int>();
+
+            for (int i = 0; i < shards.Count; i++)
+            {
+                TileTypeShardCost shard = shards[i];
+                if (shard.Amount <= 0 || shard.TileType == null)
+                    continue;
+
+                string tileType = shard.TileType.name;
+                if (string.IsNullOrEmpty(tileType))
+                    continue;
+
+                profile.AddShards(tileType, shard.Amount);
+                granted.TryGetValue(tileType, out int current);
+                granted[tileType] = current + shard.Amount;
+            }
+
+            if (granted.Count == 0)
+                return Array.Empty<ShardAmount>();
+
+            ShardAmount[] result = new ShardAmount[granted.Count];
+            int index = 0;
+            foreach (KeyValuePair<string, int> entry in granted)
+                result[index++] = new ShardAmount(entry.Key, entry.Value);
+
+            return result;
         }
 
         public bool TryAllocateStatPoint(EStatType stat) => TryAllocateStatPoints(stat, 1);

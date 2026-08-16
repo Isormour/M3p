@@ -40,9 +40,6 @@ namespace M3P
         [SerializeField] float _cameraPitch = 55f;
         [SerializeField] MapCamera _mapCam;
 
-        [Header("Rewards")]
-        [SerializeField] int _chestExperience = 15;
-
         [Header("UI")]
         [Tooltip("Shown before the token walks to a neighbour. Confirm moves; Close cancels.")]
         [SerializeField] UIMapPanelWalkNodeConfirm _walkNodeConfirmPanel;
@@ -450,7 +447,7 @@ namespace M3P
 
                 case MapNodeType.Chest:
                     if (!Run.IsCleared(nodeId))
-                        OpenChest(nodeId);
+                        OpenChest(nodeId, node.Encounter);
                     else if (!arrivedFresh)
                         _events.Show("Chest", "This chest is empty.", "OK", null);
                     break;
@@ -484,21 +481,32 @@ namespace M3P
                 });
         }
 
-        void OpenChest(string nodeId)
+        void OpenChest(string nodeId, EncounterConfig encounter)
         {
             ProgressionService progression = GameManager.Instance != null ? GameManager.Instance.Progression : null;
-            string rewardText = progression != null
-                ? $"You find supplies worth {_chestExperience} EXP."
-                : "You crack the chest open (no GameManager — reward skipped).";
+            ChestConfig chest = encounter != null ? encounter.Chest : null;
+            if (encounter != null && encounter.IsChest && chest == null)
+            {
+                Debug.LogWarning(
+                    $"{nameof(MapManager)}: chest node '{nodeId}' has no {nameof(ChestConfig)}.",
+                    encounter);
+            }
+
+            bool canGrant = progression != null && chest != null && chest.HasRewards;
+            string rewardText = progression == null
+                ? "You crack the chest open (no GameManager — reward skipped)."
+                : chest != null
+                    ? chest.DescribeRewards()
+                    : "The chest is empty.";
 
             _events.Show(
                 "Chest",
                 rewardText,
-                "Take",
+                canGrant ? "Take" : "OK",
                 () =>
                 {
-                    if (progression != null)
-                        progression.ApplyBattleRewards(_chestExperience, null);
+                    if (canGrant)
+                        progression.ApplyRewards(chest.Experience, chest.Shards);
 
                     Run.MarkCleared(nodeId);
                     RefreshNodeStates();

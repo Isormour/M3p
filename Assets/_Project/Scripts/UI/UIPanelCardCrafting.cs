@@ -1,6 +1,6 @@
+using Match3;
 using System;
 using System.Collections.Generic;
-using Match3;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,11 +10,8 @@ namespace M3P
     /// <summary>
     /// Map HUD panel: pick a card from the catalogue, preview its craft cost, and buy a copy with shards.
     /// </summary>
-    public sealed class UIPanelCardCrafting : MonoBehaviour
+    public sealed class UIPanelCardCrafting : UIPanelClosable
     {
-        [SerializeField] GameObject _panelRoot;
-        [SerializeField] Button _closeButton;
-
         [SerializeField] Transform CardTypesParent;
         [SerializeField] Button CardTypePrefab;
         [SerializeField] UIBoardActionCard CardToBeCrafted;
@@ -26,29 +23,11 @@ namespace M3P
         readonly List<UIPanelPlayerManaBar> _costViews = new List<UIPanelPlayerManaBar>();
 
         BoardActionCardDefinition _selectedCard;
-        bool _initialized;
 
-        void Awake()
+        protected override void OnInitialize()
         {
-            Initialize();
-        }
-
-        /// <summary>
-        /// Also runs from <see cref="Show"/>, because a panel that starts inactive never reaches
-        /// <see cref="Awake"/> until something opens it.
-        /// </summary>
-        void Initialize()
-        {
-            if (_initialized)
-                return;
-
-            _initialized = true;
-            ResolveRefs();
             HideTemplate(CardTypePrefab);
             HideTemplate(CostPrefab);
-
-            if (_closeButton != null)
-                _closeButton.onClick.AddListener(HandleCloseClicked);
 
             if (ConfirmCraftButton != null)
                 ConfirmCraftButton.onClick.AddListener(HandleConfirmClicked);
@@ -73,41 +52,18 @@ namespace M3P
             ClearCostViews();
         }
 
-        void OnDestroy()
+        protected override void OnDestroy()
         {
-            if (_closeButton != null)
-                _closeButton.onClick.RemoveListener(HandleCloseClicked);
-
+            base.OnDestroy();
             if (ConfirmCraftButton != null)
                 ConfirmCraftButton.onClick.RemoveListener(HandleConfirmClicked);
         }
 
-        void OnValidate()
+        public override void Show()
         {
-            ResolveRefs();
-        }
-
-        public void Show()
-        {
-            Initialize();
-            Root.SetActive(true);
+            base.Show();
             Refresh();
         }
-
-        public void Hide()
-        {
-            Root.SetActive(false);
-        }
-
-        public void Toggle()
-        {
-            if (Root.activeSelf)
-                Hide();
-            else
-                Show();
-        }
-
-        GameObject Root => _panelRoot != null ? _panelRoot : gameObject;
 
         static ProfileManager Profiles => GameManager.Instance != null ? GameManager.Instance.ProfileManager : null;
 
@@ -115,14 +71,9 @@ namespace M3P
 
         static CardConfig Cards => Config != null ? Config.Cards : null;
 
-        void ResolveRefs()
+        protected override void ResolveRefs()
         {
-            if (_panelRoot == null)
-                _panelRoot = gameObject;
-
-            if (_closeButton == null)
-                _closeButton = FindDescendantButton("CloseButton");
-
+            base.ResolveRefs();
             if (CardTypesParent == null)
                 CardTypesParent = FindDescendant("CardTypesParent");
 
@@ -138,11 +89,6 @@ namespace M3P
 
             if (ConfirmCraftButton == null)
                 ConfirmCraftButton = FindDescendantButton("ConfirmCraftButton");
-        }
-
-        void HandleCloseClicked()
-        {
-            Hide();
         }
 
         void HandleProfileChanged()
@@ -365,31 +311,6 @@ namespace M3P
         {
             if (template != null && template.gameObject.scene.IsValid())
                 template.gameObject.SetActive(false);
-        }
-
-        Transform FindDescendant(string childName)
-        {
-            Transform[] children = GetComponentsInChildren<Transform>(true);
-            for (int i = 0; i < children.Length; i++)
-            {
-                if (children[i].name == childName)
-                    return children[i];
-            }
-
-            return null;
-        }
-
-        Button FindDescendantButton(string childName)
-        {
-            Transform child = FindDescendant(childName);
-            if (child == null)
-                return null;
-
-            Button button = child.GetComponent<Button>();
-            if (button != null)
-                return button;
-
-            return child.GetComponentInChildren<Button>(true);
         }
     }
 }
