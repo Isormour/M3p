@@ -184,6 +184,7 @@ namespace M3P
                 bool selected = _cardPlay.SelectedHandIndex == i;
                 view.SetSelected(selected);
                 view.SetInteractable(playerActing && (selected || _cardPlay.CanPlay(card)));
+                view.SetFrameMaskEnabled(card != null && _cardPlay.CurrentActionPoints < card.ActionPointCost);
             }
         }
 
