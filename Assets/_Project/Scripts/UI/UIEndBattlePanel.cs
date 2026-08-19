@@ -156,6 +156,9 @@ namespace M3P
 
         public void Hide()
         {
+            if (this == null)
+                return;
+
             ClearSpawnedRewards();
 
             if (_panelRoot != null)

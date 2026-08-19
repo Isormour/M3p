@@ -7,12 +7,16 @@ using UnityEngine.UI;
 namespace M3P
 {
     /// <summary>
-    /// Center preview on the tile-crafting panel: the chosen tile type plus four upgrade slots.
+    /// Center preview on the tile-crafting panel: gem on top, four upgrade slots in a row below.
     /// Slot clicks bubble to the crafting panel so it can assign or clear upgrades.
     /// </summary>
     public sealed class UIPanelCraftTileShowTile : MonoBehaviour
     {
         public const int SlotCount = OwnedTile.MaxUpgradeCount;
+
+        const float GemSize = 220f;
+        const float SlotSize = 64f;
+        const float SlotSpacing = 8f;
 
         static readonly string[] SlotObjectNames =
         {
@@ -34,7 +38,15 @@ namespace M3P
         void Awake()
         {
             EnsureResolved();
+            LayoutUpgradeBar();
             BindSlotButtons();
+        }
+
+        void OnValidate()
+        {
+            _resolved = false;
+            EnsureResolved();
+            LayoutUpgradeBar();
         }
 
         void OnDestroy()
@@ -50,6 +62,7 @@ namespace M3P
         public void Show(Match3TileTypeDefinition tile, IReadOnlyList<TileUpgradeDefinition> upgrades, int highlightedSlot = -1)
         {
             EnsureResolved();
+            LayoutUpgradeBar();
             ApplyTile(tile);
             ApplyUpgrades(upgrades, highlightedSlot);
         }
@@ -131,6 +144,49 @@ namespace M3P
 
                 if (_slotIcons[i] != null)
                     _slotIcons[i].raycastTarget = false;
+            }
+        }
+
+        /// <summary>
+        /// Gem stays on top; the four frames sit in one row under it, like the tile-upgrade concept.
+        /// </summary>
+        void LayoutUpgradeBar()
+        {
+            if (_baseImage != null)
+            {
+                RectTransform gem = _baseImage.rectTransform;
+                gem.anchorMin = new Vector2(0.5f, 1f);
+                gem.anchorMax = new Vector2(0.5f, 1f);
+                gem.pivot = new Vector2(0.5f, 1f);
+                gem.anchoredPosition = Vector2.zero;
+                gem.sizeDelta = new Vector2(GemSize, GemSize);
+            }
+
+            float totalWidth = SlotCount * SlotSize + (SlotCount - 1) * SlotSpacing;
+            float startX = -totalWidth * 0.5f + SlotSize * 0.5f;
+            for (int i = 0; i < SlotCount; i++)
+            {
+                Image frame = _slotFrames[i];
+                if (frame == null)
+                    continue;
+
+                RectTransform slot = frame.rectTransform;
+                slot.anchorMin = new Vector2(0.5f, 0f);
+                slot.anchorMax = new Vector2(0.5f, 0f);
+                slot.pivot = new Vector2(0.5f, 0f);
+                slot.sizeDelta = new Vector2(SlotSize, SlotSize);
+                slot.anchoredPosition = new Vector2(startX + i * (SlotSize + SlotSpacing), 0f);
+
+                Image icon = _slotIcons[i];
+                if (icon == null)
+                    continue;
+
+                RectTransform iconRect = icon.rectTransform;
+                iconRect.anchorMin = Vector2.zero;
+                iconRect.anchorMax = Vector2.one;
+                iconRect.pivot = new Vector2(0.5f, 0.5f);
+                iconRect.anchoredPosition = Vector2.zero;
+                iconRect.sizeDelta = Vector2.zero;
             }
         }
 

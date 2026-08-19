@@ -8,8 +8,8 @@ using UnityEngine.UI;
 namespace M3P
 {
     /// <summary>
-    /// Map HUD panel: pick a tile type, optionally fill the four upgrade slots, preview the combined
-    /// shard cost, and buy a copy with those upgrades attached.
+    /// Map HUD panel: pick a tile type, fill the four upgrade slots under the gem, preview the
+    /// combined shard cost, and buy a copy with those upgrades attached.
     /// </summary>
     public sealed class UIPanelTileCrafting : UIPanelClosable
     {

@@ -13,6 +13,12 @@ namespace Match3
         [SerializeField] private TileSlot _slotLeft;
         [SerializeField] private TileSlot _slotRight;
 
+        const int UpgradeSlotCount = 4;
+        const float UpgradeSlotY = -0.38f;
+        const float UpgradeSlotSpacing = 0.22f;
+        const float UpgradeSlotScale = 0.48f;
+        const float UpgradeSlotZ = -0.022f;
+
         public int X { get; private set; }
         public int Y { get; private set; }
         public int TypeId { get; private set; }
@@ -49,7 +55,13 @@ namespace Match3
 
         void Awake()
         {
+            LayoutUpgradeBar();
             ApplyUpgradeSlots();
+        }
+
+        void OnValidate()
+        {
+            LayoutUpgradeBar();
         }
 
         public void Initialize(Match3Board board, int x, int y, int typeId, int[] upgradeIds = null)
@@ -81,29 +93,81 @@ namespace Match3
 
         void ApplyUpgradeSlots()
         {
-            ApplyUpgradeSlot(_slotUp, 0);
-            ApplyUpgradeSlot(_slotDown, 1);
-            ApplyUpgradeSlot(_slotLeft, 2);
-            ApplyUpgradeSlot(_slotRight, 3);
+            LayoutUpgradeBar();
+            bool showBar = HasAnyUpgrade();
+            for (int i = 0; i < UpgradeSlotCount; i++)
+                ApplyUpgradeSlot(SlotAt(i), i, showBar);
         }
 
-        void ApplyUpgradeSlot(TileSlot slot, int index)
+        /// <summary>
+        /// Four upgrade icons sit in a row along the bottom of the gem, matching the
+        /// tile-upgrade concept art (not the old compass layout).
+        /// </summary>
+        void LayoutUpgradeBar()
+        {
+            float startX = -UpgradeSlotSpacing * (UpgradeSlotCount - 1) * 0.5f;
+            for (int i = 0; i < UpgradeSlotCount; i++)
+            {
+                TileSlot slot = SlotAt(i);
+                if (slot == null)
+                    continue;
+
+                Transform slotTransform = slot.transform;
+                slotTransform.localPosition = new Vector3(
+                    startX + i * UpgradeSlotSpacing,
+                    UpgradeSlotY,
+                    UpgradeSlotZ);
+                slotTransform.localScale = Vector3.one * UpgradeSlotScale;
+            }
+        }
+
+        TileSlot SlotAt(int index)
+        {
+            switch (index)
+            {
+                case 0: return _slotUp;
+                case 1: return _slotDown;
+                case 2: return _slotLeft;
+                case 3: return _slotRight;
+                default: return null;
+            }
+        }
+
+        void ApplyUpgradeSlot(TileSlot slot, int index, bool showBar)
         {
             if (slot == null)
                 return;
 
-            int upgradeId = UpgradeIdAt(index);
-            if (upgradeId == TileUpgradeConfig.InvalidUpgradeId)
+            if (!showBar)
             {
                 slot.Hide();
                 return;
             }
 
+            int upgradeId = UpgradeIdAt(index);
             Sprite icon = null;
-            if (_upgrades != null && _upgrades.TryGetUpgrade(upgradeId, out TileUpgradeDefinition upgrade))
+            if (upgradeId != TileUpgradeConfig.InvalidUpgradeId
+                && _upgrades != null
+                && _upgrades.TryGetUpgrade(upgradeId, out TileUpgradeDefinition upgrade))
+            {
                 icon = upgrade.Icon;
+            }
 
             slot.Show(icon);
+        }
+
+        bool HasAnyUpgrade()
+        {
+            if (UpgradeIds == null)
+                return false;
+
+            for (int i = 0; i < UpgradeIds.Length; i++)
+            {
+                if (UpgradeIds[i] != TileUpgradeConfig.InvalidUpgradeId)
+                    return true;
+            }
+
+            return false;
         }
 
         int UpgradeIdAt(int index)

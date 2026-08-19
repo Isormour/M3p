@@ -102,7 +102,7 @@ namespace M3P
                 return;
 
             Instance = null;
-            EndBattle();
+            EndBattle(hideEndPanel: false);
         }
 
         public void ExecuteSkill(SkillDefinition skill, BattleCharacter caster, BattleCharacter target)
@@ -202,7 +202,7 @@ namespace M3P
             EndBattle();
 
             _battleResolved = false;
-            _endBattlePanel?.Hide();
+            HideEndBattlePanel();
 
             _player?.PrepareForBattle();
 
@@ -547,7 +547,7 @@ namespace M3P
         {
             if (!_battleResolved)
             {
-                _endBattlePanel?.Hide();
+                HideEndBattlePanel();
                 return;
             }
 
@@ -562,14 +562,27 @@ namespace M3P
                 SceneFlow.LoadMap();
         }
 
+        void HideEndBattlePanel()
+        {
+            if (_endBattlePanel != null)
+                _endBattlePanel.Hide();
+        }
+
         /// <summary>Destroys the board created by <see cref="StartBattle"/>.</summary>
         public void EndBattle()
         {
+            EndBattle(hideEndPanel: true);
+        }
+
+        void EndBattle(bool hideEndPanel)
+        {
             StopAllCoroutines();
             _battleResolved = false;
-            _endBattlePanel?.Hide();
+            if (hideEndPanel)
+                HideEndBattlePanel();
 
-            _cardPlay?.EndBattle();
+            if (_cardPlay != null)
+                _cardPlay.EndBattle();
 
             if (_activeBoard != null)
             {
@@ -586,7 +599,8 @@ namespace M3P
 
         void ClearSpawnedEnemy()
         {
-            _battleWorld?.ClearEnemyModel();
+            if (_battleWorld != null)
+                _battleWorld.ClearEnemyModel();
 
             if (_activeEnemy != null)
             {
