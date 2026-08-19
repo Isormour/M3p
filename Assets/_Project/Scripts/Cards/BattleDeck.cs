@@ -1,18 +1,23 @@
 using System;
 using System.Collections.Generic;
-using Random = UnityEngine.Random;
+using Match3;
 
 namespace M3P
 {
     /// <summary>
-    /// Draw pile, hand and discard pile for one battle. The hand is thrown away at end of turn and
-    /// redrawn, so hand size measures how many options a turn opens with rather than storage.
+    /// Draw pile, hand, queued sequence and discard pile for one battle. The hand is thrown away at end
+    /// of turn and redrawn, so hand size measures how many options a turn opens with rather than storage.
+    /// Cards committed to the queue sit in their own list: they have left the hand but are not discarded
+    /// yet, because Undo can still pull the last one back.
     /// </summary>
     public sealed class BattleDeck
     {
         readonly List<BoardActionCardDefinition> _drawPile = new List<BoardActionCardDefinition>();
         readonly List<BoardActionCardDefinition> _hand = new List<BoardActionCardDefinition>();
+        readonly List<BoardActionCardDefinition> _sequence = new List<BoardActionCardDefinition>();
         readonly List<BoardActionCardDefinition> _discardPile = new List<BoardActionCardDefinition>();
+
+        System.Random _random = new System.Random(Environment.TickCount);
 
         /// <summary>Raised whenever cards move between piles.</summary>
         public event Action Changed;
@@ -23,13 +28,23 @@ namespace M3P
 
         public int DiscardPileCount => _discardPile.Count;
 
-        public int TotalCardCount => _drawPile.Count + _hand.Count + _discardPile.Count;
+        /// <summary>Cards committed to the queue: out of hand, not yet discarded, still recoverable by Undo.</summary>
+        public int SequenceCount => _sequence.Count;
+
+        public int TotalCardCount => _drawPile.Count + _hand.Count + _sequence.Count + _discardPile.Count;
+
+        /// <summary>Fixes the shuffle stream so a battle can be replayed from a seed.</summary>
+        public void SetRandomSeed(int seed)
+        {
+            _random = new System.Random(seed);
+        }
 
         /// <summary>Rebuilds every pile from the cards a profile owns and shuffles. Call once when a battle starts.</summary>
         public void Reset(IReadOnlyList<BoardActionCardDefinition> cards)
         {
             _drawPile.Clear();
             _hand.Clear();
+            _sequence.Clear();
             _discardPile.Clear();
 
             if (cards != null)
@@ -109,6 +124,50 @@ namespace M3P
             return true;
         }
 
+        /// <summary>Commits a card from hand to the queued sequence.</summary>
+        public BoardActionCardDefinition MoveFromHandToSequence(int handIndex)
+        {
+            if (handIndex < 0 || handIndex >= _hand.Count)
+                return null;
+
+            BoardActionCardDefinition card = _hand[handIndex];
+            _hand.RemoveAt(handIndex);
+            _sequence.Add(card);
+            Changed?.Invoke();
+            return card;
+        }
+
+        /// <summary>
+        /// Puts an undone card back in hand. The original slot is honoured where it still exists, so the
+        /// hand does not reshuffle itself under the player's cursor.
+        /// </summary>
+        public void ReturnFromSequenceToHand(BoardActionCardDefinition card, int handIndex)
+        {
+            if (card == null)
+                return;
+
+            int inSequence = _sequence.LastIndexOf(card);
+            if (inSequence >= 0)
+                _sequence.RemoveAt(inSequence);
+
+            if (handIndex < 0 || handIndex > _hand.Count)
+                handIndex = _hand.Count;
+
+            _hand.Insert(handIndex, card);
+            Changed?.Invoke();
+        }
+
+        /// <summary>Sends every card of a resolved sequence to the discard pile.</summary>
+        public void DiscardSequence()
+        {
+            if (_sequence.Count == 0)
+                return;
+
+            _discardPile.AddRange(_sequence);
+            _sequence.Clear();
+            Changed?.Invoke();
+        }
+
         void RecycleDiscardPile()
         {
             _drawPile.AddRange(_discardPile);
@@ -116,13 +175,9 @@ namespace M3P
             Shuffle(_drawPile);
         }
 
-        static void Shuffle(List<BoardActionCardDefinition> cards)
+        void Shuffle(List<BoardActionCardDefinition> cards)
         {
-            for (int i = cards.Count - 1; i > 0; i--)
-            {
-                int swapIndex = Random.Range(0, i + 1);
-                (cards[i], cards[swapIndex]) = (cards[swapIndex], cards[i]);
-            }
+            SimBoard.ShuffleDeterministic(cards, _random.Next());
         }
     }
 }

@@ -13,16 +13,34 @@ namespace M3P
         public int TileTypeId { get; }
         public Vector3 WorldPosition { get; }
 
+        /// <summary>Identity of the cleared tile, for effects that need to know which piece paid out.</summary>
+        public int SourceId { get; }
+
+        /// <summary>
+        /// The Resolve's remaining budgets (card draws, burn stacks). Stamina from tile upgrades is
+        /// recorded here for the turn summary, but is not capped.
+        /// </summary>
+        public ResolveLimits Limits { get; }
+
+        /// <summary>Hand and queue for the battle, for upgrades that hand the player a card.</summary>
+        public CardPlayController CardPlay { get; }
+
         public TileUpgradeContext(
             BattleCharacter player,
             BattleCharacter opponent,
             int tileTypeId,
-            Vector3 worldPosition)
+            Vector3 worldPosition,
+            ResolveLimits limits = null,
+            CardPlayController cardPlay = null,
+            int sourceId = 0)
         {
             Player = player;
             Opponent = opponent;
             TileTypeId = tileTypeId;
             WorldPosition = worldPosition;
+            Limits = limits;
+            CardPlay = cardPlay;
+            SourceId = sourceId;
         }
     }
 

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,7 +13,7 @@ namespace Match3
         Distant = 4
     }
 
-    /// <summary>Swaps two neighbouring tiles. Unlike a classic match-3 swap this is never undone.</summary>
+    /// <summary>Swaps two tiles. Unlike a classic match-3 swap this is never undone once it resolves.</summary>
     [Serializable]
     public sealed class SwapTilesLogic : BoardActionLogic
     {
@@ -22,7 +21,7 @@ namespace Match3
 
         public override CardTargeting Targeting => CardTargeting.AdjacentPair;
 
-        public override bool IsValidTarget(Match3Board board, IReadOnlyList<Vector2Int> picked, Vector2Int candidate)
+        public override bool IsValidTarget(SimBoard board, IReadOnlyList<Vector2Int> picked, Vector2Int candidate)
         {
             if (!base.IsValidTarget(board, picked, candidate) || !board.CanMoveTile(candidate.x, candidate.y))
             {
@@ -37,17 +36,22 @@ namespace Match3
             return MatchesRelation(picked[0], candidate);
         }
 
-        public override IEnumerator ExecuteRoutine(Match3Board board, IReadOnlyList<Vector2Int> targets, int extraChoice)
+        public override void BuildOps(
+            SimBoard board,
+            IReadOnlyList<Vector2Int> targets,
+            int extraChoice,
+            int seed,
+            List<BoardOp> ops)
         {
             if (targets.Count < 2)
             {
-                yield break;
+                return;
             }
 
-            yield return board.SwapRoutine(targets[0], targets[1]);
+            ops.Add(BoardOp.Swap(targets[0], targets[1]));
         }
 
-        bool HasValidPartner(Match3Board board, Vector2Int origin)
+        bool HasValidPartner(SimBoard board, Vector2Int origin)
         {
             for (int x = 0; x < board.Width; x++)
             {
@@ -87,7 +91,10 @@ namespace Match3
         }
     }
 
-    /// <summary>Slides the row of the picked tile one cell sideways, wrapping around the edge.</summary>
+    /// <summary>
+    /// Slides the row of the picked tile one cell sideways, wrapping around the edge. Parked: whole-row
+    /// and whole-column movement is out of the progression design, so the card cannot be queued.
+    /// </summary>
     [Serializable]
     public sealed class ShiftRowLogic : BoardActionLogic
     {
@@ -96,58 +103,88 @@ namespace Match3
 
         public override CardTargeting Targeting => CardTargeting.SingleTile;
 
-        public override IEnumerator ExecuteRoutine(Match3Board board, IReadOnlyList<Vector2Int> targets, int extraChoice)
+        public override bool IsAvailable => false;
+
+        public override string UnavailableReason => "Przesuwanie rzędów jest poza zakresem designu.";
+
+        public override void BuildOps(
+            SimBoard board,
+            IReadOnlyList<Vector2Int> targets,
+            int extraChoice,
+            int seed,
+            List<BoardOp> ops)
         {
             if (targets.Count < 1)
             {
-                yield break;
+                return;
             }
 
-            yield return board.ShiftRowRoutine(targets[0].y, _direction);
+            int y = targets[0].y;
+            int step = _direction > 0 ? 1 : -1;
+            Vector2Int[] cells = new Vector2Int[board.Width];
+            for (int i = 0; i < board.Width; i++)
+            {
+                int x = step > 0 ? i : board.Width - 1 - i;
+                cells[i] = new Vector2Int(x, y);
+            }
+
+            ops.Add(BoardOp.Cycle(cells));
         }
     }
 
     /// <summary>
-    /// Destroys the picked tile plus an optional cross around it. Grants mana but no basic attack,
-    /// because nothing here forms a match.
+    /// Marks the picked tile Cracked, plus an optional cross around it. Cracked tiles leave the board
+    /// after the whole sequence has run, so later cards can still move and match them.
     /// </summary>
     [Serializable]
     public sealed class DestroyTilesLogic : BoardActionLogic
     {
-        [Tooltip("When set, also destroys the four orthogonal neighbours of the picked tile.")]
+        [Tooltip("When set, also cracks the four orthogonal neighbours of the picked tile.")]
         [SerializeField] bool _includeNeighbours;
 
         public override CardTargeting Targeting => CardTargeting.SingleTile;
 
-        public override bool IsValidTarget(Match3Board board, IReadOnlyList<Vector2Int> picked, Vector2Int candidate)
+        public override bool IsValidTarget(SimBoard board, IReadOnlyList<Vector2Int> picked, Vector2Int candidate)
         {
-            return base.IsValidTarget(board, picked, candidate) && board.CanDestroyTile(candidate.x, candidate.y);
+            return base.IsValidTarget(board, picked, candidate)
+                && board.CanDestroyTile(candidate.x, candidate.y)
+                && !board.IsCracked(candidate.x, candidate.y);
         }
 
-        public override IEnumerator ExecuteRoutine(Match3Board board, IReadOnlyList<Vector2Int> targets, int extraChoice)
+        public override void BuildOps(
+            SimBoard board,
+            IReadOnlyList<Vector2Int> targets,
+            int extraChoice,
+            int seed,
+            List<BoardOp> ops)
         {
             if (targets.Count < 1)
             {
-                yield break;
+                return;
             }
 
             Vector2Int origin = targets[0];
-            List<Vector2Int> cells = new List<Vector2Int> { origin };
+            ops.Add(BoardOp.MarkCracked(origin));
 
-            if (_includeNeighbours)
+            if (!_includeNeighbours)
             {
-                cells.Add(new Vector2Int(origin.x + 1, origin.y));
-                cells.Add(new Vector2Int(origin.x - 1, origin.y));
-                cells.Add(new Vector2Int(origin.x, origin.y + 1));
-                cells.Add(new Vector2Int(origin.x, origin.y - 1));
+                return;
             }
 
-            board.DestroyTiles(cells);
-            yield break;
+            AddCrackIfDestroyable(board, ops, new Vector2Int(origin.x + 1, origin.y));
+            AddCrackIfDestroyable(board, ops, new Vector2Int(origin.x - 1, origin.y));
+            AddCrackIfDestroyable(board, ops, new Vector2Int(origin.x, origin.y + 1));
+            AddCrackIfDestroyable(board, ops, new Vector2Int(origin.x, origin.y - 1));
+        }
+
+        static void AddCrackIfDestroyable(SimBoard board, List<BoardOp> ops, Vector2Int cell)
+        {
+            if (board.CanDestroyTile(cell.x, cell.y))
+                ops.Add(BoardOp.MarkCracked(cell));
         }
     }
 
-    /// <summary>Destroys two neighbouring tiles at once. Each still pays its colour's energy.</summary>
+    /// <summary>Cracks two neighbouring tiles at once. Each still pays its colour's mana on removal.</summary>
     [Serializable]
     public sealed class DestroyPairLogic : BoardActionLogic
     {
@@ -155,9 +192,11 @@ namespace Match3
 
         public override CardTargeting Targeting => CardTargeting.AdjacentPair;
 
-        public override bool IsValidTarget(Match3Board board, IReadOnlyList<Vector2Int> picked, Vector2Int candidate)
+        public override bool IsValidTarget(SimBoard board, IReadOnlyList<Vector2Int> picked, Vector2Int candidate)
         {
-            if (!base.IsValidTarget(board, picked, candidate) || !board.CanDestroyTile(candidate.x, candidate.y))
+            if (!base.IsValidTarget(board, picked, candidate)
+                || !board.CanDestroyTile(candidate.x, candidate.y)
+                || board.IsCracked(candidate.x, candidate.y))
             {
                 return false;
             }
@@ -172,18 +211,23 @@ namespace Match3
                 : Match3Board.AreHorizontallyAdjacent(picked[0], candidate);
         }
 
-        public override IEnumerator ExecuteRoutine(Match3Board board, IReadOnlyList<Vector2Int> targets, int extraChoice)
+        public override void BuildOps(
+            SimBoard board,
+            IReadOnlyList<Vector2Int> targets,
+            int extraChoice,
+            int seed,
+            List<BoardOp> ops)
         {
             if (targets.Count < 2)
             {
-                yield break;
+                return;
             }
 
-            board.DestroyTiles(targets);
-            yield break;
+            ops.Add(BoardOp.MarkCracked(targets[0]));
+            ops.Add(BoardOp.MarkCracked(targets[1]));
         }
 
-        bool HasValidPartner(Match3Board board, Vector2Int origin)
+        bool HasValidPartner(SimBoard board, Vector2Int origin)
         {
             Vector2Int[] neighbours = _vertical
                 ? new[] { new Vector2Int(origin.x, origin.y + 1), new Vector2Int(origin.x, origin.y - 1) }
@@ -191,7 +235,7 @@ namespace Match3
 
             for (int i = 0; i < neighbours.Length; i++)
             {
-                if (board.CanDestroyTile(neighbours[i].x, neighbours[i].y))
+                if (board.CanDestroyTile(neighbours[i].x, neighbours[i].y) && !board.IsCracked(neighbours[i].x, neighbours[i].y))
                 {
                     return true;
                 }
@@ -214,12 +258,12 @@ namespace Match3
         public override CardExtraChoice ExtraChoice =>
             _tileType == null ? CardExtraChoice.TileColor : CardExtraChoice.None;
 
-        public override bool IsValidTarget(Match3Board board, IReadOnlyList<Vector2Int> picked, Vector2Int candidate)
+        public override bool IsValidTarget(SimBoard board, IReadOnlyList<Vector2Int> picked, Vector2Int candidate)
         {
             return base.IsValidTarget(board, picked, candidate) && board.CanRecolorTile(candidate.x, candidate.y);
         }
 
-        public override void CollectExtraChoices(Match3Board board, List<CardChoiceOption> destination)
+        public override void CollectExtraChoices(SimBoard board, List<CardChoiceOption> destination)
         {
             destination.Clear();
             if (board == null)
@@ -239,21 +283,26 @@ namespace Match3
             }
         }
 
-        public override IEnumerator ExecuteRoutine(Match3Board board, IReadOnlyList<Vector2Int> targets, int extraChoice)
+        public override void BuildOps(
+            SimBoard board,
+            IReadOnlyList<Vector2Int> targets,
+            int extraChoice,
+            int seed,
+            List<BoardOp> ops)
         {
             if (targets.Count < 1)
             {
-                yield break;
+                return;
             }
 
             int typeId = _tileType != null ? board.GetTileTypeId(_tileType) : extraChoice;
             if (typeId < 0)
             {
                 Debug.LogError($"{nameof(PaintTileLogic)}: tile type is missing from the game config.");
-                yield break;
+                return;
             }
 
-            board.SetTileType(targets[0].x, targets[0].y, typeId);
+            ops.Add(BoardOp.Recolor(targets[0], typeId));
         }
     }
 }

@@ -36,6 +36,8 @@ namespace M3P
         [SerializeField] UIEndBattlePanel _endBattlePanel;
 
         readonly BattleSessionRewards _sessionRewards = new BattleSessionRewards();
+        readonly ResolveLimits _resolveLimits = new ResolveLimits();
+        readonly TurnReport _turnReport = new TurnReport();
 
         Match3Board _activeBoard;
         EnemyDefinition _activeEnemyDefinition;
@@ -62,6 +64,16 @@ namespace M3P
 
         /// <summary>Deck and hand for the current battle.</summary>
         public CardPlayController CardPlay => _cardPlay;
+
+        /// <summary>
+        /// Per-Resolve budgets for card draws and burn stacks, plus a running stamina-refund total.
+        /// Stamina from tile upgrades is not gated here.
+        /// </summary>
+        public ResolveLimits ResolveLimits => _resolveLimits;
+
+        /// <summary>Running summary of the player's turn across every sequence it contains.</summary>
+        public TurnReport TurnReport => _turnReport;
+
         public Action<Match3Board> OnBattleStarted;
 
         /// <summary>Raised after a skill is applied, including enemy turns.</summary>
@@ -301,7 +313,7 @@ namespace M3P
             if (_activeBoard == null)
                 yield break;
 
-            _activeBoard.BoardActionResolved += HandleBoardActionResolved;
+            _activeBoard.SequenceResolved += HandleSequenceResolved;
             _activeBoard.MatchWaveCompleted += HandleMatchWaveCompleted;
             BeginPlayerTurn();
         }
@@ -352,15 +364,68 @@ namespace M3P
         }
 
         /// <summary>
-        /// A card no longer ends the turn on its own. The turn runs until the player is out of action
-        /// points, out of affordable cards and skills, or chooses to stop.
+        /// Runs the queued sequence. Resolve ends the sequence, not the turn: the player gets control back
+        /// afterwards and can spend stamina the payout handed them on another sequence or a skill.
         /// </summary>
-        void HandleBoardActionResolved()
+        public void RequestResolve()
+        {
+            if (_battleResolved || !_isPlayerTurn || _activeBoard == null || _cardPlay == null)
+                return;
+
+            if (!_cardPlay.CanResolve())
+                return;
+
+            StartCoroutine(ResolveSequenceRoutine(endTurnAfterwards: false));
+        }
+
+        /// <summary>
+        /// Ends the turn on the player's request. A queue that is still standing resolves first, so no
+        /// stamina already committed to cards is silently thrown away — but stamina the payout returns is
+        /// lost, which is the cost of ending on a full queue.
+        /// </summary>
+        public void RequestEndTurn()
+        {
+            if (_battleResolved || !_isPlayerTurn || _activeBoard == null || _activeBoard.IsResolving)
+                return;
+
+            if (_cardPlay != null && _cardPlay.CanResolve())
+            {
+                StartCoroutine(ResolveSequenceRoutine(endTurnAfterwards: true));
+                return;
+            }
+
+            EndPlayerTurn();
+        }
+
+        IEnumerator ResolveSequenceRoutine(bool endTurnAfterwards)
+        {
+            _resolveLimits.BeginResolve();
+
+            yield return _cardPlay.ResolveSequenceRoutine();
+
+            if (_battleResolved)
+                yield break;
+
+            if (endTurnAfterwards)
+            {
+                EndPlayerTurn();
+                yield break;
+            }
+
+            EndPlayerTurnIfExhausted();
+        }
+
+        /// <summary>
+        /// Runs once a Resolve has fully settled, including cascades and every enchant. Only here can the
+        /// game tell whether the turn can continue, because a tile may have handed back the stamina that
+        /// pays for the next sequence.
+        /// </summary>
+        void HandleSequenceResolved(ResolveReport report)
         {
             if (_battleResolved)
                 return;
 
-            EndPlayerTurnIfExhausted();
+            _turnReport.AddResolve(report, _resolveLimits.StaminaRefunded);
         }
 
         void EndPlayerTurnIfExhausted()
@@ -371,18 +436,9 @@ namespace M3P
             EndPlayerTurn();
         }
 
-        /// <summary>Ends the turn on the player's request, banking nothing for unspent action points.</summary>
-        public void RequestEndTurn()
-        {
-            if (_battleResolved || !_isPlayerTurn || _activeBoard == null || _activeBoard.IsResolving)
-                return;
-
-            EndPlayerTurn();
-        }
-
         bool PlayerHasLegalAction()
         {
-            if (_cardPlay != null && _cardPlay.HasPlayableCard())
+            if (_cardPlay != null && (_cardPlay.HasQueueableCard() || _cardPlay.CanResolve()))
                 return true;
 
             if (HasCastableSkill())
@@ -436,6 +492,8 @@ namespace M3P
                 return;
 
             _isPlayerTurn = true;
+            _turnReport.BeginTurn();
+            _resolveLimits.BeginResolve();
 
             if (_activeBoard != null)
                 _activeBoard.AllowPlayerInput = true;
@@ -586,7 +644,7 @@ namespace M3P
 
             if (_activeBoard != null)
             {
-                _activeBoard.BoardActionResolved -= HandleBoardActionResolved;
+                _activeBoard.SequenceResolved -= HandleSequenceResolved;
                 _activeBoard.MatchWaveCompleted -= HandleMatchWaveCompleted;
                 Destroy(_activeBoard.gameObject);
                 _activeBoard = null;

@@ -7,38 +7,58 @@ using UnityEngine;
 namespace M3P
 {
     /// <summary>
-    /// Drives the player's turn: which card is selected, which board cells it still needs, and paying
-    /// the action points once a play is complete.
+    /// Drives the planning half of the player's turn: which card is selected, which cells it still needs,
+    /// and the queue those cards build. Playing a card costs stamina and adds a command to the queue —
+    /// the board itself does not move until <see cref="ResolveSequenceRoutine"/> runs.
     /// </summary>
     public sealed class CardPlayController : MonoBehaviour
     {
         readonly BattleDeck _deck = new BattleDeck();
+        readonly CardQueue _queue = new CardQueue();
         readonly List<BoardActionCardDefinition> _resolvedDeck = new List<BoardActionCardDefinition>();
         readonly List<Vector2Int> _pickedTargets = new List<Vector2Int>();
         readonly List<Match3Tile> _highlightedTiles = new List<Match3Tile>();
+        readonly List<CardChoiceOption> _choiceBuffer = new List<CardChoiceOption>();
+        readonly List<BoardOp> _opsBuffer = new List<BoardOp>();
 
         Match3Board _board;
         PlayerBattleCharacter _player;
         BoardActionCardDefinition _selectedCard;
         int _selectedHandIndex = -1;
-        bool _isPlaying;
+        bool _isResolving;
         bool _awaitingChoice;
         UICardChoiceOverlay _choiceOverlay;
-        readonly List<CardChoiceOption> _choiceBuffer = new List<CardChoiceOption>();
+        System.Random _seedSource;
 
-        /// <summary>Raised when the hand, the selection or the action point pool changes.</summary>
+        /// <summary>Raised when the hand, the selection, the queue or the stamina pool changes.</summary>
         public event Action Changed;
 
         public BattleDeck Deck => _deck;
+
+        /// <summary>The sequence being built this turn, and the predicted board it produces.</summary>
+        public CardQueue Queue => _queue;
 
         public BoardActionCardDefinition SelectedCard => _selectedCard;
 
         public int SelectedHandIndex => _selectedHandIndex;
 
-        public bool IsPlaying => _isPlaying || _awaitingChoice;
+        /// <summary>True while a Resolve is running or a card is waiting on a colour/direction prompt.</summary>
+        public bool IsBusy => _isResolving || _awaitingChoice;
 
         /// <summary>Cells already picked for the selected card.</summary>
         public IReadOnlyList<Vector2Int> PickedTargets => _pickedTargets;
+
+        /// <summary>The real board plus every queued command. What later cards target and the preview draws.</summary>
+        public SimBoard PredictedBoard => _queue.Predicted;
+
+        public int QueuedCardCount => _queue.Count;
+
+        public bool HasQueuedCards => !_queue.IsEmpty;
+
+        public int MaxHandSize => _player?.Stats?.Soft?.MaxHandSize ?? 0;
+
+        /// <summary>Player-facing name for action points, which the design calls Stamina.</summary>
+        public int CurrentStamina => _player?.Stats?.Soft?.CurrentActionPoints ?? 0;
 
         public void BeginBattle(Match3Board board, PlayerBattleCharacter player)
         {
@@ -50,6 +70,8 @@ namespace M3P
             _selectedHandIndex = -1;
             _pickedTargets.Clear();
             _highlightedTiles.Clear();
+            _queue.Clear();
+            _seedSource = new System.Random(Environment.TickCount);
 
             if (_board != null)
             {
@@ -64,15 +86,17 @@ namespace M3P
         {
             UnbindBoard();
             CancelSelection();
+            _queue.Clear();
             _player = null;
             Changed?.Invoke();
         }
 
-        /// <summary>Draws a fresh hand. Action points are reset separately by the character.</summary>
+        /// <summary>Draws a fresh hand and opens the first sequence. Stamina is reset by the character.</summary>
         public void BeginTurn()
         {
             CancelSelection();
             _deck.DrawUpTo(MaxHandSize);
+            BeginSequence();
             Changed?.Invoke();
         }
 
@@ -80,17 +104,45 @@ namespace M3P
         public void EndTurn()
         {
             CancelSelection();
+            _deck.DiscardSequence();
+            _queue.Clear();
             _deck.DiscardHand();
             Changed?.Invoke();
         }
 
-        public int MaxHandSize => _player?.Stats?.Soft?.MaxHandSize ?? 0;
-
-        public int CurrentActionPoints => _player?.Stats?.Soft?.CurrentActionPoints ?? 0;
-
-        public bool CanPlay(BoardActionCardDefinition card)
+        /// <summary>
+        /// Starts a new queue from the current board. Called at the start of a turn and after every
+        /// Resolve, because a turn may contain several sequences.
+        /// </summary>
+        public void BeginSequence()
         {
-            if (card == null || card.Logic == null || _board == null || _isPlaying || _board.IsResolving)
+            if (_board == null)
+            {
+                _queue.Clear();
+                return;
+            }
+
+            _queue.Reset(_board.CaptureSimBoard());
+        }
+
+        /// <summary>Draws extra cards mid-turn, for reward runes and tile upgrades that grant a draw.</summary>
+        public void DrawCards(int count)
+        {
+            if (count <= 0)
+                return;
+
+            _deck.DrawUpTo(_deck.Hand.Count + count);
+            Changed?.Invoke();
+        }
+
+        public bool CanQueue(BoardActionCardDefinition card)
+        {
+            if (card == null || card.Logic == null || _board == null || IsBusy || _board.IsResolving)
+            {
+                return false;
+            }
+
+            if (!_queue.CanEnqueue(card.Logic))
             {
                 return false;
             }
@@ -99,19 +151,30 @@ namespace M3P
             return soft != null && soft.HasActionPoints(card.ActionPointCost);
         }
 
-        /// <summary>True while at least one card in hand is affordable.</summary>
-        public bool HasPlayableCard()
+        /// <summary>True while at least one card in hand can still join the queue.</summary>
+        public bool HasQueueableCard()
         {
             IReadOnlyList<BoardActionCardDefinition> hand = _deck.Hand;
             for (int i = 0; i < hand.Count; i++)
             {
-                if (CanPlay(hand[i]))
+                if (CanQueue(hand[i]))
                 {
                     return true;
                 }
             }
 
             return false;
+        }
+
+        /// <summary>A queued sequence can always be resolved, which is itself a legal action.</summary>
+        public bool CanResolve()
+        {
+            return _board != null && !_board.IsResolving && !IsBusy && !_queue.IsEmpty;
+        }
+
+        public bool CanUndo()
+        {
+            return _board != null && !_board.IsResolving && !IsBusy && !_queue.IsEmpty;
         }
 
         public void SelectCardAt(int handIndex)
@@ -129,7 +192,7 @@ namespace M3P
             CancelSelection();
 
             BoardActionCardDefinition card = hand[handIndex];
-            if (!CanPlay(card))
+            if (!CanQueue(card))
                 return;
 
             _selectedHandIndex = handIndex;
@@ -141,7 +204,7 @@ namespace M3P
                 if (card.Logic.ExtraChoice != CardExtraChoice.None)
                     PromptExtraChoice(handIndex, new List<Vector2Int>());
                 else
-                    StartCoroutine(PlayRoutine(handIndex, new List<Vector2Int>(), 0));
+                    EnqueueCard(handIndex, new List<Vector2Int>(), 0);
             }
         }
 
@@ -160,9 +223,62 @@ namespace M3P
             Changed?.Invoke();
         }
 
+        /// <summary>
+        /// Takes the last card back out of the queue: it returns to hand, its stamina is refunded and the
+        /// predicted board is recomputed. Only the last card can go, because pulling one from the middle
+        /// would invalidate the targets every card behind it was planned against.
+        /// </summary>
+        public bool UndoLastCard()
+        {
+            if (!CanUndo())
+                return false;
+
+            CancelSelection();
+
+            QueuedCard entry = _queue.RemoveLast();
+            if (entry == null)
+                return false;
+
+            _player?.Stats?.Soft?.AddActionPoints(entry.StaminaPaid);
+            _deck.ReturnFromSequenceToHand(entry.Card, entry.HandIndex);
+            Changed?.Invoke();
+            return true;
+        }
+
+        /// <summary>
+        /// Runs the queued sequence on the real board. Resolve ends the sequence, not the turn: once the
+        /// payout has settled the player gets control back and may queue another sequence.
+        /// </summary>
+        public IEnumerator ResolveSequenceRoutine()
+        {
+            if (!CanResolve())
+                yield break;
+
+            CancelSelection();
+            _isResolving = true;
+
+            int cardCount = _queue.Count;
+            _queue.CollectOps(_opsBuffer);
+            _deck.DiscardSequence();
+            _queue.Clear();
+            Changed?.Invoke();
+
+            yield return _board.ResolveSequenceRoutine(_opsBuffer, cardCount);
+
+            _isResolving = false;
+            BeginSequence();
+            Changed?.Invoke();
+        }
+
         void HandleTileClicked(Match3Tile tile)
         {
-            if (_selectedCard == null || _isPlaying || _awaitingChoice || tile == null)
+            if (_selectedCard == null || IsBusy || tile == null)
+            {
+                return;
+            }
+
+            SimBoard predicted = _queue.Predicted;
+            if (predicted == null)
             {
                 return;
             }
@@ -170,7 +286,7 @@ namespace M3P
             BoardActionLogic logic = _selectedCard.Logic;
             Vector2Int candidate = new Vector2Int(tile.X, tile.Y);
 
-            if (!logic.IsValidTarget(_board, _pickedTargets, candidate))
+            if (!logic.IsValidTarget(predicted, _pickedTargets, candidate))
             {
                 return;
             }
@@ -190,7 +306,7 @@ namespace M3P
             if (logic.ExtraChoice != CardExtraChoice.None)
                 PromptExtraChoice(handIndex, targets);
             else
-                StartCoroutine(PlayRoutine(handIndex, targets, 0));
+                EnqueueCard(handIndex, targets, 0);
         }
 
         void PromptExtraChoice(int handIndex, List<Vector2Int> targets)
@@ -199,10 +315,10 @@ namespace M3P
             if (logic == null)
                 return;
 
-            logic.CollectExtraChoices(_board, _choiceBuffer);
+            logic.CollectExtraChoices(_queue.Predicted, _choiceBuffer);
             if (_choiceBuffer.Count == 0)
             {
-                StartCoroutine(PlayRoutine(handIndex, targets, 0));
+                EnqueueCard(handIndex, targets, 0);
                 return;
             }
 
@@ -210,7 +326,7 @@ namespace M3P
             if (parent == null)
             {
                 Debug.LogError($"{nameof(CardPlayController)}: no Canvas found for the extra card choice.", this);
-                StartCoroutine(PlayRoutine(handIndex, targets, _choiceBuffer[0].Value));
+                EnqueueCard(handIndex, targets, _choiceBuffer[0].Value);
                 return;
             }
 
@@ -230,7 +346,66 @@ namespace M3P
         {
             HideChoiceOverlay();
             _awaitingChoice = false;
-            StartCoroutine(PlayRoutine(handIndex, targets, extraChoice));
+            EnqueueCard(handIndex, targets, extraChoice);
+        }
+
+        /// <summary>
+        /// Pays for the card and appends its commands to the queue. Commands are compiled here, against
+        /// the predicted board, and stored — the Resolve replays exactly these, so a random card that
+        /// fixes its seed now cannot surprise the player later.
+        /// </summary>
+        void EnqueueCard(int handIndex, List<Vector2Int> targets, int extraChoice)
+        {
+            if (_board == null)
+                return;
+
+            IReadOnlyList<BoardActionCardDefinition> hand = _deck.Hand;
+            if (handIndex < 0 || handIndex >= hand.Count)
+                return;
+
+            BoardActionCardDefinition card = hand[handIndex];
+            SimBoard predicted = _queue.Predicted;
+            if (card?.Logic == null || predicted == null || !_queue.CanEnqueue(card.Logic))
+                return;
+
+            SoftStats soft = _player?.Stats?.Soft;
+            if (soft == null || !soft.TrySpendActionPoint(card.ActionPointCost))
+                return;
+
+            int seed = card.Logic.NeedsSeed ? NextSeed() : 0;
+            _opsBuffer.Clear();
+            card.Logic.BuildOps(predicted, targets, extraChoice, seed, _opsBuffer);
+
+            if (_opsBuffer.Count == 0)
+            {
+                soft.AddActionPoints(card.ActionPointCost);
+                CancelSelection();
+                return;
+            }
+
+            _deck.MoveFromHandToSequence(handIndex);
+            _queue.Enqueue(new QueuedCard(
+                card,
+                handIndex,
+                card.ActionPointCost,
+                targets.ToArray(),
+                extraChoice,
+                seed,
+                _opsBuffer.ToArray()));
+
+            HideChoiceOverlay();
+            ClearHighlights();
+            _pickedTargets.Clear();
+            _selectedHandIndex = -1;
+            _selectedCard = null;
+            _awaitingChoice = false;
+            Changed?.Invoke();
+        }
+
+        int NextSeed()
+        {
+            _seedSource ??= new System.Random(Environment.TickCount);
+            return _seedSource.Next(int.MinValue, int.MaxValue);
         }
 
         void HideChoiceOverlay()
@@ -257,35 +432,6 @@ namespace M3P
             }
 
             return best != null ? best.transform : null;
-        }
-
-        IEnumerator PlayRoutine(int handIndex, List<Vector2Int> targets, int extraChoice)
-        {
-            if (_board == null)
-                yield break;
-
-            IReadOnlyList<BoardActionCardDefinition> hand = _deck.Hand;
-            if (handIndex < 0 || handIndex >= hand.Count)
-                yield break;
-
-            BoardActionCardDefinition card = hand[handIndex];
-            _isPlaying = true;
-            _awaitingChoice = false;
-
-            _player?.Stats?.Soft?.TrySpendActionPoint(card.ActionPointCost);
-            _deck.TryDiscardFromHandAt(handIndex);
-
-            HideChoiceOverlay();
-            ClearHighlights();
-            _pickedTargets.Clear();
-            _selectedHandIndex = -1;
-            _selectedCard = null;
-            Changed?.Invoke();
-
-            yield return _board.ExecuteActionRoutine(card.Logic, targets, extraChoice);
-
-            _isPlaying = false;
-            Changed?.Invoke();
         }
 
         void ClearHighlights()

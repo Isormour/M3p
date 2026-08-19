@@ -95,7 +95,7 @@ namespace M3P
             _matchWaveIndex = 0;
             _board.TileDestroyed += HandleTileDestroyed;
             _board.MatchWaveCompleted += HandleMatchWaveCompleted;
-            _board.BoardActionResolved += HandleBoardActionResolved;
+            _board.SequenceResolved += HandleSequenceResolved;
         }
 
         void UnbindBoard()
@@ -104,7 +104,7 @@ namespace M3P
             {
                 _board.TileDestroyed -= HandleTileDestroyed;
                 _board.MatchWaveCompleted -= HandleMatchWaveCompleted;
-                _board.BoardActionResolved -= HandleBoardActionResolved;
+                _board.SequenceResolved -= HandleSequenceResolved;
             }
 
             _board = null;
@@ -144,7 +144,7 @@ namespace M3P
             }
         }
 
-        void HandleBoardActionResolved()
+        void HandleSequenceResolved(ResolveReport report)
         {
             _matchWaveIndex = 0;
         }

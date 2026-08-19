@@ -19,9 +19,24 @@ namespace Match3
 
         const int UpgradeSlotCount = 4;
 
+        /// <summary>Colour multiplied into the sprite while the tile is marked for removal.</summary>
+        static readonly Color CrackedTint = new Color(0.45f, 0.45f, 0.5f, 0.85f);
+
         public int X { get; private set; }
         public int Y { get; private set; }
         public int TypeId { get; private set; }
+
+        /// <summary>
+        /// Identity that survives moves, so the predicted board can follow this exact tile rather than
+        /// whatever currently sits in a cell.
+        /// </summary>
+        public int TileId { get; private set; }
+
+        /// <summary>
+        /// Marked by a Destroy card. The mark travels with the tile through later cards in the sequence;
+        /// the tile itself only leaves the board once every card has run.
+        /// </summary>
+        public bool IsCracked { get; private set; }
 
         /// <summary>Crafted upgrades copied from the owned tile that spawned this piece.</summary>
         public int[] UpgradeIds { get; private set; } = Array.Empty<int>();
@@ -66,6 +81,7 @@ namespace Match3
             UpgradeIds = CloneUpgradeIds(upgradeIds);
             _baseScale = transform.localScale;
             ApplyFlags(false, false, false, false, true, true);
+            SetCracked(false);
             ApplyUpgradeSlots();
         }
 
@@ -195,6 +211,19 @@ namespace Match3
         public void SetType(int typeId)
         {
             TypeId = typeId;
+        }
+
+        public void SetTileId(int tileId)
+        {
+            TileId = tileId;
+        }
+
+        public void SetCracked(bool cracked)
+        {
+            IsCracked = cracked;
+
+            if (_tileRenderer != null)
+                _tileRenderer.color = cracked ? CrackedTint : Color.white;
         }
 
         public void ApplyFlags(

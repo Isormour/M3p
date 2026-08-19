@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,8 +8,8 @@ using UnityEngine.UI;
 namespace M3P
 {
     /// <summary>
-    /// Hand UI: instantiates card prefabs from each <see cref="BoardActionCardDefinition"/>,
-    /// plus an action point readout and an end turn button.
+    /// Hand UI: instantiates card prefabs from each <see cref="BoardActionCardDefinition"/>, plus a
+    /// stamina readout, the queue the player is building and the Resolve, Undo and End Turn commands.
     /// </summary>
     public sealed class UIPanelCardHand : MonoBehaviour
     {
@@ -16,13 +17,19 @@ namespace M3P
         [SerializeField] float _sidePanelWidth = 110f;
         [SerializeField] float _cardSpacing = 8f;
         [SerializeField] float _sectionSpacing = 12f;
+        [SerializeField] float _queueStripHeight = 26f;
 
         readonly List<UIBoardActionCard> _cardViews = new List<UIBoardActionCard>();
+        readonly StringBuilder _queueText = new StringBuilder();
 
         CardPlayController _cardPlay;
         RectTransform _handContainer;
-        TextMeshProUGUI _actionPointsLabel;
+        TextMeshProUGUI _staminaLabel;
+        TextMeshProUGUI _queueLabel;
+        Button _resolveButton;
+        Button _undoButton;
         Button _endTurnButton;
+        TextMeshProUGUI _endTurnLabel;
         Coroutine _watchRoutine;
 
         void OnEnable()
@@ -150,26 +157,40 @@ namespace M3P
         {
             if (_cardPlay == null)
             {
-                if (_actionPointsLabel != null)
-                    _actionPointsLabel.text = "AP -";
+                if (_staminaLabel != null)
+                    _staminaLabel.text = "Stamina -";
 
-                if (_endTurnButton != null)
-                    _endTurnButton.interactable = false;
+                if (_queueLabel != null)
+                    _queueLabel.text = string.Empty;
 
+                SetCommandsInteractable(false, false, false);
                 return;
             }
 
-            if (_actionPointsLabel != null)
+            if (_staminaLabel != null)
             {
                 int max = _cardPlay.MaxHandSize;
-                _actionPointsLabel.text = $"AP {_cardPlay.CurrentActionPoints}\n<size=70%>hand {_cardPlay.Deck.Hand.Count}/{max}";
+                _staminaLabel.text =
+                    $"Stamina {_cardPlay.CurrentStamina}\n<size=70%>ręka {_cardPlay.Deck.Hand.Count}/{max}";
             }
 
-            BattleManager manager = BattleManager.Instance;
-            bool playerActing = manager != null && manager.IsPlayerTurn && !_cardPlay.IsPlaying;
+            if (_queueLabel != null)
+                _queueLabel.text = BuildQueueText();
 
-            if (_endTurnButton != null)
-                _endTurnButton.interactable = playerActing;
+            BattleManager manager = BattleManager.Instance;
+            bool playerActing = manager != null && manager.IsPlayerTurn && !_cardPlay.IsBusy;
+
+            SetCommandsInteractable(
+                playerActing && _cardPlay.CanResolve(),
+                playerActing && _cardPlay.CanUndo(),
+                playerActing);
+
+            if (_endTurnLabel != null)
+            {
+                _endTurnLabel.text = _cardPlay.HasQueuedCards
+                    ? "Resolve &\nEnd Turn"
+                    : "End Turn";
+            }
 
             IReadOnlyList<BoardActionCardDefinition> hand = _cardPlay.Deck.Hand;
             int count = Mathf.Min(hand.Count, _cardViews.Count);
@@ -183,9 +204,45 @@ namespace M3P
                 BoardActionCardDefinition card = hand[i];
                 bool selected = _cardPlay.SelectedHandIndex == i;
                 view.SetSelected(selected);
-                view.SetInteractable(playerActing && (selected || _cardPlay.CanPlay(card)));
-                view.SetFrameMaskEnabled(card != null && _cardPlay.CurrentActionPoints < card.ActionPointCost);
+                view.SetInteractable(playerActing && (selected || _cardPlay.CanQueue(card)));
+                view.SetFrameMaskEnabled(card != null && !_cardPlay.CanQueue(card) && !selected);
             }
+        }
+
+        void SetCommandsInteractable(bool resolve, bool undo, bool endTurn)
+        {
+            if (_resolveButton != null)
+                _resolveButton.interactable = resolve;
+
+            if (_undoButton != null)
+                _undoButton.interactable = undo;
+
+            if (_endTurnButton != null)
+                _endTurnButton.interactable = endTurn;
+        }
+
+        /// <summary>
+        /// Numbered list of the sequence, so the player can read back the order their commands will run in.
+        /// </summary>
+        string BuildQueueText()
+        {
+            IReadOnlyList<QueuedCard> entries = _cardPlay.Queue.Entries;
+            if (entries.Count == 0)
+                return "<alpha=#80>Kolejka pusta — zagraj karty, potem Resolve.";
+
+            _queueText.Clear();
+            _queueText.Append("Kolejka: ");
+
+            for (int i = 0; i < entries.Count; i++)
+            {
+                if (i > 0)
+                    _queueText.Append("  ");
+
+                BoardActionCardDefinition card = entries[i].Card;
+                _queueText.Append(i + 1).Append(". ").Append(card != null ? card.DisplayName : "?");
+            }
+
+            return _queueText.ToString();
         }
 
         void ClearCardViews()
@@ -206,25 +263,105 @@ namespace M3P
 
             RemoveLayoutGroup(gameObject);
 
-            GameObject actionPoints = new GameObject("ActionPoints", typeof(RectTransform));
-            actionPoints.transform.SetParent(transform, false);
-            SetupSidePanel((RectTransform)actionPoints.transform, true);
-            _actionPointsLabel = CreateLabel(actionPoints.transform, "AP -");
-            _actionPointsLabel.alignment = TextAlignmentOptions.Center;
+            GameObject stamina = new GameObject("Stamina", typeof(RectTransform));
+            stamina.transform.SetParent(transform, false);
+            SetupSidePanel((RectTransform)stamina.transform, true);
+            _staminaLabel = CreateLabel(stamina.transform, "Stamina -");
+            _staminaLabel.alignment = TextAlignmentOptions.Center;
 
             GameObject hand = new GameObject("Hand", typeof(RectTransform));
             hand.transform.SetParent(transform, false);
             _handContainer = (RectTransform)hand.transform;
             SetupHandContainer();
 
-            GameObject endTurn = new GameObject("EndTurn", typeof(RectTransform), typeof(Image), typeof(Button));
-            endTurn.transform.SetParent(transform, false);
-            endTurn.GetComponent<Image>().color = new Color(0.42f, 0.2f, 0.2f, 0.95f);
-            SetupSidePanel((RectTransform)endTurn.transform, false);
-            CreateLabel(endTurn.transform, "End Turn").alignment = TextAlignmentOptions.Center;
+            BuildQueueStrip();
+            BuildCommandColumn();
+        }
 
-            _endTurnButton = endTurn.GetComponent<Button>();
+        /// <summary>Reads back the queued sequence in execution order, above the hand.</summary>
+        void BuildQueueStrip()
+        {
+            GameObject strip = new GameObject("Queue", typeof(RectTransform));
+            strip.transform.SetParent(transform, false);
+
+            float horizontalInset = _sectionSpacing + _sidePanelWidth + _sectionSpacing;
+            RectTransform rect = (RectTransform)strip.transform;
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(0.5f, 1f);
+            rect.anchoredPosition = new Vector2(0f, -_sectionSpacing * 0.5f);
+            rect.sizeDelta = new Vector2(-horizontalInset * 2f, _queueStripHeight);
+
+            _queueLabel = CreateLabel(strip.transform, string.Empty);
+            _queueLabel.alignment = TextAlignmentOptions.Left;
+            _queueLabel.enableAutoSizing = false;
+            _queueLabel.fontSize = 16f;
+            _queueLabel.overflowMode = TextOverflowModes.Ellipsis;
+        }
+
+        /// <summary>
+        /// Resolve, Undo and End Turn stacked on the right. Undo only reaches the last queued card, and
+        /// End Turn folds a Resolve into itself when the queue is not empty.
+        /// </summary>
+        void BuildCommandColumn()
+        {
+            GameObject column = new GameObject("Commands", typeof(RectTransform));
+            column.transform.SetParent(transform, false);
+            RectTransform columnRect = (RectTransform)column.transform;
+            SetupSidePanel(columnRect, false);
+
+            _resolveButton = CreateCommandButton(
+                columnRect,
+                "Resolve",
+                "Resolve",
+                new Color(0.2f, 0.4f, 0.24f, 0.95f),
+                0,
+                out _);
+            _resolveButton.onClick.AddListener(() => BattleManager.Instance?.RequestResolve());
+
+            _undoButton = CreateCommandButton(
+                columnRect,
+                "Undo",
+                "Undo",
+                new Color(0.28f, 0.28f, 0.34f, 0.95f),
+                1,
+                out _);
+            _undoButton.onClick.AddListener(() => _cardPlay?.UndoLastCard());
+
+            _endTurnButton = CreateCommandButton(
+                columnRect,
+                "EndTurn",
+                "End Turn",
+                new Color(0.42f, 0.2f, 0.2f, 0.95f),
+                2,
+                out _endTurnLabel);
             _endTurnButton.onClick.AddListener(() => BattleManager.Instance?.RequestEndTurn());
+        }
+
+        Button CreateCommandButton(
+            RectTransform parent,
+            string name,
+            string text,
+            Color color,
+            int slot,
+            out TextMeshProUGUI label)
+        {
+            const int slotCount = 3;
+
+            GameObject button = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            button.transform.SetParent(parent, false);
+            button.GetComponent<Image>().color = color;
+
+            float slotHeight = 1f / slotCount;
+            RectTransform rect = (RectTransform)button.transform;
+            rect.anchorMin = new Vector2(0f, 1f - slotHeight * (slot + 1));
+            rect.anchorMax = new Vector2(1f, 1f - slotHeight * slot);
+            rect.offsetMin = new Vector2(0f, 2f);
+            rect.offsetMax = new Vector2(0f, -2f);
+
+            label = CreateLabel(button.transform, text);
+            label.alignment = TextAlignmentOptions.Center;
+            return button.GetComponent<Button>();
         }
 
         void SetupSidePanel(RectTransform rect, bool left)
@@ -243,7 +380,7 @@ namespace M3P
             _handContainer.anchorMin = new Vector2(0f, 0.5f);
             _handContainer.anchorMax = new Vector2(1f, 0.5f);
             _handContainer.pivot = new Vector2(0.5f, 0.5f);
-            _handContainer.anchoredPosition = Vector2.zero;
+            _handContainer.anchoredPosition = new Vector2(0f, -_queueStripHeight * 0.5f);
             _handContainer.sizeDelta = new Vector2(-horizontalInset * 2f, GetReferenceCardHeight());
         }
 

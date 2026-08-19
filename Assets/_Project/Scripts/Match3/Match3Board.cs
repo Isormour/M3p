@@ -5,7 +5,6 @@ using System.Collections.ObjectModel;
 using M3P;
 using UnityEngine;
 using UnityEngine.Events;
-using Random = UnityEngine.Random;
 
 namespace Match3
 {
@@ -17,7 +16,7 @@ namespace Match3
         Right = 3
     }
 
-    public class Match3Board : MonoBehaviour
+    public class Match3Board : MonoBehaviour, IBoardTypeCatalog
     {
         /// <summary>Shortest run that counts as a match.</summary>
         public const int MinimumMatchSize = 3;
@@ -54,21 +53,16 @@ namespace Match3
         private int _tilePoints;
         private BoardGravity? _pendingGravity;
         private BoardGravity _activeGravity = BoardGravity.Down;
-        private BoardTileSnapshot[,] _rewindSnapshot;
-        private BoardGravity? _rewindPendingGravity;
-        private bool _hasRewindSnapshot;
+        private readonly ResolveReport _resolveReport = new ResolveReport();
+        private readonly HashSet<Match3Tile> _crackedRemovalBuffer = new HashSet<Match3Tile>();
+        private System.Random _rng;
+        private int _nextTileId = 1;
 
-        struct BoardTileSnapshot
-        {
-            public int TypeId;
-            public int[] UpgradeIds;
-            public bool IsLocked;
-            public bool IsNegative;
-            public bool IsBlockade;
-            public bool IsEnemyElement;
-            public bool AllowsColorChange;
-            public bool CanDestroy;
-        }
+        /// <summary>
+        /// What the last Resolve produced. Reward runes and payouts read this rather than reacting to a
+        /// single card, because a sequence of cards builds one result together.
+        /// </summary>
+        public ResolveReport LastResolveReport => _resolveReport;
 
         /// <summary>
         /// Per-type counts from the most recent completed match resolution (after swap or full cascade). Empty if the last swap had no matches.
@@ -81,8 +75,11 @@ namespace Match3
         /// <summary>Highest combo reached in the current board session.</summary>
         public int BestCombo => _bestCombo;
 
-        /// <summary>Fired once a played card action and every cascade it triggered have finished resolving.</summary>
-        public event Action BoardActionResolved;
+        /// <summary>
+        /// Fired once a Resolve has finished: every queued card, the removal of cracked tiles and all
+        /// cascade waves. Runs after payouts settle, so listeners see the complete result of the sequence.
+        /// </summary>
+        public event Action<ResolveReport> SequenceResolved;
 
         /// <summary>Fired when the player clicks a tile. Targeting is owned by whoever is playing cards.</summary>
         public event Action<Match3Tile> TileClicked;
@@ -99,8 +96,11 @@ namespace Match3
         /// <summary>When false, mouse input does not affect the board.</summary>
         public bool AllowPlayerInput { get; set; } = true;
 
-        /// <summary>True while tiles are swapping or cascades are resolving.</summary>
+        /// <summary>True while a Resolve is running the queue, removing tiles or settling cascades.</summary>
         public bool IsResolving => _isResolving;
+
+        /// <summary>Direction tiles will fall on the next Resolve, once a Gravity Shift has been queued.</summary>
+        public BoardGravity? PendingGravity => _pendingGravity;
 
         public int Width => width;
 
@@ -224,10 +224,32 @@ namespace Match3
                 return;
             }
 
+            _rng ??= new System.Random(Environment.TickCount);
             _tiles = new Match3Tile[width, height];
             BuildInitialBoard();
             RaiseComboChanged(0);
             RaiseTilePointsChanged();
+
+            if (GetComponent<BoardPreviewOverlay>() == null)
+                gameObject.AddComponent<BoardPreviewOverlay>();
+        }
+
+        /// <summary>
+        /// Fixes the battle's random stream. Every refill and shuffle draws from it, so a battle can be
+        /// replayed and a queued random card can promise the preview the same board it will produce.
+        /// </summary>
+        public void SetRandomSeed(int seed)
+        {
+            _rng = new System.Random(seed);
+        }
+
+        int NextRandom(int exclusiveMax)
+        {
+            if (exclusiveMax <= 1)
+                return 0;
+
+            _rng ??= new System.Random(Environment.TickCount);
+            return _rng.Next(exclusiveMax);
         }
 
         public void OnTileClicked(Match3Tile tile)
@@ -309,21 +331,57 @@ namespace Match3
             }
 
             tile.Initialize(this, x, y, typeId, upgradeIds);
+            tile.SetTileId(_nextTileId++);
             tile.ApplyGraphics(definition, _config != null ? _config.TileUpgrades : null);
             _tiles[x, y] = tile;
         }
 
         /// <summary>
-        /// Runs one card action and everything it sets off, then reports completion through
-        /// <see cref="BoardActionResolved"/>. Card actions are never rolled back: a swap that forms no
-        /// match still stands.
+        /// Copies the board into plain data for planning. The queue clones this and applies its commands
+        /// to it, so the player targets the state the sequence will actually reach.
         /// </summary>
-        public IEnumerator ExecuteActionRoutine(
-            BoardActionLogic logic,
-            IReadOnlyList<Vector2Int> targets,
-            int extraChoice = 0)
+        public SimBoard CaptureSimBoard()
         {
-            if (logic == null || _tiles == null || _isResolving)
+            SimBoard sim = new SimBoard(width, height, this) { PendingGravity = _pendingGravity };
+            if (_tiles == null)
+                return sim;
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    Match3Tile tile = _tiles[x, y];
+                    if (tile == null)
+                        continue;
+
+                    sim.SetTile(x, y, new SimTile
+                    {
+                        Id = tile.TileId,
+                        TypeId = tile.TypeId,
+                        UpgradeIds = tile.UpgradeIds,
+                        IsLocked = tile.IsLocked,
+                        IsNegative = tile.IsNegative,
+                        IsBlockade = tile.IsBlockade,
+                        IsEnemyElement = tile.IsEnemyElement,
+                        AllowsColorChange = tile.AllowsColorChange,
+                        CanDestroy = tile.CanDestroy,
+                        IsCracked = tile.IsCracked
+                    });
+                }
+            }
+
+            return sim;
+        }
+
+        /// <summary>
+        /// Runs one Resolve: every queued command in the order it was played, then the removal of tiles
+        /// the cards cracked, then collapsing, refilling, matching and the full cascade. The board is
+        /// only checked for matches once the whole sequence has run, so cards build one result together.
+        /// Nothing here is reversible — Undo exists only while cards are still in the queue.
+        /// </summary>
+        public IEnumerator ResolveSequenceRoutine(IReadOnlyList<BoardOp> ops, int cardCount)
+        {
+            if (_tiles == null || _isResolving)
             {
                 yield break;
             }
@@ -331,34 +389,109 @@ namespace Match3
             _isResolving = true;
             _currentCombo = 0;
             _destroyedTypeCountsThisResolve.Clear();
+            _resolveReport.Reset();
+            _resolveReport.CardsInSequence = cardCount;
             RaiseComboChanged(0);
 
-            bool isRewind = logic is RewindBoardLogic;
-            if (!isRewind)
+            if (ops != null)
             {
-                CaptureRewindSnapshot();
+                for (int i = 0; i < ops.Count; i++)
+                    yield return StartCoroutine(ApplyOpRoutine(ops[i]));
             }
 
-            yield return StartCoroutine(logic.ExecuteRoutine(this, targets, extraChoice));
+            yield return StartCoroutine(RemoveCrackedTilesRoutine());
+            yield return StartCoroutine(ResolveCascadesRoutine());
 
-            if (logic.ResolvesMatchesAfterExecute)
-            {
-                yield return StartCoroutine(ResolveCascadesRoutine());
-                if (_destroyedTypeCountsThisResolve.Count > 0)
-                {
-                    _pendingGravity = null;
-                }
-            }
-
+            _pendingGravity = null;
             _activeGravity = BoardGravity.Down;
             _lastDestroyedTypeCounts = new ReadOnlyDictionary<int, int>(new Dictionary<int, int>(_destroyedTypeCountsThisResolve));
             _isResolving = false;
-            BoardActionResolved?.Invoke();
+            SequenceResolved?.Invoke(_resolveReport);
         }
 
         /// <summary>
-        /// Settles the board after an action: drops tiles into gaps, refills, then clears every match
-        /// until none remain. Each wave reports its groups so damage can be scored per match.
+        /// Replays one command on the real board with animation. The predicted board applied the exact
+        /// same command while planning, which is what keeps the preview trustworthy.
+        /// </summary>
+        IEnumerator ApplyOpRoutine(BoardOp op)
+        {
+            switch (op.Kind)
+            {
+                case BoardOpKind.Swap:
+                    if (op.Cells.Length >= 2)
+                        yield return StartCoroutine(SwapRoutine(op.Cells[0], op.Cells[1]));
+                    yield break;
+                case BoardOpKind.Cycle:
+                    yield return StartCoroutine(CycleCellsRoutine(op.Cells));
+                    yield break;
+                case BoardOpKind.Recolor:
+                    if (op.Cells.Length >= 1)
+                        SetTileType(op.Cells[0].x, op.Cells[0].y, op.Value);
+                    yield break;
+                case BoardOpKind.MarkCracked:
+                    if (op.Cells.Length >= 1)
+                        MarkCracked(op.Cells[0]);
+                    yield break;
+                case BoardOpKind.Purge:
+                    if (op.Cells.Length >= 1 && PurgeTile(op.Cells[0]))
+                        _resolveReport.TilesClearedByCards++;
+                    yield break;
+                case BoardOpKind.SetGravity:
+                    _pendingGravity = (BoardGravity)op.Value;
+                    yield break;
+                case BoardOpKind.Shuffle:
+                    yield return StartCoroutine(ShuffleMovableTilesRoutine(op.Value));
+                    yield break;
+            }
+        }
+
+        /// <summary>
+        /// Marks a tile Cracked. The mark rides along with the tile, so later cards in the sequence can
+        /// still swap or match it; removal waits until every card has run.
+        /// </summary>
+        public void MarkCracked(Vector2Int cell)
+        {
+            Match3Tile tile = GetTile(cell.x, cell.y);
+            if (tile == null || !tile.CanDestroy)
+            {
+                return;
+            }
+
+            tile.SetCracked(true);
+        }
+
+        /// <summary>
+        /// Clears everything the cards cracked, in one batch before gravity. These tiles pay mana but
+        /// form no <see cref="MatchGroup"/>, so destruction feeds skills instead of dealing basic damage.
+        /// </summary>
+        IEnumerator RemoveCrackedTilesRoutine()
+        {
+            _crackedRemovalBuffer.Clear();
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    Match3Tile tile = _tiles[x, y];
+                    if (tile != null && tile.IsCracked)
+                        _crackedRemovalBuffer.Add(tile);
+                }
+            }
+
+            if (_crackedRemovalBuffer.Count == 0)
+            {
+                yield break;
+            }
+
+            ClearTiles(_crackedRemovalBuffer);
+            _resolveReport.TilesClearedByCards += _crackedRemovalBuffer.Count;
+            yield break;
+        }
+
+        /// <summary>
+        /// Settles the board once the sequence has run: drops tiles into gaps, refills, then clears every
+        /// match until none remain. Each wave reports its groups so damage is scored per match, and the
+        /// whole run is summarised into one <see cref="ResolveReport"/>.
         /// </summary>
         private IEnumerator ResolveCascadesRoutine()
         {
@@ -379,6 +512,7 @@ namespace Match3
                 RaiseComboChanged(_currentCombo);
                 CollectUniqueTiles(groups, _matchedTilesBuffer);
                 ClearTiles(_matchedTilesBuffer);
+                _resolveReport.AddWave(groups);
                 MatchWaveCompleted?.Invoke(groups);
                 AccumulateTilePointsForWave(_destroyedThisWave);
                 RaiseTilePointsChanged();
@@ -411,51 +545,6 @@ namespace Match3
             yield return secondMove;
         }
 
-        /// <summary>Slides a whole row sideways, wrapping the tile pushed off the edge around to the other side.</summary>
-        public IEnumerator ShiftRowRoutine(int y, int direction)
-        {
-            if (_tiles == null || y < 0 || y >= height || direction == 0)
-            {
-                yield break;
-            }
-
-            int step = direction > 0 ? 1 : -1;
-            Match3Tile[] before = new Match3Tile[width];
-            for (int x = 0; x < width; x++)
-            {
-                before[x] = _tiles[x, y];
-            }
-
-            List<Coroutine> moves = new List<Coroutine>();
-            for (int x = 0; x < width; x++)
-            {
-                int sourceX = ((x - step) % width + width) % width;
-                Match3Tile tile = before[sourceX];
-                _tiles[x, y] = tile;
-
-                if (tile == null)
-                {
-                    continue;
-                }
-
-                tile.SetCoordinates(x, y);
-                Vector3 target = GridToWorld(x, y);
-
-                if (Mathf.Abs(x - sourceX) > 1)
-                {
-                    tile.transform.position = target;
-                    continue;
-                }
-
-                moves.Add(StartCoroutine(AnimateMove(tile.transform, target, swapDuration)));
-            }
-
-            for (int i = 0; i < moves.Count; i++)
-            {
-                yield return moves[i];
-            }
-        }
-
         /// <summary>
         /// Destroys tiles outright. They still pay mana, but because no <see cref="MatchGroup"/> is formed
         /// they trigger no basic attack — destruction cards feed skills rather than dealing damage.
@@ -484,26 +573,22 @@ namespace Match3
         /// Removes a purgeable object. Overlay blockades leave the tile underneath; a whole negative
         /// tile is deleted without energy or shards.
         /// </summary>
-        public void PurgeTile(Vector2Int cell)
+        public bool PurgeTile(Vector2Int cell)
         {
             Match3Tile tile = GetTile(cell.x, cell.y);
             if (tile == null || !tile.IsPurgeable)
             {
-                return;
+                return false;
             }
 
             if (tile.IsBlockade && !tile.IsNegative && !tile.IsEnemyElement)
             {
                 tile.ClearNegativeOverlay();
-                return;
+                return false;
             }
 
             DestroyTiles(new[] { cell }, grantEnergy: false);
-        }
-
-        public void SetPendingGravity(BoardGravity gravity)
-        {
-            _pendingGravity = gravity;
+            return true;
         }
 
         /// <summary>Cycles tiles along <paramref name="cells"/>: the tile at index i moves to index i + 1.</summary>
@@ -545,7 +630,12 @@ namespace Match3
             }
         }
 
-        public IEnumerator ShuffleMovableTilesRoutine()
+        /// <summary>
+        /// Rearranges movable tiles from a fixed seed, using the same permutation the predicted board
+        /// computed. No retry for a favourable layout: a chaotic shuffle is meant to be a gamble, and a
+        /// retry loop could not be mirrored in the preview.
+        /// </summary>
+        public IEnumerator ShuffleMovableTilesRoutine(int seed)
         {
             if (_tiles == null)
             {
@@ -566,23 +656,8 @@ namespace Match3
                 startPositions[movable[i]] = movable[i].transform.position;
             }
 
-            const int maxAttempts = 32;
-            bool foundLayout = false;
-            for (int attempt = 0; attempt < maxAttempts; attempt++)
-            {
-                ShuffleList(movable);
-                ApplyTilesToCells(movable, cells);
-                if (!HasAnyMatch() && HasLegalSwapMove())
-                {
-                    foundLayout = true;
-                    break;
-                }
-            }
-
-            if (!foundLayout)
-            {
-                ApplyTilesToCells(movable, cells);
-            }
+            SimBoard.ShuffleDeterministic(movable, seed);
+            ApplyTilesToCells(movable, cells);
 
             List<Coroutine> moves = new List<Coroutine>(movable.Count);
             for (int i = 0; i < movable.Count; i++)
@@ -598,57 +673,10 @@ namespace Match3
             }
         }
 
-        public bool RestoreRewindSnapshot()
-        {
-            if (!_hasRewindSnapshot || _rewindSnapshot == null || _tiles == null)
-            {
-                return false;
-            }
-
-            for (int x = 0; x < width; x++)
-            {
-                for (int y = 0; y < height; y++)
-                {
-                    Match3Tile tile = _tiles[x, y];
-                    if (tile == null)
-                    {
-                        continue;
-                    }
-
-                    _tiles[x, y] = null;
-                    Destroy(tile.gameObject);
-                }
-            }
-
-            for (int x = 0; x < width; x++)
-            {
-                for (int y = 0; y < height; y++)
-                {
-                    BoardTileSnapshot snapshot = _rewindSnapshot[x, y];
-                    if (snapshot.TypeId < 0)
-                    {
-                        continue;
-                    }
-
-                    SpawnTile(x, y, snapshot.TypeId, snapshot.UpgradeIds);
-                    Match3Tile spawned = _tiles[x, y];
-                    spawned?.ApplyFlags(
-                        snapshot.IsLocked,
-                        snapshot.IsNegative,
-                        snapshot.IsBlockade,
-                        snapshot.IsEnemyElement,
-                        snapshot.AllowsColorChange,
-                        snapshot.CanDestroy);
-                }
-            }
-
-            _pendingGravity = _rewindPendingGravity;
-            _hasRewindSnapshot = false;
-            _rewindSnapshot = null;
-            return true;
-        }
-
-        /// <summary>Replaces the tile at a cell with a fresh one of another type, keeping the correct prefab.</summary>
+        /// <summary>
+        /// Replaces the tile at a cell with a fresh one of another type, keeping the correct prefab.
+        /// Crafted upgrades, board flags and a Cracked mark all survive the recolour.
+        /// </summary>
         public bool SetTileType(int x, int y, int typeId)
         {
             Match3Tile tile = GetTile(x, y);
@@ -658,9 +686,28 @@ namespace Match3
             }
 
             int[] upgradeIds = tile.UpgradeIds;
+            bool isLocked = tile.IsLocked;
+            bool isNegative = tile.IsNegative;
+            bool isBlockade = tile.IsBlockade;
+            bool isEnemyElement = tile.IsEnemyElement;
+            bool allowsColorChange = tile.AllowsColorChange;
+            bool canDestroy = tile.CanDestroy;
+            bool isCracked = tile.IsCracked;
+            int tileId = tile.TileId;
+
             _tiles[x, y] = null;
             Destroy(tile.gameObject);
             SpawnTile(x, y, typeId, upgradeIds);
+
+            Match3Tile spawned = _tiles[x, y];
+            if (spawned == null)
+            {
+                return false;
+            }
+
+            spawned.SetTileId(tileId);
+            spawned.ApplyFlags(isLocked, isNegative, isBlockade, isEnemyElement, allowsColorChange, canDestroy);
+            spawned.SetCracked(isCracked);
             return true;
         }
 
@@ -774,7 +821,14 @@ namespace Match3
                     AddDestroyedCount(typeId, _destroyedTypeCountsThisResolve);
                     _config?.TileUpgrades?.ApplyCleared(
                         tile.UpgradeIds,
-                        new TileUpgradeContext(player, opponent, typeId, tile.transform.position));
+                        new TileUpgradeContext(
+                            player,
+                            opponent,
+                            typeId,
+                            tile.transform.position,
+                            BattleManager.Instance != null ? BattleManager.Instance.ResolveLimits : null,
+                            BattleManager.Instance != null ? BattleManager.Instance.CardPlay : null,
+                            tile.TileId));
                 }
 
                 TileDestroyed?.Invoke(tile.transform.position, typeId);
@@ -898,10 +952,13 @@ namespace Match3
             tileTransform.position = targetPosition;
         }
 
-        private Vector3 GridToWorld(int x, int y)
+        public Vector3 GridToWorld(int x, int y)
         {
             return transform.position + new Vector3(x * tileSpacing, y * tileSpacing, 0f);
         }
+
+        /// <summary>Spacing between cell centres, used by overlays that draw on top of the board.</summary>
+        public float TileSpacing => tileSpacing;
 
         private void RaiseComboChanged(int comboValue)
         {
@@ -1083,38 +1140,6 @@ namespace Match3
             return tile != null && !tile.CanMove;
         }
 
-        void CaptureRewindSnapshot()
-        {
-            _rewindSnapshot = new BoardTileSnapshot[width, height];
-            for (int x = 0; x < width; x++)
-            {
-                for (int y = 0; y < height; y++)
-                {
-                    Match3Tile tile = _tiles[x, y];
-                    if (tile == null)
-                    {
-                        _rewindSnapshot[x, y] = new BoardTileSnapshot { TypeId = -1 };
-                        continue;
-                    }
-
-                    _rewindSnapshot[x, y] = new BoardTileSnapshot
-                    {
-                        TypeId = tile.TypeId,
-                        UpgradeIds = tile.UpgradeIds,
-                        IsLocked = tile.IsLocked,
-                        IsNegative = tile.IsNegative,
-                        IsBlockade = tile.IsBlockade,
-                        IsEnemyElement = tile.IsEnemyElement,
-                        AllowsColorChange = tile.AllowsColorChange,
-                        CanDestroy = tile.CanDestroy
-                    };
-                }
-            }
-
-            _rewindPendingGravity = _pendingGravity;
-            _hasRewindSnapshot = true;
-        }
-
         void CollectMovableTiles(List<Match3Tile> movable, List<Vector2Int> cells)
         {
             movable.Clear();
@@ -1146,21 +1171,8 @@ namespace Match3
             }
         }
 
-        static void ShuffleList<T>(IList<T> values)
-        {
-            for (int i = values.Count - 1; i > 0; i--)
-            {
-                int swapIndex = Random.Range(0, i + 1);
-                (values[i], values[swapIndex]) = (values[swapIndex], values[i]);
-            }
-        }
-
-        bool HasAnyMatch()
-        {
-            return FindAllMatchGroups().Count > 0;
-        }
-
-        bool HasLegalSwapMove()
+        /// <summary>True when some orthogonal swap would still form a match.</summary>
+        public bool HasLegalSwapMove()
         {
             for (int x = 0; x < width; x++)
             {
@@ -1309,9 +1321,9 @@ namespace Match3
         TileSpawnSpec PickSpawnSpec()
         {
             if (_spawnSpecs.Count == 0)
-                return new TileSpawnSpec(Random.Range(0, Mathf.Max(1, _config.TileTypeCount)), Array.Empty<int>());
+                return new TileSpawnSpec(NextRandom(Mathf.Max(1, _config.TileTypeCount)), Array.Empty<int>());
 
-            return _spawnSpecs[Random.Range(0, _spawnSpecs.Count)];
+            return _spawnSpecs[NextRandom(_spawnSpecs.Count)];
         }
     }
 }

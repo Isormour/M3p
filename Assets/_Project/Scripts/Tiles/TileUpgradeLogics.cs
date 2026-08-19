@@ -31,6 +31,7 @@ namespace M3P
         }
     }
 
+    /// <summary>Hands stamina back. Every stamina upgrade on a cleared tile pays in full, with no Resolve cap.</summary>
     [Serializable]
     public sealed class AddApUpgradeLogic : TileUpgradeLogic
     {
@@ -40,7 +41,24 @@ namespace M3P
 
         public override void OnCleared(TileUpgradeContext context)
         {
+            context.Limits?.RecordStaminaRefund(Amount);
             context.Player?.Stats?.Soft?.AddActionPoints(Amount);
+        }
+    }
+
+    /// <summary>Draws a card, capped to one draw per Resolve.</summary>
+    [Serializable]
+    public sealed class DrawCardUpgradeLogic : TileUpgradeLogic
+    {
+        public override void OnCleared(TileUpgradeContext context)
+        {
+            if (context.CardPlay == null)
+                return;
+
+            if (context.Limits != null && !context.Limits.TrySpendCardDraw())
+                return;
+
+            context.CardPlay.DrawCards(1);
         }
     }
 
@@ -57,6 +75,10 @@ namespace M3P
         }
     }
 
+    /// <summary>
+    /// Stacks Burn on the opponent. Capped per Resolve so a wide sequence cannot dump an entire Ignite
+    /// payoff in one go; the stack itself is meant to build up to a skill, not replace it.
+    /// </summary>
     [Serializable]
     public sealed class StackBurnUpgradeLogic : TileUpgradeLogic
     {
@@ -67,6 +89,9 @@ namespace M3P
         public override void OnCleared(TileUpgradeContext context)
         {
             if (_burn == null || context.Opponent == null)
+                return;
+
+            if (context.Limits != null && !context.Limits.TrySpendBurnStack())
                 return;
 
             context.Opponent.ApplyStatus(_burn, context.Player);

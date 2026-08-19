@@ -1,29 +1,33 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Match3
 {
-    /// <summary>Removes one negative tile, blockade or opponent-created piece. Pays no energy.</summary>
+    /// <summary>Removes one negative tile, blockade or opponent-created piece. Pays no mana.</summary>
     [Serializable]
     public sealed class PurgeTileLogic : BoardActionLogic
     {
         public override CardTargeting Targeting => CardTargeting.SingleTile;
 
-        public override bool IsValidTarget(Match3Board board, IReadOnlyList<Vector2Int> picked, Vector2Int candidate)
+        public override bool IsValidTarget(SimBoard board, IReadOnlyList<Vector2Int> picked, Vector2Int candidate)
         {
             return base.IsValidTarget(board, picked, candidate) && board.CanPurgeTile(candidate.x, candidate.y);
         }
 
-        public override IEnumerator ExecuteRoutine(Match3Board board, IReadOnlyList<Vector2Int> targets, int extraChoice)
+        public override void BuildOps(
+            SimBoard board,
+            IReadOnlyList<Vector2Int> targets,
+            int extraChoice,
+            int seed,
+            List<BoardOp> ops)
         {
             if (targets.Count < 1)
             {
-                yield break;
+                return;
             }
 
-            board.PurgeTile(targets[0]);
+            ops.Add(BoardOp.Purge(targets[0]));
         }
     }
 
@@ -35,44 +39,14 @@ namespace Match3
     {
         public override CardTargeting Targeting => CardTargeting.SingleTile;
 
-        public override bool IsValidTarget(Match3Board board, IReadOnlyList<Vector2Int> picked, Vector2Int candidate)
+        public override bool IsValidTarget(SimBoard board, IReadOnlyList<Vector2Int> picked, Vector2Int candidate)
         {
             if (!base.IsValidTarget(board, picked, candidate))
             {
                 return false;
             }
 
-            return IsValidOrigin(board, candidate);
-        }
-
-        public override IEnumerator ExecuteRoutine(Match3Board board, IReadOnlyList<Vector2Int> targets, int extraChoice)
-        {
-            if (targets.Count < 1)
-            {
-                yield break;
-            }
-
-            Vector2Int origin = targets[0];
-            Vector2Int[] cells =
-            {
-                origin,
-                new Vector2Int(origin.x, origin.y + 1),
-                new Vector2Int(origin.x + 1, origin.y + 1),
-                new Vector2Int(origin.x + 1, origin.y)
-            };
-            yield return board.CycleCellsRoutine(cells);
-        }
-
-        static bool IsValidOrigin(Match3Board board, Vector2Int origin)
-        {
-            Vector2Int[] cells =
-            {
-                origin,
-                new Vector2Int(origin.x, origin.y + 1),
-                new Vector2Int(origin.x + 1, origin.y + 1),
-                new Vector2Int(origin.x + 1, origin.y)
-            };
-
+            Vector2Int[] cells = SquareCells(candidate);
             for (int i = 0; i < cells.Length; i++)
             {
                 if (!board.CanMoveTile(cells[i].x, cells[i].y))
@@ -82,6 +56,32 @@ namespace Match3
             }
 
             return true;
+        }
+
+        public override void BuildOps(
+            SimBoard board,
+            IReadOnlyList<Vector2Int> targets,
+            int extraChoice,
+            int seed,
+            List<BoardOp> ops)
+        {
+            if (targets.Count < 1)
+            {
+                return;
+            }
+
+            ops.Add(BoardOp.Cycle(SquareCells(targets[0])));
+        }
+
+        static Vector2Int[] SquareCells(Vector2Int origin)
+        {
+            return new[]
+            {
+                origin,
+                new Vector2Int(origin.x, origin.y + 1),
+                new Vector2Int(origin.x + 1, origin.y + 1),
+                new Vector2Int(origin.x + 1, origin.y)
+            };
         }
     }
 
@@ -93,7 +93,7 @@ namespace Match3
     {
         public override CardTargeting Targeting => CardTargeting.Triple;
 
-        public override bool IsValidTarget(Match3Board board, IReadOnlyList<Vector2Int> picked, Vector2Int candidate)
+        public override bool IsValidTarget(SimBoard board, IReadOnlyList<Vector2Int> picked, Vector2Int candidate)
         {
             if (!base.IsValidTarget(board, picked, candidate) || !board.CanMoveTile(candidate.x, candidate.y))
             {
@@ -113,14 +113,19 @@ namespace Match3
             return FormsTriangleCorners(picked[0], picked[1], candidate);
         }
 
-        public override IEnumerator ExecuteRoutine(Match3Board board, IReadOnlyList<Vector2Int> targets, int extraChoice)
+        public override void BuildOps(
+            SimBoard board,
+            IReadOnlyList<Vector2Int> targets,
+            int extraChoice,
+            int seed,
+            List<BoardOp> ops)
         {
             if (targets.Count < 3)
             {
-                yield break;
+                return;
             }
 
-            yield return board.CycleCellsRoutine(targets);
+            ops.Add(BoardOp.Cycle(new[] { targets[0], targets[1], targets[2] }));
         }
 
         static bool FormsTriangleCorners(Vector2Int a, Vector2Int b, Vector2Int c)
@@ -145,7 +150,7 @@ namespace Match3
     }
 
     /// <summary>
-    /// Sets gravity for the next resolve that actually removes tiles, then returns to the default.
+    /// Sets the direction tiles fall for the rest of the Resolve, including every cascade wave it sets off.
     /// </summary>
     [Serializable]
     public sealed class GravityShiftLogic : BoardActionLogic
@@ -162,47 +167,67 @@ namespace Match3
 
         public override CardExtraChoice ExtraChoice => CardExtraChoice.GravityDirection;
 
-        public override bool ResolvesMatchesAfterExecute => false;
-
-        public override void CollectExtraChoices(Match3Board board, List<CardChoiceOption> destination)
+        public override void CollectExtraChoices(SimBoard board, List<CardChoiceOption> destination)
         {
             destination.Clear();
             destination.AddRange(Directions);
         }
 
-        public override IEnumerator ExecuteRoutine(Match3Board board, IReadOnlyList<Vector2Int> targets, int extraChoice)
+        public override void BuildOps(
+            SimBoard board,
+            IReadOnlyList<Vector2Int> targets,
+            int extraChoice,
+            int seed,
+            List<BoardOp> ops)
         {
-            board.SetPendingGravity((BoardGravity)extraChoice);
-            yield break;
+            ops.Add(BoardOp.SetGravity((BoardGravity)extraChoice));
         }
     }
 
-    /// <summary>Randomly rearranges movable tiles. Accidental matches are not scored.</summary>
+    /// <summary>
+    /// Randomly rearranges movable tiles. Finale: the seed is fixed when the card enters the queue and
+    /// nothing may be queued behind it, so the preview never promises a layout it cannot know.
+    /// </summary>
     [Serializable]
     public sealed class ChaoticShuffleLogic : BoardActionLogic
     {
         public override CardTargeting Targeting => CardTargeting.None;
 
-        public override bool ResolvesMatchesAfterExecute => false;
+        public override bool IsFinale => true;
 
-        public override IEnumerator ExecuteRoutine(Match3Board board, IReadOnlyList<Vector2Int> targets, int extraChoice)
+        public override bool NeedsSeed => true;
+
+        public override void BuildOps(
+            SimBoard board,
+            IReadOnlyList<Vector2Int> targets,
+            int extraChoice,
+            int seed,
+            List<BoardOp> ops)
         {
-            yield return board.ShuffleMovableTilesRoutine();
+            ops.Add(BoardOp.Shuffle(seed));
         }
     }
 
-    /// <summary>Restores the board to the layout from before the previously played card.</summary>
+    /// <summary>
+    /// Restored the board to the layout from before the previous card. Parked: with a free Undo of the
+    /// last queued card the effect needs a new purpose, so the card cannot be queued yet.
+    /// </summary>
     [Serializable]
     public sealed class RewindBoardLogic : BoardActionLogic
     {
         public override CardTargeting Targeting => CardTargeting.None;
 
-        public override bool ResolvesMatchesAfterExecute => false;
+        public override bool IsAvailable => false;
 
-        public override IEnumerator ExecuteRoutine(Match3Board board, IReadOnlyList<Vector2Int> targets, int extraChoice)
+        public override string UnavailableReason => "Rewind wymaga przeprojektowania pod model kolejki.";
+
+        public override void BuildOps(
+            SimBoard board,
+            IReadOnlyList<Vector2Int> targets,
+            int extraChoice,
+            int seed,
+            List<BoardOp> ops)
         {
-            board.RestoreRewindSnapshot();
-            yield break;
         }
     }
 }

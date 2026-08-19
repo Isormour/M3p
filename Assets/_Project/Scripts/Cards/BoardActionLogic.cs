@@ -1,14 +1,13 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Match3
 {
-    /// <summary>How many board cells a card needs picked before it can be played.</summary>
+    /// <summary>How many board cells a card needs picked before it can join the queue.</summary>
     public enum CardTargeting
     {
-        /// <summary>Plays immediately, no board selection.</summary>
+        /// <summary>Queues immediately, no board selection.</summary>
         None = 0,
         SingleTile = 1,
         AdjacentPair = 2,
@@ -39,8 +38,10 @@ namespace Match3
     }
 
     /// <summary>
-    /// The board-side behaviour of a card. Logic only mutates the board; collapsing, refilling and
-    /// scoring matches is handled once by <see cref="Match3Board.ExecuteActionRoutine"/>.
+    /// The board-side behaviour of a card. A card does not touch the board when it is played: it
+    /// compiles into <see cref="BoardOp"/> commands against the predicted board, and the real board
+    /// replays those same commands at Resolve. Collapsing, refilling and scoring happen once per
+    /// Resolve, after every card in the sequence has run.
     /// </summary>
     [Serializable]
     public abstract class BoardActionLogic
@@ -50,28 +51,49 @@ namespace Match3
         public virtual CardExtraChoice ExtraChoice => CardExtraChoice.None;
 
         /// <summary>
-        /// When false, the board skips collapse, refill and match scoring after this action. Used by
-        /// shuffle, rewind and delayed gravity so those cards cannot accidentally score.
+        /// A Finale card has to be the last one in the queue. Used by cards whose result the player
+        /// cannot plan around, so nothing is queued behind an outcome the preview cannot show.
         /// </summary>
-        public virtual bool ResolvesMatchesAfterExecute => true;
+        public virtual bool IsFinale => false;
 
-        public abstract IEnumerator ExecuteRoutine(
-            Match3Board board,
+        /// <summary>
+        /// Needs a random seed fixed the moment it enters the queue, so the preview and the Resolve
+        /// produce the same board.
+        /// </summary>
+        public virtual bool NeedsSeed => false;
+
+        /// <summary>
+        /// False keeps the card out of the queue entirely. Used for designs parked until a later
+        /// prototype, so their assets stay valid without the card being playable.
+        /// </summary>
+        public virtual bool IsAvailable => true;
+
+        /// <summary>Why the card cannot be queued, shown to the player when <see cref="IsAvailable"/> is false.</summary>
+        public virtual string UnavailableReason => string.Empty;
+
+        /// <summary>
+        /// Turns picked targets into board commands. Runs against the predicted board, which already
+        /// includes every card queued earlier in the sequence.
+        /// </summary>
+        public abstract void BuildOps(
+            SimBoard board,
             IReadOnlyList<Vector2Int> targets,
-            int extraChoice);
+            int extraChoice,
+            int seed,
+            List<BoardOp> ops);
 
-        public virtual void CollectExtraChoices(Match3Board board, List<CardChoiceOption> destination)
+        public virtual void CollectExtraChoices(SimBoard board, List<CardChoiceOption> destination)
         {
             destination.Clear();
         }
 
         /// <summary>
-        /// Whether <paramref name="candidate"/> may be added to the cells picked so far. Used to reject
-        /// clicks during targeting, before any AP is spent.
+        /// Whether <paramref name="candidate"/> may be added to the cells picked so far. Validated
+        /// against the predicted board, so a card can target the result of the cards ahead of it.
         /// </summary>
-        public virtual bool IsValidTarget(Match3Board board, IReadOnlyList<Vector2Int> picked, Vector2Int candidate)
+        public virtual bool IsValidTarget(SimBoard board, IReadOnlyList<Vector2Int> picked, Vector2Int candidate)
         {
-            if (board == null || !board.IsInsideBoard(candidate.x, candidate.y))
+            if (board == null || !board.IsInside(candidate.x, candidate.y))
             {
                 return false;
             }
