@@ -1,5 +1,5 @@
-using System;
 using M3P;
+using System;
 using UnityEngine;
 
 namespace Match3
@@ -12,12 +12,12 @@ namespace Match3
         [SerializeField] private TileSlot _slotDown;
         [SerializeField] private TileSlot _slotLeft;
         [SerializeField] private TileSlot _slotRight;
+        [SerializeField] private TileArrow _arrowUp;
+        [SerializeField] private TileArrow _arrowDown;
+        [SerializeField] private TileArrow _arrowLeft;
+        [SerializeField] private TileArrow _arrowRight;
 
         const int UpgradeSlotCount = 4;
-        const float UpgradeSlotY = -0.38f;
-        const float UpgradeSlotSpacing = 0.22f;
-        const float UpgradeSlotScale = 0.48f;
-        const float UpgradeSlotZ = -0.022f;
 
         public int X { get; private set; }
         public int Y { get; private set; }
@@ -55,13 +55,7 @@ namespace Match3
 
         void Awake()
         {
-            LayoutUpgradeBar();
             ApplyUpgradeSlots();
-        }
-
-        void OnValidate()
-        {
-            LayoutUpgradeBar();
         }
 
         public void Initialize(Match3Board board, int x, int y, int typeId, int[] upgradeIds = null)
@@ -93,32 +87,9 @@ namespace Match3
 
         void ApplyUpgradeSlots()
         {
-            LayoutUpgradeBar();
             bool showBar = HasAnyUpgrade();
             for (int i = 0; i < UpgradeSlotCount; i++)
-                ApplyUpgradeSlot(SlotAt(i), i, showBar);
-        }
-
-        /// <summary>
-        /// Four upgrade icons sit in a row along the bottom of the gem, matching the
-        /// tile-upgrade concept art (not the old compass layout).
-        /// </summary>
-        void LayoutUpgradeBar()
-        {
-            float startX = -UpgradeSlotSpacing * (UpgradeSlotCount - 1) * 0.5f;
-            for (int i = 0; i < UpgradeSlotCount; i++)
-            {
-                TileSlot slot = SlotAt(i);
-                if (slot == null)
-                    continue;
-
-                Transform slotTransform = slot.transform;
-                slotTransform.localPosition = new Vector3(
-                    startX + i * UpgradeSlotSpacing,
-                    UpgradeSlotY,
-                    UpgradeSlotZ);
-                slotTransform.localScale = Vector3.one * UpgradeSlotScale;
-            }
+                ApplyUpgradeSlot(i, showBar);
         }
 
         TileSlot SlotAt(int index)
@@ -133,27 +104,43 @@ namespace Match3
             }
         }
 
-        void ApplyUpgradeSlot(TileSlot slot, int index, bool showBar)
+        TileArrow ArrowAt(int index)
         {
-            if (slot == null)
-                return;
-
-            if (!showBar)
+            switch (index)
             {
-                slot.Hide();
-                return;
+                case 0: return _arrowUp;
+                case 1: return _arrowDown;
+                case 2: return _arrowLeft;
+                case 3: return _arrowRight;
+                default: return null;
+            }
+        }
+
+        void ApplyUpgradeSlot(int index, bool showBar)
+        {
+            TileSlot slot = SlotAt(index);
+            TileUpgradeDefinition upgrade = showBar ? UpgradeAt(index) : null;
+
+            if (slot != null)
+            {
+                if (upgrade == null && !showBar)
+                    slot.Hide();
+                else
+                    slot.Show(upgrade != null ? upgrade.Icon : null);
             }
 
+            TileArrow arrow = ArrowAt(index);
+            if (arrow != null)
+                arrow.SetEnabled(upgrade != null && upgrade.Logic != null && upgrade.Logic.AffectsNeighbor);
+        }
+
+        TileUpgradeDefinition UpgradeAt(int index)
+        {
             int upgradeId = UpgradeIdAt(index);
-            Sprite icon = null;
-            if (upgradeId != TileUpgradeConfig.InvalidUpgradeId
-                && _upgrades != null
-                && _upgrades.TryGetUpgrade(upgradeId, out TileUpgradeDefinition upgrade))
-            {
-                icon = upgrade.Icon;
-            }
+            if (upgradeId == TileUpgradeConfig.InvalidUpgradeId || _upgrades == null)
+                return null;
 
-            slot.Show(icon);
+            return _upgrades.TryGetUpgrade(upgradeId, out TileUpgradeDefinition upgrade) ? upgrade : null;
         }
 
         bool HasAnyUpgrade()

@@ -68,16 +68,16 @@ namespace M3P
                 if (tile == null)
                     continue;
 
-                ForEachLogic(tile.UpgradeIds, logic => logic.CollectExtraClears(board, tile, tiles));
+                ForEachLogic(tile.UpgradeIds, (logic, slot) => logic.CollectExtraClears(board, tile, slot, tiles));
             }
         }
 
         public void ApplyCleared(int[] upgradeIds, TileUpgradeContext context)
         {
-            ForEachLogic(upgradeIds, logic => logic.OnCleared(context));
+            ForEachLogic(upgradeIds, (logic, _) => logic.OnCleared(context));
         }
 
-        void ForEachLogic(int[] upgradeIds, Action<TileUpgradeLogic> apply)
+        void ForEachLogic(int[] upgradeIds, Action<TileUpgradeLogic, int> apply)
         {
             if (upgradeIds == null || apply == null)
                 return;
@@ -88,7 +88,7 @@ namespace M3P
                     continue;
 
                 if (upgrade.Logic != null)
-                    apply(upgrade.Logic);
+                    apply(upgrade.Logic, i);
             }
         }
 

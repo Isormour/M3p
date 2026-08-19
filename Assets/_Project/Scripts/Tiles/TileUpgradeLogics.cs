@@ -76,15 +76,46 @@ namespace M3P
     [Serializable]
     public sealed class MatchNeighborUpgradeLogic : TileUpgradeLogic
     {
-        public override void CollectExtraClears(Match3Board board, Match3Tile tile, HashSet<Match3Tile> destination)
+        public override bool AffectsNeighbor => true;
+
+        public override void CollectExtraClears(
+            Match3Board board,
+            Match3Tile tile,
+            int slotIndex,
+            HashSet<Match3Tile> destination)
         {
             if (board == null || tile == null || destination == null)
                 return;
 
-            TryAdd(board, destination, tile.X + 1, tile.Y);
-            TryAdd(board, destination, tile.X - 1, tile.Y);
-            TryAdd(board, destination, tile.X, tile.Y + 1);
-            TryAdd(board, destination, tile.X, tile.Y - 1);
+            OffsetForSlot(slotIndex, out int dx, out int dy);
+            TryAdd(board, destination, tile.X + dx, tile.Y + dy);
+        }
+
+        static void OffsetForSlot(int slotIndex, out int dx, out int dy)
+        {
+            switch (slotIndex)
+            {
+                case 0:
+                    dx = 0;
+                    dy = 1;
+                    return;
+                case 1:
+                    dx = 0;
+                    dy = -1;
+                    return;
+                case 2:
+                    dx = -1;
+                    dy = 0;
+                    return;
+                case 3:
+                    dx = 1;
+                    dy = 0;
+                    return;
+                default:
+                    dx = 0;
+                    dy = 0;
+                    return;
+            }
         }
 
         static void TryAdd(Match3Board board, HashSet<Match3Tile> destination, int x, int y)

@@ -29,10 +29,18 @@ namespace M3P
     [Serializable]
     public abstract class TileUpgradeLogic
     {
+        /// <summary>True when this upgrade extra-clears a neighbour in the slot's direction.</summary>
+        public virtual bool AffectsNeighbor => false;
+
         /// <summary>
         /// Adds extra tiles to a clear set. Called once per origin tile before anything is destroyed.
+        /// <paramref name="slotIndex"/> is the upgrade slot on that tile (0 up, 1 down, 2 left, 3 right).
         /// </summary>
-        public virtual void CollectExtraClears(Match3Board board, Match3Tile tile, HashSet<Match3Tile> destination)
+        public virtual void CollectExtraClears(
+            Match3Board board,
+            Match3Tile tile,
+            int slotIndex,
+            HashSet<Match3Tile> destination)
         {
         }
 

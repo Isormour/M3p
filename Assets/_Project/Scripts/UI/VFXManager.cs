@@ -28,12 +28,30 @@ namespace M3P
         [SerializeField] Transform _shardTarget;
         [SerializeField] float _shardVfxLifetime = 2f;
 
+        [Header("Battle Indicators")]
+        [SerializeField] CascadeIndicator _cascadeIndicator;
+        [SerializeField] SuperMatchIndicator _superMatchIndicator;
+        [SerializeField] int _superMatchMinSize = 4;
+
         Match3Board _board;
+        int _matchWaveIndex;
 
         void Awake()
         {
             if (_battleManager == null)
                 _battleManager = BattleManager.Instance;
+
+            if (_cascadeIndicator == null)
+                _cascadeIndicator = FindAnyObjectByType<CascadeIndicator>(FindObjectsInactive.Include);
+
+            if (_superMatchIndicator == null)
+                _superMatchIndicator = FindAnyObjectByType<SuperMatchIndicator>(FindObjectsInactive.Include);
+        }
+
+        void Start()
+        {
+            _cascadeIndicator?.Hide();
+            _superMatchIndicator?.Hide();
         }
 
         void OnEnable()
@@ -74,8 +92,10 @@ namespace M3P
                 return;
 
             _board = board;
+            _matchWaveIndex = 0;
             _board.TileDestroyed += HandleTileDestroyed;
             _board.MatchWaveCompleted += HandleMatchWaveCompleted;
+            _board.BoardActionResolved += HandleBoardActionResolved;
         }
 
         void UnbindBoard()
@@ -84,9 +104,13 @@ namespace M3P
             {
                 _board.TileDestroyed -= HandleTileDestroyed;
                 _board.MatchWaveCompleted -= HandleMatchWaveCompleted;
+                _board.BoardActionResolved -= HandleBoardActionResolved;
             }
 
             _board = null;
+            _matchWaveIndex = 0;
+            _cascadeIndicator?.Hide();
+            _superMatchIndicator?.Hide();
         }
 
         void HandleTileDestroyed(Vector3 worldPosition, int typeId)
@@ -98,6 +122,9 @@ namespace M3P
         {
             if (groups == null || groups.Count == 0)
                 return;
+
+            _matchWaveIndex++;
+            UpdateBattleIndicators(groups);
 
             Transform origin = GetPlayerVfxPoint();
             Transform destination = GetEnemyVfxPoint();
@@ -112,8 +139,52 @@ namespace M3P
                         && _battleManager?.ActiveEnemy != null
                         && !_battleManager.ActiveEnemy.IsAlive;
                     world?.NotifyEnemyHit(died);
+                    PulseBattleIndicators();
                 });
             }
+        }
+
+        void HandleBoardActionResolved()
+        {
+            _matchWaveIndex = 0;
+        }
+
+        void UpdateBattleIndicators(IReadOnlyList<MatchGroup> groups)
+        {
+            if (_matchWaveIndex >= 2)
+                _cascadeIndicator?.Present(_matchWaveIndex - 1);
+
+            int largestSize = GetLargestMatchSize(groups);
+            if (largestSize < _superMatchMinSize)
+                return;
+
+            if (_superMatchIndicator != null
+                && _superMatchIndicator.IsShowing
+                && largestSize <= _superMatchIndicator.CurrentAmount)
+                return;
+
+            _superMatchIndicator?.Present(largestSize);
+        }
+
+        void PulseBattleIndicators()
+        {
+            if (_cascadeIndicator != null && _cascadeIndicator.IsShowing)
+                _cascadeIndicator.Pulse();
+
+            if (_superMatchIndicator != null && _superMatchIndicator.IsShowing)
+                _superMatchIndicator.Pulse();
+        }
+
+        static int GetLargestMatchSize(IReadOnlyList<MatchGroup> groups)
+        {
+            int size = 0;
+            for (int i = 0; i < groups.Count; i++)
+            {
+                if (groups[i].Size > size)
+                    size = groups[i].Size;
+            }
+
+            return size;
         }
 
         void HandleSkillExecuted(SkillDefinition skill, BattleCharacter caster, BattleCharacter target)
