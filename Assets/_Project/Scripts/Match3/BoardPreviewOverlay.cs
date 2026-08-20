@@ -6,20 +6,16 @@ using UnityEngine;
 namespace Match3
 {
     /// <summary>
-    /// Draws the predicted board on top of the real one while the player is planning: a translucent ghost
-    /// wherever a queued command will change a cell, and a darker mark on tiles a Destroy has cracked.
-    /// Refills and cascades are deliberately absent, because the preview must only promise what the
-    /// sequence itself determines.
+    /// While planning, draws a ghost of the new colour on any tile a Recolor will change.
+    /// Movement is left to the arc indicators; only a type change on the same tile identity is shown.
     /// </summary>
     [RequireComponent(typeof(Match3Board))]
     public sealed class BoardPreviewOverlay : MonoBehaviour
     {
-        const int GhostSortingOrder = 50;
+        [SerializeField] TileGhost _ghostPrefab;
 
-        static readonly Color GhostTint = new Color(1f, 1f, 1f, 0.55f);
-        static readonly Color CrackedTint = new Color(1f, 0.35f, 0.3f, 0.65f);
-
-        readonly List<SpriteRenderer> _ghosts = new List<SpriteRenderer>();
+        readonly List<TileGhost> _ghosts = new List<TileGhost>();
+        readonly Dictionary<int, Vector2Int> _predictedCellsByTileId = new Dictionary<int, Vector2Int>();
 
         Match3Board _board;
         CardPlayController _cardPlay;
@@ -80,80 +76,69 @@ namespace Match3
             _usedGhosts = 0;
 
             SimBoard predicted = _cardPlay != null ? _cardPlay.PredictedBoard : null;
-            bool planning = predicted != null && _board != null && !_board.IsResolving && _cardPlay.HasQueuedCards;
+            bool planning = predicted != null
+                && _board != null
+                && !_board.IsResolving
+                && _cardPlay.HasQueuedCards
+                && _ghostPrefab != null;
 
             if (planning)
+                DrawRecolorGhosts(predicted);
+
+            HideUnused();
+        }
+
+        void DrawRecolorGhosts(SimBoard predicted)
+        {
+            _predictedCellsByTileId.Clear();
+            for (int x = 0; x < predicted.Width; x++)
             {
-                for (int x = 0; x < _board.Width; x++)
+                for (int y = 0; y < predicted.Height; y++)
                 {
-                    for (int y = 0; y < _board.Height; y++)
-                        DrawCellIfChanged(predicted, x, y);
+                    SimTile tile = predicted.GetTile(x, y);
+                    if (tile != null)
+                        _predictedCellsByTileId[tile.Id] = new Vector2Int(x, y);
                 }
             }
 
-            for (int i = _usedGhosts; i < _ghosts.Count; i++)
+            for (int x = 0; x < _board.Width; x++)
             {
-                if (_ghosts[i] != null)
-                    _ghosts[i].gameObject.SetActive(false);
+                for (int y = 0; y < _board.Height; y++)
+                {
+                    Match3Tile actual = _board.GetTile(x, y);
+                    if (actual == null)
+                        continue;
+
+                    if (!_predictedCellsByTileId.TryGetValue(actual.TileId, out Vector2Int destination))
+                        continue;
+
+                    SimTile expected = predicted.GetTile(destination.x, destination.y);
+                    if (expected == null || expected.TypeId == actual.TypeId)
+                        continue;
+
+                    ShowGhost(destination.x, destination.y, expected.TypeId);
+                }
             }
         }
 
-        void DrawCellIfChanged(SimBoard predicted, int x, int y)
+        void ShowGhost(int x, int y, int typeId)
         {
-            SimTile expected = predicted.GetTile(x, y);
-            Match3Tile actual = _board.GetTile(x, y);
+            TileTypeGraphics graphics = _board.GetTileTypeTileGraphics(typeId);
+            Sprite sprite = graphics != null && graphics.MainSprite != null
+                ? graphics.MainSprite
+                : _board.GetTileTypeSprite(typeId);
 
-            if (expected == null)
-            {
-                // A purge is the only command that empties a cell before the board settles.
-                if (actual != null)
-                    ShowGhost(x, y, null, CrackedTint);
-
-                return;
-            }
-
-            bool typeChanged = actual == null || actual.TypeId != expected.TypeId;
-            bool movedHere = actual != null && actual.TileId != expected.Id;
-
-            if (expected.IsCracked)
-            {
-                ShowGhost(x, y, _board.GetTileTypeSprite(expected.TypeId), CrackedTint);
-                return;
-            }
-
-            if (typeChanged || movedHere)
-                ShowGhost(x, y, _board.GetTileTypeSprite(expected.TypeId), GhostTint);
+            RentGhost().Present(
+                _board.GridToWorld(x, y),
+                sprite,
+                _board.GetTileTypeColor(typeId));
         }
 
-        void ShowGhost(int x, int y, Sprite sprite, Color tint)
-        {
-            SpriteRenderer ghost = RentGhost();
-            ghost.transform.position = _board.GridToWorld(x, y);
-            ghost.transform.localScale = Vector3.one * GhostScaleFor(sprite);
-            ghost.sprite = sprite;
-            ghost.color = tint;
-            ghost.enabled = sprite != null;
-            ghost.gameObject.SetActive(true);
-        }
-
-        /// <summary>Fits the sprite to a cell, since tile prefabs carry their own scale.</summary>
-        float GhostScaleFor(Sprite sprite)
-        {
-            if (sprite == null)
-                return 1f;
-
-            float spriteSize = Mathf.Max(sprite.bounds.size.x, sprite.bounds.size.y);
-            if (spriteSize <= 0.0001f)
-                return 1f;
-
-            return _board.TileSpacing * 0.9f / spriteSize;
-        }
-
-        SpriteRenderer RentGhost()
+        TileGhost RentGhost()
         {
             if (_usedGhosts < _ghosts.Count)
             {
-                SpriteRenderer existing = _ghosts[_usedGhosts++];
+                TileGhost existing = _ghosts[_usedGhosts++];
                 if (existing != null)
                     return existing;
 
@@ -161,31 +146,32 @@ namespace Match3
                 return _ghosts[_usedGhosts - 1];
             }
 
-            SpriteRenderer created = CreateGhost();
+            TileGhost created = CreateGhost();
             _ghosts.Add(created);
             _usedGhosts++;
             return created;
         }
 
-        SpriteRenderer CreateGhost()
+        TileGhost CreateGhost()
         {
-            GameObject ghost = new GameObject($"Ghost_{_ghosts.Count}");
-            ghost.transform.SetParent(_ghostRoot, false);
+            TileGhost ghost = Instantiate(_ghostPrefab, _ghostRoot);
+            ghost.transform.localRotation = Quaternion.identity;
+            return ghost;
+        }
 
-            SpriteRenderer renderer = ghost.AddComponent<SpriteRenderer>();
-            renderer.sortingOrder = GhostSortingOrder;
-            return renderer;
+        void HideUnused()
+        {
+            for (int i = _usedGhosts; i < _ghosts.Count; i++)
+            {
+                if (_ghosts[i] != null)
+                    _ghosts[i].Hide();
+            }
         }
 
         void HideAll()
         {
-            for (int i = 0; i < _ghosts.Count; i++)
-            {
-                if (_ghosts[i] != null)
-                    _ghosts[i].gameObject.SetActive(false);
-            }
-
             _usedGhosts = 0;
+            HideUnused();
         }
     }
 }

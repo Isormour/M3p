@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: ArrowTrail
-  m_Shader: {fileID: -6465566751694194690, guid: 7038536018d1aac4c869e9359ec73db9, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 07ecf3bd95ac1e249a847c92b6ca1c7a, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -46,6 +46,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _Distortion:
+        m_Texture: {fileID: 2800000, guid: 0d2e6e87394245dfa7a4f4cc25cbb9d3, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _DistortionTex:
         m_Texture: {fileID: 2800000, guid: 0d2e6e87394245dfa7a4f4cc25cbb9d3, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -55,7 +59,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: b162d5e2361c65b45836d83bcd0f41ef, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTexture:
@@ -71,10 +75,14 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Noise:
-        m_Texture: {fileID: 2800000, guid: e90936d95cdf68e47a94a9ab6bda19c7, type: 3}
+        m_Texture: {fileID: 2800000, guid: fd01c1679eeb4df0a8dfbad947776ce4, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Overlay:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -82,8 +90,20 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_c7a68222c3ea4d7a9e83da89fa696f1d_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: 2bc19eee5815455f858ec9810eadf19b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _SpecGlossMap:
         m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Texture2DAsset_633cee9322554b2ead33b3f81af74781_Out_0_Texture2D:
+        m_Texture: {fileID: 2800000, guid: 0d2e6e87394245dfa7a4f4cc25cbb9d3, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Texture2DAsset_da3227411423448abaef9798619de57a_Out_0_Texture2D:
+        m_Texture: {fileID: 2800000, guid: 0d2e6e87394245dfa7a4f4cc25cbb9d3, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _UVDistortion_47fe2067e61c4d5a9eec6a06e23ecda7_NoiseMap_647888222_Texture2D:
@@ -119,7 +139,7 @@ Material:
     - _ClearCoatSmoothness: 0
     - _ColorAdd: 1
     - _ColorMode: 0
-    - _ColorMult: 2
+    - _ColorMult: 20
     - _Cull: 2
     - _Cutoff: 0.5
     - _DetailAlbedoMapScale: 1
@@ -152,21 +172,26 @@ Material:
     - _SoftParticlesNearFadeDistance: 0
     - _SpecularHighlights: 1
     - _Speed: 1
+    - _Spread: 6.3
     - _SrcBlend: 5
     - _SrcBlendAlpha: 1
     - _Surface: 1
     - _WorkflowMode: 1
     - _XRMotionVectorsPass: 1
     - _ZWrite: 0
+    - _highlight: -0.6
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _BaseColorAddSubDiff: {r: 0, g: 0, b: 0, a: 0}
     - _CameraFadeParams: {r: 0, g: Infinity, b: 0, a: 0}
+    - _Col: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _Dir: {r: -1, g: 0, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _NoiseTiling: {r: 1.09, g: 1.03, b: 0, a: 0}
     - _SoftParticleFadeParams: {r: 0, g: 0, b: 0, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+    - _Speed: {r: 0.2, g: 0.1, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &1081081478501848182
