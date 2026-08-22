@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -15,6 +16,9 @@ namespace M3P
 
         readonly List<UIPanelGainSkillCard> _cards = new List<UIPanelGainSkillCard>();
         readonly List<SkillDefinition> _unownedPool = new List<SkillDefinition>();
+
+        /// <summary>Raised when the panel closes after being open, including a skill pick or Close.</summary>
+        public event Action Closed;
 
         protected override void OnInitialize()
         {
@@ -34,8 +38,11 @@ namespace M3P
 
         public override void Hide()
         {
+            bool wasOpen = IsOpen;
             ClearCards();
             base.Hide();
+            if (wasOpen)
+                Closed?.Invoke();
         }
 
         static ProfileManager Profiles => GameManager.Instance != null ? GameManager.Instance.ProfileManager : null;
@@ -87,7 +94,7 @@ namespace M3P
 
             for (int i = 0; i < count; i++)
             {
-                int pick = Random.Range(i, _unownedPool.Count);
+                int pick = UnityEngine.Random.Range(i, _unownedPool.Count);
                 SkillDefinition skill = _unownedPool[pick];
                 _unownedPool[pick] = _unownedPool[i];
                 _unownedPool[i] = skill;

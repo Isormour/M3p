@@ -1,5 +1,4 @@
 using System;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,9 +6,7 @@ namespace M3P
 {
     public sealed class UIPanelGainSkillCard : MonoBehaviour
     {
-        [SerializeField] TextMeshProUGUI labelSKillName;
-        [SerializeField] Image skillArtwork;
-        [SerializeField] TextMeshProUGUI labelDescription;
+        [SerializeField] UISkillVisuals skillVisuals;
         [SerializeField] Button confirmButton;
 
         SkillDefinition _skill;
@@ -39,18 +36,8 @@ namespace M3P
 
         void ApplyVisuals()
         {
-            if (labelSKillName != null)
-                labelSKillName.text = _skill != null ? _skill.DisplayName : string.Empty;
-
-            if (labelDescription != null)
-                labelDescription.text = _skill != null ? _skill.Description : string.Empty;
-
-            if (skillArtwork != null)
-            {
-                Sprite artwork = _skill != null ? _skill.Artwork : null;
-                skillArtwork.sprite = artwork;
-                skillArtwork.enabled = artwork != null;
-            }
+            if (skillVisuals != null)
+                skillVisuals.SetSkill(_skill);
 
             if (confirmButton != null)
                 confirmButton.interactable = _skill != null;
@@ -75,24 +62,13 @@ namespace M3P
 
         void ResolveRefs()
         {
-            if (labelSKillName == null)
-                labelSKillName = FindDescendantComponent<TextMeshProUGUI>("labelSKillName")
-                    ?? FindDescendantComponent<TextMeshProUGUI>("SkillName");
-
-            if (skillArtwork == null)
-            {
-                Transform artwork = FindDescendant("skillArtwork") ?? FindDescendant("SkillArtwork");
-                if (artwork != null)
-                    skillArtwork = artwork.GetComponent<Image>();
-            }
-
-            if (labelDescription == null)
-                labelDescription = FindDescendantComponent<TextMeshProUGUI>("labelDescription")
-                    ?? FindDescendantComponent<TextMeshProUGUI>("Description");
+            if (skillVisuals == null)
+                skillVisuals = GetComponentInChildren<UISkillVisuals>(true);
 
             if (confirmButton == null)
                 confirmButton = FindDescendantButton("confirmButton")
                     ?? FindDescendantButton("ConfirmButton")
+                    ?? FindDescendantButton("BasicButton")
                     ?? GetComponent<Button>();
         }
 
@@ -104,12 +80,6 @@ namespace M3P
 
             Button button = child.GetComponent<Button>();
             return button != null ? button : child.GetComponentInChildren<Button>(true);
-        }
-
-        T FindDescendantComponent<T>(string childName) where T : Component
-        {
-            Transform child = FindDescendant(childName);
-            return child != null ? child.GetComponentInChildren<T>(true) : null;
         }
 
         Transform FindDescendant(string childName)

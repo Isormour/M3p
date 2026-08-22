@@ -34,6 +34,8 @@ namespace M3P
 
         [Header("UI")]
         [SerializeField] UIEndBattlePanel _endBattlePanel;
+        [Tooltip("Shown after a boss win. Closing it generates the next floor and returns to Map.")]
+        [SerializeField] UIPanelGainSkill _gainSkillPanel;
 
         readonly BattleSessionRewards _sessionRewards = new BattleSessionRewards();
         readonly ResolveLimits _resolveLimits = new ResolveLimits();
@@ -45,6 +47,7 @@ namespace M3P
         bool _isPlayerTurn = true;
         bool _battleResolved;
         bool _awaitingSkillChoice;
+        bool _awaitingBossSkillReward;
         BattleOutcome _lastOutcome;
         MatchRewardRules _fallbackMatchRewards;
 
@@ -101,6 +104,9 @@ namespace M3P
 
             if (_endBattlePanel == null)
                 _endBattlePanel = FindAnyObjectByType<UIEndBattlePanel>(FindObjectsInactive.Include);
+
+            if (_gainSkillPanel == null)
+                _gainSkillPanel = FindAnyObjectByType<UIPanelGainSkill>(FindObjectsInactive.Include);
         }
 
         void Start()
@@ -117,6 +123,7 @@ namespace M3P
             if (Instance != this)
                 return;
 
+            UnsubscribeBossSkillPanel();
             Instance = null;
             EndBattle(hideEndPanel: false);
         }
@@ -661,9 +668,12 @@ namespace M3P
 
             EndBattle();
 
-            if (wonBoss && GameManager.Instance != null)
+            if (wonBoss)
             {
-                GameManager.Instance.StartNextGeneratedMap();
+                if (TryShowBossSkillReward())
+                    return;
+
+                AdvanceAfterBossVictory();
                 return;
             }
 
@@ -673,6 +683,46 @@ namespace M3P
                     GameManager.Instance.PersistMapRun();
                 SceneFlow.LoadMap();
             }
+        }
+
+        bool TryShowBossSkillReward()
+        {
+            if (_gainSkillPanel == null)
+                _gainSkillPanel = FindAnyObjectByType<UIPanelGainSkill>(FindObjectsInactive.Include);
+
+            if (_gainSkillPanel == null)
+            {
+                Debug.LogError($"{nameof(BattleManager)}: assign {nameof(_gainSkillPanel)} to offer a skill after a boss.", this);
+                return false;
+            }
+
+            _awaitingBossSkillReward = true;
+            _gainSkillPanel.Closed -= HandleBossSkillPanelClosed;
+            _gainSkillPanel.Closed += HandleBossSkillPanelClosed;
+            _gainSkillPanel.Show();
+            return true;
+        }
+
+        void HandleBossSkillPanelClosed()
+        {
+            UnsubscribeBossSkillPanel();
+            if (!_awaitingBossSkillReward)
+                return;
+
+            _awaitingBossSkillReward = false;
+            AdvanceAfterBossVictory();
+        }
+
+        void UnsubscribeBossSkillPanel()
+        {
+            if (_gainSkillPanel != null)
+                _gainSkillPanel.Closed -= HandleBossSkillPanelClosed;
+        }
+
+        void AdvanceAfterBossVictory()
+        {
+            if (GameManager.Instance != null)
+                GameManager.Instance.StartNextGeneratedMap();
         }
 
         void HideEndBattlePanel()

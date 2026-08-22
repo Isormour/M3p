@@ -16,7 +16,8 @@ namespace M3P
         [SerializeField] UIPanelCardCrafting _craftingPanel;
         [SerializeField] Button _togglePanelTileCraftingButton;
         [SerializeField] UIPanelTileCrafting _tileCraftingPanel;
-        [SerializeField] UIPanelGainSkill _gainSkillPanel;
+        [SerializeField] Button _togglePanelSkillsButton;
+        [SerializeField] UIPanelChooseSkill _chooseSkillsPanel;
         [SerializeField] bool _startHidden = true;
 
         void Awake()
@@ -35,6 +36,9 @@ namespace M3P
             if (_togglePanelTileCraftingButton != null)
                 _togglePanelTileCraftingButton.onClick.AddListener(HandleToggleTileCraftingClicked);
 
+            if (_togglePanelSkillsButton != null)
+                _togglePanelSkillsButton.onClick.AddListener(HandleToggleSkillsClicked);
+
             if (_startHidden)
             {
                 if (_statsPanel != null)
@@ -49,8 +53,8 @@ namespace M3P
                 if (_tileCraftingPanel != null)
                     _tileCraftingPanel.Hide();
 
-                if (_gainSkillPanel != null)
-                    _gainSkillPanel.Hide();
+                if (_chooseSkillsPanel != null && _togglePanelSkillsButton != null)
+                    _chooseSkillsPanel.Hide();
             }
         }
 
@@ -67,6 +71,9 @@ namespace M3P
 
             if (_togglePanelTileCraftingButton != null)
                 _togglePanelTileCraftingButton.onClick.RemoveListener(HandleToggleTileCraftingClicked);
+
+            if (_togglePanelSkillsButton != null)
+                _togglePanelSkillsButton.onClick.RemoveListener(HandleToggleSkillsClicked);
         }
 
         void OnValidate()
@@ -88,6 +95,9 @@ namespace M3P
             if (_togglePanelTileCraftingButton == null)
                 _togglePanelTileCraftingButton = FindChildButton("ButtonPanelCraftingTiles");
 
+            if (_togglePanelSkillsButton == null)
+                _togglePanelSkillsButton = FindChildButton("ButtonPanelSkills");
+
             if (_statsPanel == null)
                 _statsPanel = GetComponentInChildren<UIPanelPlayerStats>(true);
 
@@ -100,8 +110,8 @@ namespace M3P
             if (_tileCraftingPanel == null)
                 _tileCraftingPanel = FindPanelOnCanvas<UIPanelTileCrafting>();
 
-            if (_gainSkillPanel == null)
-                _gainSkillPanel = FindPanelOnCanvas<UIPanelGainSkill>();
+            if (_chooseSkillsPanel == null)
+                _chooseSkillsPanel = FindPanelOnCanvas<UIPanelChooseSkill>();
         }
 
         void HandleToggleStatsClicked()
@@ -146,6 +156,17 @@ namespace M3P
             }
 
             _tileCraftingPanel.Toggle();
+        }
+
+        void HandleToggleSkillsClicked()
+        {
+            if (_chooseSkillsPanel == null)
+            {
+                Debug.LogError($"{nameof(UIMapPlayerStats)}: assign {nameof(_chooseSkillsPanel)} on the prefab.", this);
+                return;
+            }
+
+            _chooseSkillsPanel.Toggle();
         }
 
         T FindPanelOnCanvas<T>() where T : MonoBehaviour
