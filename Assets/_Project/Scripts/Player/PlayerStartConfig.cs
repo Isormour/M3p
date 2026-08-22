@@ -92,6 +92,7 @@ namespace M3P
                 }
 
                 profile.Skills.Add(new CharacterSkill(skillId, 1, skill.name));
+                profile.TryAddSkillToLoadout(skillId);
             }
         }
 

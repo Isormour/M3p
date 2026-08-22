@@ -7,6 +7,8 @@ namespace M3P
     {
         readonly List<StatusInstance> _statuses = new List<StatusInstance>();
         readonly Dictionary<SkillDefinition, int> _skillCooldowns = new Dictionary<SkillDefinition, int>();
+        readonly HashSet<SkillDefinition> _skillsUsedThisTurn = new HashSet<SkillDefinition>();
+        readonly CombatModifiers _modifiers = new CombatModifiers();
 
         CharacterStats _characterStats;
 
@@ -20,6 +22,8 @@ namespace M3P
 
         public IReadOnlyList<StatusInstance> Statuses => _statuses;
 
+        public CombatModifiers Modifiers => _modifiers;
+
         protected void SetCharacterStats(CharacterStats stats)
         {
             _characterStats = stats;
@@ -27,12 +31,34 @@ namespace M3P
 
         public virtual void OnTurnStarted()
         {
+            _skillsUsedThisTurn.Clear();
             TickStatuses();
         }
 
         public void ClearStatuses()
         {
             _statuses.Clear();
+            _skillsUsedThisTurn.Clear();
+            _modifiers.Clear();
+        }
+
+        /// <summary>
+        /// Fires on-turn effects for every instance of <paramref name="definition"/> without
+        /// shortening remaining duration or removing the status.
+        /// </summary>
+        public void TriggerStatusTick(StatusEffectDefinition definition)
+        {
+            if (definition == null)
+                return;
+
+            for (int i = 0; i < _statuses.Count; i++)
+            {
+                StatusInstance status = _statuses[i];
+                if (status.Definition != definition)
+                    continue;
+
+                definition.ApplyOnTurnEffects(this, status.Source);
+            }
         }
 
         /// <summary>True when the skill has no remaining lockout (or authored cooldown is zero).</summary>
@@ -41,10 +67,24 @@ namespace M3P
             if (skill == null)
                 return false;
 
+            if (skill.OncePerTurn && _skillsUsedThisTurn.Contains(skill))
+                return false;
+
             if (skill.Cooldown <= 0)
                 return true;
 
             return !_skillCooldowns.TryGetValue(skill, out int remaining) || remaining <= 0;
+        }
+
+        public bool HasUsedSkillThisTurn(SkillDefinition skill)
+        {
+            return skill != null && _skillsUsedThisTurn.Contains(skill);
+        }
+
+        public void MarkSkillUsedThisTurn(SkillDefinition skill)
+        {
+            if (skill != null)
+                _skillsUsedThisTurn.Add(skill);
         }
 
         public int GetRemainingCooldown(SkillDefinition skill)
@@ -95,6 +135,40 @@ namespace M3P
         protected void ClearSkillCooldowns()
         {
             _skillCooldowns.Clear();
+        }
+
+        public int CountStatus(StatusEffectDefinition definition)
+        {
+            if (definition == null)
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < _statuses.Count; i++)
+            {
+                if (_statuses[i].Definition == definition)
+                    count++;
+            }
+
+            return count;
+        }
+
+        /// <summary>Removes every instance of <paramref name="definition"/> and returns how many were consumed.</summary>
+        public int ConsumeStatus(StatusEffectDefinition definition)
+        {
+            if (definition == null)
+                return 0;
+
+            int consumed = 0;
+            for (int i = _statuses.Count - 1; i >= 0; i--)
+            {
+                if (_statuses[i].Definition != definition)
+                    continue;
+
+                _statuses.RemoveAt(i);
+                consumed++;
+            }
+
+            return consumed;
         }
 
         /// <summary>

@@ -25,12 +25,26 @@ namespace M3P
         public BattleCharacter Caster { get; }
         public BattleCharacter Target { get; }
         public EEffectSource Source { get; }
+        public bool DirectHit { get; }
+        public float SkillDamageMultiplier { get; }
+        public int ChoicePrimary { get; }
+        public int ChoiceSecondary { get; }
 
-        public BattleEffectContext(BattleCharacter caster, BattleCharacter target)
+        public BattleEffectContext(
+            BattleCharacter caster,
+            BattleCharacter target,
+            bool directHit = false,
+            float skillDamageMultiplier = 1f,
+            int choicePrimary = 0,
+            int choiceSecondary = 0)
         {
             Caster = caster;
             Target = target;
             Source = caster != null ? caster.EffectSource : EEffectSource.None;
+            DirectHit = directHit;
+            SkillDamageMultiplier = skillDamageMultiplier > 0f ? skillDamageMultiplier : 1f;
+            ChoicePrimary = choicePrimary;
+            ChoiceSecondary = choiceSecondary;
         }
 
         public BattleCharacter Resolve(EEffectTarget effectTarget)

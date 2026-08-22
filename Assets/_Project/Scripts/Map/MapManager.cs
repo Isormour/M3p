@@ -23,6 +23,7 @@ namespace M3P
         [SerializeField] GameObject _battleMarkerPrefab;
         [SerializeField] GameObject _shopMarkerPrefab;
         [SerializeField] GameObject _chestMarkerPrefab;
+        [SerializeField] GameObject _forgeMarkerPrefab;
 
         [SerializeField] float _nodeWorldY = 0f;
         [SerializeField] float _nodeRadius = 0.55f;
@@ -32,6 +33,9 @@ namespace M3P
         [SerializeField] Color _battleColor = new Color(0.85f, 0.25f, 0.22f);
         [SerializeField] Color _shopColor = new Color(0.25f, 0.45f, 0.9f);
         [SerializeField] Color _chestColor = new Color(0.95f, 0.75f, 0.2f);
+        [SerializeField] Color _eliteColor = new Color(0.55f, 0.18f, 0.7f);
+        [SerializeField] Color _forgeColor = new Color(0.95f, 0.5f, 0.18f);
+        [SerializeField] Color _bossColor = new Color(0.55f, 0.08f, 0.1f);
 
         [Header("Camera")]
         [SerializeField] bool _frameCameraOnStart = true;
@@ -45,9 +49,7 @@ namespace M3P
         [SerializeField] UIMapPanelWalkNodeConfirm _walkNodeConfirmPanel;
 
         [Header("Generated map")]
-        [SerializeField] int _generatedLayerCount = 4;
-        [SerializeField] int _generatedNodesPerLayerMin = 2;
-        [SerializeField] int _generatedNodesPerLayerMax = 3;
+        [SerializeField] int _generatedFloorIndex = 1;
         [SerializeField] float _generatedLayerSpacing = 3.5f;
         [SerializeField] float _generatedNodeSpacing = 3.5f;
 
@@ -57,6 +59,9 @@ namespace M3P
         MapGraphDefinition _activeGraph;
         MapPlayerToken _token;
         MapEventPresenter _events;
+        UIPanelCardCrafting _cardShopPanel;
+        UIPanelTileCrafting _forgePanel;
+        UIPanelGainSkill _gainSkillPanel;
         Transform _visualRoot;
         bool _ownsRuntimeGraph;
         bool _inputLocked;
@@ -80,10 +85,19 @@ namespace M3P
         void Start()
         {
             transform.position = Vector3.zero;
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.ConfigureMapGeneration(
+                    _graph,
+                    _generatedLayerSpacing,
+                    _generatedNodeSpacing);
+            }
+
             EnsureGraph();
             EnsureRunState();
             BuildVisuals();
             EnsureWalkConfirmPanel();
+            EnsureServicePanels();
             PlaceTokenAtCurrentNode();
             RefreshNodeStates();
             if (_frameCameraOnStart)
@@ -98,7 +112,10 @@ namespace M3P
             if (_inputLocked ||
                 _token != null && _token.IsMoving ||
                 _events != null && _events.IsOpen ||
-                _walkNodeConfirmPanel != null && _walkNodeConfirmPanel.IsOpen)
+                _walkNodeConfirmPanel != null && _walkNodeConfirmPanel.IsOpen ||
+                _cardShopPanel != null && _cardShopPanel.IsOpen ||
+                _forgePanel != null && _forgePanel.IsOpen ||
+                _gainSkillPanel != null && _gainSkillPanel.IsOpen)
                 return;
 
             if (!Input.GetMouseButtonDown(0))
@@ -179,7 +196,7 @@ namespace M3P
             MapGraphSnapshot snapshot = _activeGraph.name == MapGenerator.GeneratedGraphName
                 ? _activeGraph.ToSnapshot()
                 : null;
-            run.BeginRun(_activeGraph.name, _activeGraph.StartNodeId, snapshot);
+            run.BeginRun(_activeGraph.name, _activeGraph.StartNodeId, snapshot, run.FloorIndex);
             PersistRun();
         }
 
@@ -192,7 +209,7 @@ namespace M3P
                 run.MoveTo(_activeGraph.StartNodeId);
 
             if (string.IsNullOrEmpty(run.CurrentNodeId) || !_activeGraph.TryGetNode(run.CurrentNodeId, out _))
-                run.BeginRun(_activeGraph.name, _activeGraph.StartNodeId, run.GraphSnapshot);
+                run.BeginRun(_activeGraph.name, _activeGraph.StartNodeId, run.GraphSnapshot, run.FloorIndex);
         }
 
         void BuildVisuals()
@@ -310,7 +327,10 @@ namespace M3P
             {
                 case MapNodeType.Start: return _startMarkerPrefab;
                 case MapNodeType.Battle: return _battleMarkerPrefab;
+                case MapNodeType.Elite: return _battleMarkerPrefab;
+                case MapNodeType.Boss: return _battleMarkerPrefab;
                 case MapNodeType.Shop: return _shopMarkerPrefab;
+                case MapNodeType.Forge: return _forgeMarkerPrefab != null ? _forgeMarkerPrefab : _shopMarkerPrefab;
                 case MapNodeType.Chest: return _chestMarkerPrefab;
                 default: return null;
             }
@@ -477,7 +497,7 @@ namespace M3P
                 return;
 
             // Only re-trigger uncleared nodes when clicking the current node.
-            if (Run.IsCleared(nodeId) && node.ResolvedType != MapNodeType.Shop)
+            if (Run.IsCleared(nodeId) && !node.ResolvedType.IsRevisitable())
                 return;
 
             ResolveNode(nodeId, arrivedFresh: false);
@@ -491,12 +511,18 @@ namespace M3P
             switch (node.ResolvedType)
             {
                 case MapNodeType.Battle:
+                case MapNodeType.Elite:
+                case MapNodeType.Boss:
                     if (!Run.IsCleared(nodeId))
                         EnterBattle(nodeId, node.Encounter);
                     break;
 
                 case MapNodeType.Shop:
-                    OpenShop(nodeId);
+                    OpenCardShop(nodeId);
+                    break;
+
+                case MapNodeType.Forge:
+                    OpenForge(nodeId);
                     break;
 
                 case MapNodeType.Chest:
@@ -522,18 +548,56 @@ namespace M3P
             SceneFlow.LoadBattle();
         }
 
-        void OpenShop(string nodeId)
+        void OpenCardShop(string nodeId)
+        {
+            EnsureServicePanels();
+            if (_cardShopPanel != null)
+            {
+                _cardShopPanel.Show();
+                MarkServiceVisited(nodeId);
+                return;
+            }
+
+            OpenServiceFallback(nodeId, "Card Shop", "A card merchant. Crafting panel is missing from the scene.");
+        }
+
+        void OpenForge(string nodeId)
+        {
+            EnsureServicePanels();
+            if (_forgePanel != null)
+            {
+                _forgePanel.Show();
+                MarkServiceVisited(nodeId);
+                return;
+            }
+
+            OpenServiceFallback(nodeId, "Forge", "A tile forge. Crafting panel is missing from the scene.");
+        }
+
+        void OpenServiceFallback(string nodeId, string title, string body)
         {
             _events.Show(
-                "Shop",
-                "A merchant nods. Full shop inventory comes later — for now you may pass through.",
+                title,
+                body,
                 "Leave",
-                () =>
-                {
-                    Run.MarkCleared(nodeId);
-                    RefreshNodeStates();
-                    PersistRun();
-                });
+                () => MarkServiceVisited(nodeId));
+        }
+
+        void MarkServiceVisited(string nodeId)
+        {
+            Run.MarkCleared(nodeId);
+            RefreshNodeStates();
+            PersistRun();
+        }
+
+        void EnsureServicePanels()
+        {
+            if (_cardShopPanel == null)
+                _cardShopPanel = FindAnyObjectByType<UIPanelCardCrafting>(FindObjectsInactive.Include);
+            if (_forgePanel == null)
+                _forgePanel = FindAnyObjectByType<UIPanelTileCrafting>(FindObjectsInactive.Include);
+            if (_gainSkillPanel == null)
+                _gainSkillPanel = FindAnyObjectByType<UIPanelGainSkill>(FindObjectsInactive.Include);
         }
 
         void OpenChest(string nodeId, EncounterConfig encounter)
@@ -575,21 +639,18 @@ namespace M3P
             {
                 case MapNodeType.Start: return _startColor;
                 case MapNodeType.Shop: return _shopColor;
+                case MapNodeType.Forge: return _forgeColor;
                 case MapNodeType.Chest: return _chestColor;
+                case MapNodeType.Elite: return _eliteColor;
+                case MapNodeType.Boss: return _bossColor;
                 default: return _battleColor;
             }
         }
 
         MapGraphDefinition GenerateGraph()
         {
-            CollectEncounterPools(
-                out EncounterConfig start,
-                out List<EncounterConfig> battles,
-                out EncounterConfig boss,
-                out List<EncounterConfig> chests,
-                out List<EncounterConfig> shops);
-
-            if (battles.Count == 0)
+            MapEncounterPools pools = CollectEncounterPools();
+            if (pools.Battles.Count == 0)
             {
                 Debug.LogError(
                     $"{nameof(MapManager)}: cannot generate a map, no battle encounters found on {nameof(_graph)}.",
@@ -597,66 +658,24 @@ namespace M3P
                 return _graph != null ? _graph : MapGraphDefinition.CreateRuntimeDemo();
             }
 
-            return MapGenerator.Generate(
-                start,
-                battles,
-                boss != null ? boss : battles[battles.Count - 1],
-                chests,
-                shops,
-                _generatedLayerCount,
-                _generatedNodesPerLayerMin,
-                _generatedNodesPerLayerMax,
+            int floorIndex = Run.FloorIndex > 0 ? Run.FloorIndex : _generatedFloorIndex;
+            MapGraphDefinition generated = MapGenerator.Generate(
+                pools,
+                unchecked(System.Environment.TickCount),
                 _generatedLayerSpacing,
                 _generatedNodeSpacing,
-                unchecked(System.Environment.TickCount));
+                floorIndex);
+
+            if (generated != null)
+                return generated;
+
+            Debug.LogError($"{nameof(MapManager)}: map generation failed validation.", this);
+            return _graph != null ? _graph : MapGraphDefinition.CreateRuntimeDemo();
         }
 
-        void CollectEncounterPools(
-            out EncounterConfig start,
-            out List<EncounterConfig> battles,
-            out EncounterConfig boss,
-            out List<EncounterConfig> chests,
-            out List<EncounterConfig> shops)
+        MapEncounterPools CollectEncounterPools()
         {
-            start = null;
-            boss = null;
-            battles = new List<EncounterConfig>();
-            chests = new List<EncounterConfig>();
-            shops = new List<EncounterConfig>();
-
-            IReadOnlyList<MapGraphDefinition.Node> nodes = _graph != null ? _graph.Nodes : null;
-            if (nodes == null)
-                return;
-
-            for (int i = 0; i < nodes.Count; i++)
-            {
-                MapGraphDefinition.Node node = nodes[i];
-                if (node == null || node.Encounter == null)
-                    continue;
-
-                switch (node.ResolvedType)
-                {
-                    case MapNodeType.Start:
-                        if (start == null)
-                            start = node.Encounter;
-                        break;
-                    case MapNodeType.Chest:
-                        if (!chests.Contains(node.Encounter))
-                            chests.Add(node.Encounter);
-                        break;
-                    case MapNodeType.Shop:
-                        if (!shops.Contains(node.Encounter))
-                            shops.Add(node.Encounter);
-                        break;
-                    default:
-                        if (node.Id != null &&
-                            node.Id.IndexOf("boss", System.StringComparison.OrdinalIgnoreCase) >= 0)
-                            boss = node.Encounter;
-                        else if (!battles.Contains(node.Encounter))
-                            battles.Add(node.Encounter);
-                        break;
-                }
-            }
+            return MapEncounterPools.FromGraph(_graph);
         }
 
         EncounterConfig ResolveEncounterByName(string encounterName)
@@ -664,23 +683,9 @@ namespace M3P
             if (string.IsNullOrEmpty(encounterName))
                 return null;
 
-            CollectEncounterPools(
-                out EncounterConfig start,
-                out List<EncounterConfig> battles,
-                out EncounterConfig boss,
-                out List<EncounterConfig> chests,
-                out List<EncounterConfig> shops);
-
-            if (MatchesEncounter(start, encounterName))
-                return start;
-            if (MatchesEncounter(boss, encounterName))
-                return boss;
-
-            EncounterConfig match = FindEncounter(battles, encounterName)
-                ?? FindEncounter(chests, encounterName)
-                ?? FindEncounter(shops, encounterName);
-            if (match != null)
-                return match;
+            EncounterConfig fromPools = CollectEncounterPools().FindByName(encounterName);
+            if (fromPools != null)
+                return fromPools;
 
             IReadOnlyList<MapGraphDefinition.Node> nodes = _graph != null ? _graph.Nodes : null;
             if (nodes == null)
@@ -689,30 +694,11 @@ namespace M3P
             for (int i = 0; i < nodes.Count; i++)
             {
                 EncounterConfig encounter = nodes[i] != null ? nodes[i].Encounter : null;
-                if (MatchesEncounter(encounter, encounterName))
+                if (encounter != null && encounter.name == encounterName)
                     return encounter;
             }
 
             return null;
-        }
-
-        static EncounterConfig FindEncounter(List<EncounterConfig> pool, string encounterName)
-        {
-            if (pool == null)
-                return null;
-
-            for (int i = 0; i < pool.Count; i++)
-            {
-                if (MatchesEncounter(pool[i], encounterName))
-                    return pool[i];
-            }
-
-            return null;
-        }
-
-        static bool MatchesEncounter(EncounterConfig encounter, string encounterName)
-        {
-            return encounter != null && encounter.name == encounterName;
         }
 
         void PersistRun()
@@ -736,8 +722,11 @@ namespace M3P
             }
 
             Vector3 center = (min + max) * 0.5f;
+            float spanZ = Mathf.Max(1f, max.z - min.z);
+            float height = Mathf.Max(_cameraHeight, spanZ * 0.55f + 6f);
+            float distance = Mathf.Max(_cameraDistance, spanZ * 0.45f + 6f);
             cameraRef.orthographic = false;
-            cameraRef.transform.position = center + new Vector3(0f, _cameraHeight, -_cameraDistance);
+            cameraRef.transform.position = center + new Vector3(0f, height, -distance);
             cameraRef.transform.rotation = Quaternion.Euler(_cameraPitch, 0f, 0f);
             cameraRef.backgroundColor = new Color(0.05f, 0.06f, 0.08f, 1f);
             cameraRef.clearFlags = CameraClearFlags.SolidColor;

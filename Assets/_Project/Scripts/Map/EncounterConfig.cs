@@ -24,14 +24,16 @@ namespace M3P
 
         public ChestConfig Chest => _chest;
 
-        public bool IsBattle => _type == MapNodeType.Battle;
+        public bool IsBattle =>
+            _type == MapNodeType.Battle || _type == MapNodeType.Elite || _type == MapNodeType.Boss;
 
         public bool IsChest => _type == MapNodeType.Chest;
 
 #if UNITY_EDITOR
         void OnValidate()
         {
-            if (_type == MapNodeType.Battle && _enemy == null)
+            if ((_type == MapNodeType.Battle || _type == MapNodeType.Elite || _type == MapNodeType.Boss) &&
+                _enemy == null)
             {
                 Debug.LogWarning(
                     $"{nameof(EncounterConfig)} '{name}': Battle encounters should assign an {nameof(EnemyDefinition)}.",

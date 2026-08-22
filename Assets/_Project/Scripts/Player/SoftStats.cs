@@ -26,6 +26,7 @@ namespace M3P
         public int MaxActionPoints;
         public int CurrentActionPoints;
         public int MaxHandSize;
+        public int CurrentSouls;
         public List<TileTypeMana> ManaByBrokenTileType = new List<TileTypeMana>();
 
         public event Action Changed;
@@ -36,6 +37,7 @@ namespace M3P
             MaxHP = progression.CalculateMaxHp(hard, talents);
             CurrentHealth = MaxHP;
             CurrentShield = 0;
+            CurrentSouls = 0;
             MaxActionPoints = progression.CalculateMaxActionPoints(hard, talents);
             CurrentActionPoints = MaxActionPoints;
             MaxHandSize = progression.CalculateMaxHandSize(hard, talents);
@@ -116,12 +118,71 @@ namespace M3P
             NotifyChanged();
         }
 
+        public void ClearShield()
+        {
+            if (CurrentShield <= 0)
+                return;
+
+            CurrentShield = 0;
+            NotifyChanged();
+        }
+
+        /// <summary>
+        /// Direct HP loss that ignores Shield. Used by sacrifice skills. Never drops below
+        /// <paramref name="minimumHealth"/>, so the skill cannot kill the bearer.
+        /// </summary>
+        public int LoseHealthIgnoringShield(int amount, int minimumHealth = 1)
+        {
+            if (amount <= 0)
+                return 0;
+
+            int floor = Mathf.Max(0, minimumHealth);
+            int lost = Mathf.Min(amount, Mathf.Max(0, CurrentHealth - floor));
+            if (lost <= 0)
+                return 0;
+
+            CurrentHealth -= lost;
+            NotifyChanged();
+            return lost;
+        }
+
+        public void AddSouls(int amount)
+        {
+            if (amount <= 0)
+                return;
+
+            CurrentSouls += amount;
+            NotifyChanged();
+        }
+
+        /// <summary>Consumes up to <paramref name="amount"/> souls and returns how many were spent.</summary>
+        public int ConsumeSouls(int amount)
+        {
+            if (amount <= 0 || CurrentSouls <= 0)
+                return 0;
+
+            int spent = Mathf.Min(amount, CurrentSouls);
+            CurrentSouls -= spent;
+            NotifyChanged();
+            return spent;
+        }
+
+        public void ClearSouls()
+        {
+            if (CurrentSouls <= 0)
+                return;
+
+            CurrentSouls = 0;
+            NotifyChanged();
+        }
+
         public void RecalculateFromHard(HardStats hard, StatProgressionConfig progression, TalentBonuses talents = default)
         {
             progression ??= StatProgressionConfig.CreateDefault();
             MaxHP = progression.CalculateMaxHp(hard, talents);
             CurrentHealth = MaxHP;
             CurrentShield = 0;
+            CurrentSouls = 0;
             MaxHandSize = progression.CalculateMaxHandSize(hard, talents);
             ResetActionPoints(hard, progression, talents);
             ResetMana();
@@ -171,6 +232,7 @@ namespace M3P
             {
                 CurrentHealth = CurrentHealth,
                 CurrentShield = CurrentShield,
+                CurrentSouls = CurrentSouls,
                 CurrentActionPoints = CurrentActionPoints,
                 ManaByBrokenTileType = ManaByBrokenTileType != null
                     ? new List<TileTypeMana>(ManaByBrokenTileType)

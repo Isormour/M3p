@@ -14,6 +14,12 @@ namespace M3P
 
         public int UnspentStatPoints;
         public List<CharacterSkill> Skills = new List<CharacterSkill>();
+
+        /// <summary>
+        /// Up to <see cref="SkillConfig.MaxLoadoutSize"/> owned skill ids taken into battle.
+        /// Null or empty falls back to the first owned skills.
+        /// </summary>
+        public List<int> SkillLoadout;
         public List<OwnedCard> Cards = new List<OwnedCard>();
 
         /// <summary>
@@ -86,6 +92,103 @@ namespace M3P
             UnlockedTalentIds.Add(talentId);
             PendingTalent = default;
             return true;
+        }
+
+        public bool HasSkill(int skillId)
+        {
+            if (Skills == null || skillId == SkillConfig.InvalidSkillId)
+                return false;
+
+            for (int i = 0; i < Skills.Count; i++)
+            {
+                if (Skills[i].SkillId == skillId)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>Adds a skill the profile does not already own. Returns false when the id is invalid or already present.</summary>
+        public bool TryAddSkill(int skillId, string name = "", int skillLevel = 1)
+        {
+            if (skillId == SkillConfig.InvalidSkillId || HasSkill(skillId))
+                return false;
+
+            Skills ??= new List<CharacterSkill>();
+            Skills.Add(new CharacterSkill(skillId, Math.Max(1, skillLevel), name ?? ""));
+            TryAddSkillToLoadout(skillId);
+            return true;
+        }
+
+        /// <summary>Adds an owned skill to the first empty loadout slot. Ignored when the loadout is already full.</summary>
+        public bool TryAddSkillToLoadout(int skillId)
+        {
+            if (!HasSkill(skillId))
+                return false;
+
+            SkillLoadout ??= new List<int>();
+            if (SkillLoadout.Contains(skillId) || SkillLoadout.Count >= SkillConfig.MaxLoadoutSize)
+                return false;
+
+            SkillLoadout.Add(skillId);
+            return true;
+        }
+
+        public bool TryRemoveLoadoutAt(int index)
+        {
+            if (SkillLoadout == null || index < 0 || index >= SkillLoadout.Count)
+                return false;
+
+            SkillLoadout.RemoveAt(index);
+            return true;
+        }
+
+        /// <summary>Owned skill ids taken into battle, capped at <see cref="SkillConfig.MaxLoadoutSize"/>.</summary>
+        public void CollectBattleSkillIds(List<int> destination)
+        {
+            destination.Clear();
+            if (Skills == null)
+                return;
+
+            if (SkillLoadout != null)
+            {
+                for (int i = 0; i < SkillLoadout.Count && destination.Count < SkillConfig.MaxLoadoutSize; i++)
+                {
+                    int skillId = SkillLoadout[i];
+                    if (skillId == SkillConfig.InvalidSkillId || !HasSkill(skillId) || destination.Contains(skillId))
+                        continue;
+
+                    destination.Add(skillId);
+                }
+            }
+
+            if (destination.Count > 0)
+                return;
+
+            for (int i = 0; i < Skills.Count && destination.Count < SkillConfig.MaxLoadoutSize; i++)
+            {
+                int skillId = Skills[i].SkillId;
+                if (skillId == SkillConfig.InvalidSkillId || destination.Contains(skillId))
+                    continue;
+
+                destination.Add(skillId);
+            }
+        }
+
+        void DropInvalidLoadoutIds()
+        {
+            if (SkillLoadout == null)
+                return;
+
+            for (int i = SkillLoadout.Count - 1; i >= 0; i--)
+            {
+                int skillId = SkillLoadout[i];
+                if (skillId == SkillConfig.InvalidSkillId || !HasSkill(skillId) || SkillLoadout.IndexOf(skillId) != i)
+                    SkillLoadout.RemoveAt(i);
+            }
+
+            while (SkillLoadout.Count > SkillConfig.MaxLoadoutSize)
+                SkillLoadout.RemoveAt(SkillLoadout.Count - 1);
         }
 
         /// <summary>Spends one level-up point on a stat. Returns false when there is nothing to spend.</summary>
@@ -248,6 +351,8 @@ namespace M3P
             Experience = Math.Max(0, Experience);
             UnspentStatPoints = Math.Max(0, UnspentStatPoints);
             Skills ??= new List<CharacterSkill>();
+            SkillLoadout ??= new List<int>();
+            DropInvalidLoadoutIds();
             Cards ??= new List<OwnedCard>();
             for (int i = 0; i < Cards.Count; i++)
                 Cards[i] = Cards[i].Normalized();
@@ -285,6 +390,9 @@ namespace M3P
             Skills = source.Skills != null
                 ? new List<CharacterSkill>(source.Skills)
                 : new List<CharacterSkill>();
+            SkillLoadout = source.SkillLoadout != null
+                ? new List<int>(source.SkillLoadout)
+                : null;
             Cards = CloneCards(source.Cards);
             Deck = source.Deck != null ? new List<int>(source.Deck) : null;
             Tiles = CloneTiles(source.Tiles);
@@ -307,6 +415,7 @@ namespace M3P
             public int Experience;
             public int UnspentStatPoints;
             public CharacterSkill[] Skills;
+            public int[] SkillLoadout;
             public OwnedCard[] Cards;
             public int[] Deck;
             public OwnedTile[] Tiles;
@@ -325,6 +434,7 @@ namespace M3P
                     Experience = profile.Experience,
                     UnspentStatPoints = profile.UnspentStatPoints,
                     Skills = profile.Skills != null ? profile.Skills.ToArray() : Array.Empty<CharacterSkill>(),
+                    SkillLoadout = profile.SkillLoadout != null ? profile.SkillLoadout.ToArray() : null,
                     Cards = CloneCardArray(profile.Cards),
                     Deck = profile.Deck != null ? profile.Deck.ToArray() : null,
                     Tiles = CloneTileArray(profile.Tiles),
@@ -349,6 +459,7 @@ namespace M3P
                     Skills = Skills != null
                         ? new List<CharacterSkill>(Skills)
                         : new List<CharacterSkill>(),
+                    SkillLoadout = SkillLoadout != null ? new List<int>(SkillLoadout) : null,
                     Cards = CloneCards(Cards),
                     Deck = Deck != null ? new List<int>(Deck) : null,
                     Tiles = CloneTiles(Tiles),

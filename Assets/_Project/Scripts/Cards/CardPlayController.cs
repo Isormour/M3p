@@ -142,6 +142,10 @@ namespace M3P
                 return false;
             }
 
+            BattleManager manager = BattleManager.Instance;
+            if (manager != null && manager.IsAwaitingSkillChoice)
+                return false;
+
             if (!_queue.CanEnqueue(card.Logic))
             {
                 return false;

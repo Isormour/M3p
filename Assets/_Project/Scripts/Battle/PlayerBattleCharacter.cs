@@ -91,12 +91,15 @@ namespace M3P
             GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
             SkillConfig skillConfig = config != null ? config.Skills : null;
 
-            if (skillConfig == null || profile.Skills == null)
+            if (skillConfig == null || profile == null)
                 return;
 
-            for (int i = 0; i < profile.Skills.Count; i++)
+            var battleSkillIds = new List<int>();
+            profile.CollectBattleSkillIds(battleSkillIds);
+
+            for (int i = 0; i < battleSkillIds.Count; i++)
             {
-                int skillId = profile.Skills[i].SkillId;
+                int skillId = battleSkillIds[i];
 
                 if (skillConfig.TryGetSkill(skillId, out SkillDefinition skill))
                     _skills.Add(skill);

@@ -16,6 +16,7 @@ namespace M3P
         [SerializeField] UIPanelCardCrafting _craftingPanel;
         [SerializeField] Button _togglePanelTileCraftingButton;
         [SerializeField] UIPanelTileCrafting _tileCraftingPanel;
+        [SerializeField] UIPanelGainSkill _gainSkillPanel;
         [SerializeField] bool _startHidden = true;
 
         void Awake()
@@ -47,6 +48,9 @@ namespace M3P
 
                 if (_tileCraftingPanel != null)
                     _tileCraftingPanel.Hide();
+
+                if (_gainSkillPanel != null)
+                    _gainSkillPanel.Hide();
             }
         }
 
@@ -95,6 +99,9 @@ namespace M3P
 
             if (_tileCraftingPanel == null)
                 _tileCraftingPanel = FindPanelOnCanvas<UIPanelTileCrafting>();
+
+            if (_gainSkillPanel == null)
+                _gainSkillPanel = FindPanelOnCanvas<UIPanelGainSkill>();
         }
 
         void HandleToggleStatsClicked()

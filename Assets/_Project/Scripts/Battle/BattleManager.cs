@@ -44,6 +44,7 @@ namespace M3P
         EnemyBattleCharacter _activeEnemy;
         bool _isPlayerTurn = true;
         bool _battleResolved;
+        bool _awaitingSkillChoice;
         BattleOutcome _lastOutcome;
         MatchRewardRules _fallbackMatchRewards;
 
@@ -52,6 +53,9 @@ namespace M3P
 
         /// <summary>True when the human player may swap tiles on the board.</summary>
         public bool IsPlayerTurn => _isPlayerTurn;
+
+        /// <summary>True while Recycle or Transmute is waiting on a UI choice.</summary>
+        public bool IsAwaitingSkillChoice => _awaitingSkillChoice;
 
         /// <summary>Human player for the current battle.</summary>
         public PlayerBattleCharacter Player => _player;
@@ -119,10 +123,19 @@ namespace M3P
 
         public void ExecuteSkill(SkillDefinition skill, BattleCharacter caster, BattleCharacter target)
         {
+            ExecuteSkill(skill, caster, target, default);
+        }
+
+        public void ExecuteSkill(
+            SkillDefinition skill,
+            BattleCharacter caster,
+            BattleCharacter target,
+            SkillCastChoice choice)
+        {
             if (_battleResolved || skill == null || target == null)
                 return;
 
-            skill.UseSkill(caster, target);
+            skill.UseSkill(caster, target, choice);
             NotifySkillAnimation(skill, caster);
             SkillExecuted?.Invoke(skill, caster, target);
             TryResolveBattleOutcome();
@@ -167,10 +180,25 @@ namespace M3P
 
         public bool TryExecuteSkill(SkillDefinition skill, BattleCharacter caster, BattleCharacter target)
         {
+            return TryExecuteSkill(skill, caster, target, default);
+        }
+
+        public bool TryExecuteSkill(
+            SkillDefinition skill,
+            BattleCharacter caster,
+            BattleCharacter target,
+            SkillCastChoice choice)
+        {
             if (skill == null || caster == null || target == null || !target.IsAlive)
                 return false;
 
+            if (_awaitingSkillChoice)
+                return false;
+
             if (!caster.IsSkillReady(skill))
+                return false;
+
+            if (!skill.MeetsCastRequirements(caster, target))
                 return false;
 
             SoftStats softStats = caster.Stats?.Soft;
@@ -180,13 +208,23 @@ namespace M3P
             if (!skill.TrySpendActionPoints(softStats) || !skill.TrySpendMana(softStats))
                 return false;
 
-            ExecuteSkill(skill, caster, target);
+            ExecuteSkill(skill, caster, target, choice);
             caster.StartSkillCooldown(skill);
 
             if (caster == _player)
                 EndPlayerTurnIfExhausted();
 
             return true;
+        }
+
+        public void BeginSkillChoice()
+        {
+            _awaitingSkillChoice = true;
+        }
+
+        public void CancelSkillChoice()
+        {
+            _awaitingSkillChoice = false;
         }
 
         /// <summary>Spends 1 AP to reduce the remaining cooldown of a player skill by 1.</summary>
@@ -461,7 +499,8 @@ namespace M3P
                 if (skill != null
                     && _player.IsSkillReady(skill)
                     && skill.HasEnoughActionPoints(softStats)
-                    && skill.HasEnoughMana(softStats))
+                    && skill.HasEnoughMana(softStats)
+                    && skill.MeetsCastRequirements(_player, _activeEnemy))
                     return true;
             }
 
@@ -500,6 +539,7 @@ namespace M3P
 
             SnapshotVitals(_player, out int playerHealth, out int playerShield);
             _player?.OnTurnStarted();
+            _activeEnemy?.RefreshTelegraph();
             NotifyHitReaction(_player, playerHealth, playerShield);
             TryResolveBattleOutcome();
 
@@ -515,6 +555,7 @@ namespace M3P
                 return;
 
             _isPlayerTurn = false;
+            _awaitingSkillChoice = false;
 
             if (_activeBoard != null)
                 _activeBoard.AllowPlayerInput = false;
@@ -611,10 +652,20 @@ namespace M3P
 
             MapRunState mapRun = MapRunState.Active;
             bool returnToMap = mapRun != null && mapRun.HasPendingBattle;
-            if (returnToMap)
+            bool wonBoss = returnToMap &&
+                           _lastOutcome == BattleOutcome.Win &&
+                           mapRun.IsPendingBossBattle;
+
+            if (returnToMap && !wonBoss)
                 mapRun.ResolveBattle(_lastOutcome == BattleOutcome.Win);
 
             EndBattle();
+
+            if (wonBoss && GameManager.Instance != null)
+            {
+                GameManager.Instance.StartNextGeneratedMap();
+                return;
+            }
 
             if (returnToMap)
             {

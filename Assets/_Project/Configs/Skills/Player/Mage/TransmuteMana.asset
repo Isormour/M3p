@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
+  m_Name: TransmuteMana
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
+  <_skillName>k__BackingField: Transmutacja Many
+  _description: Zamienia maksymalnie 3 punkty zgromadzonej many jednego koloru na tyle samo many wybranego koloru. Raz na turę.
+  _artwork: {fileID: 21300000, guid: 5aebf21bf3334fd4c8a81fa3337db07e, type: 3}
+  _manaCosts:
+  - TileType: {fileID: 11400000, guid: d2fc95fcf0bc7f94d903f81e8e26b5f1, type: 2}
+    Amount: 2
+  _effects:
+  - {fileID: 11400000, guid: a788bb0892554a9ca3ce5442f734bd91, type: 2}
+  _cooldown: 0
+  _oncePerTurn: 1
+  _distinctColorManaCost: 0
+  _castPrompt: 2
+  _physicalSkill: 0
+  _archetype: 2
+  <_animationName>k__BackingField: BasicAttack

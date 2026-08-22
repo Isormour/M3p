@@ -88,5 +88,13 @@ namespace M3P
 
             return Mathf.Max(1, Mathf.RoundToInt(baseAmount * GetMagicEffectMultiplier(hard, talents)));
         }
+
+        public int ScalePhysicalEffect(HardStats hard, int baseAmount, TalentBonuses talents = default)
+        {
+            if (baseAmount <= 0)
+                return baseAmount;
+
+            return Mathf.Max(1, Mathf.RoundToInt(baseAmount * GetPhysicalDamageMultiplier(hard, talents)));
+        }
     }
 }

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
+  m_Name: IgniteBurst
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
+  <_skillName>k__BackingField: Zapłon
+  _description: Zużywa wszystkie stacki Burn i zadaje 4 obrażenia magiczne za każdy stack.
+  _artwork: {fileID: 21300000, guid: 3cd763a248aae554ebf9e0eac6469448, type: 3}
+  _manaCosts:
+  - TileType: {fileID: 11400000, guid: fb0e43bb3e72afb43a017902700c99c4, type: 2}
+    Amount: 2
+  - TileType: {fileID: 11400000, guid: 3b3c19c61b9ce4a4ea680cbd46f909a6, type: 2}
+    Amount: 1
+  _effects:
+  - {fileID: 11400000, guid: 2c0dae6b9fb84a7b9e051bc835f7e130, type: 2}
+  _cooldown: 0
+  _oncePerTurn: 0
+  _distinctColorManaCost: 0
+  _castPrompt: 0
+  _physicalSkill: 0
+  _archetype: 2
+  <_animationName>k__BackingField: BasicAttack

@@ -15,6 +15,8 @@ namespace M3P
         /// <summary>Id of a skill that this config does not know about.</summary>
         public const int InvalidSkillId = 0;
 
+        public const int MaxLoadoutSize = 5;
+
         [Serializable]
         public struct Entry
         {

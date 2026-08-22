@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
+  m_Name: BloodPact
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
+  <_skillName>k__BackingField: Krwawy Pakt
+  _description: Gracz traci 5 HP i otrzymuje 2 AP. Skill nie może zabić gracza i może zostać użyty raz na turę.
+  _artwork: {fileID: 21300000, guid: 1f9a4098d9733d54b8bd098da20f7af2, type: 3}
+  _manaCosts:
+  - TileType: {fileID: 11400000, guid: 3b3c19c61b9ce4a4ea680cbd46f909a6, type: 2}
+    Amount: 2
+  _effects:
+  - {fileID: 11400000, guid: 93562b3503bd4ee3bd5619ce074ea913, type: 2}
+  _cooldown: 0
+  _oncePerTurn: 1
+  _distinctColorManaCost: 0
+  _castPrompt: 0
+  _physicalSkill: 0
+  _archetype: 3
+  <_animationName>k__BackingField: BasicAttack

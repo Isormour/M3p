@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
+  m_Name: Execute
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
+  <_skillName>k__BackingField: Egzekucja
+  _description: Zadaje 8 obrażeń. Jeśli przeciwnik ma mniej niż 25% HP, zadaje 16. Cooldown: 2 tury.
+  _artwork: {fileID: 21300000, guid: 4b64a177e808e84489ba1c0b5caf9e36, type: 3}
+  _manaCosts:
+  - TileType: {fileID: 11400000, guid: fb0e43bb3e72afb43a017902700c99c4, type: 2}
+    Amount: 3
+  - TileType: {fileID: 11400000, guid: 3b3c19c61b9ce4a4ea680cbd46f909a6, type: 2}
+    Amount: 1
+  _effects:
+  - {fileID: 11400000, guid: c711c81804ce498a93b231fbc8536ca8, type: 2}
+  _cooldown: 2
+  _oncePerTurn: 0
+  _distinctColorManaCost: 0
+  _castPrompt: 0
+  _physicalSkill: 1
+  _archetype: 1
+  <_animationName>k__BackingField: BasicAttack

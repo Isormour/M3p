@@ -9,6 +9,8 @@ namespace M3P
     {
         public string Name;
         public string StartNodeId;
+        public bool Directed;
+        public int Seed;
         public Node[] Nodes;
         public Edge[] Edges;
 
@@ -34,6 +36,8 @@ namespace M3P
             {
                 Name = Name,
                 StartNodeId = StartNodeId,
+                Directed = Directed,
+                Seed = Seed,
                 Nodes = CloneNodes(Nodes),
                 Edges = CloneEdges(Edges),
             };
@@ -86,6 +90,7 @@ namespace M3P
     {
         public bool IsActive;
         public bool IsGenerated;
+        public int FloorIndex;
         public string GraphName;
         public string CurrentNodeId;
         public string PreviousNodeId;
@@ -101,6 +106,7 @@ namespace M3P
             {
                 IsActive = IsActive,
                 IsGenerated = IsGenerated,
+                FloorIndex = FloorIndex,
                 GraphName = GraphName,
                 CurrentNodeId = CurrentNodeId,
                 PreviousNodeId = PreviousNodeId,

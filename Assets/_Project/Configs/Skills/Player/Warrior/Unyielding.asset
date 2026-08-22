@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
+  m_Name: Unyielding
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
+  <_skillName>k__BackingField: Nieugięty
+  _description: Daje 12 Shield i wzmacnia następny fizyczny skill o 50%. Jeśli Wojownik ma mniej niż 30% HP, odzyskuje również 1 AP. Cooldown: 4 tury.
+  _artwork: {fileID: 21300000, guid: 73b1b5b631f951148a89c1c0059d6df7, type: 3}
+  _manaCosts:
+  - TileType: {fileID: 11400000, guid: d2fc95fcf0bc7f94d903f81e8e26b5f1, type: 2}
+    Amount: 3
+  - TileType: {fileID: 11400000, guid: fb0e43bb3e72afb43a017902700c99c4, type: 2}
+    Amount: 1
+  - TileType: {fileID: 11400000, guid: 031c32cbcfb4a0f4e97c6bd265a1bb5d, type: 2}
+    Amount: 1
+  _effects:
+  - {fileID: 11400000, guid: 052ca031c7904b559f6179a59b1646fd, type: 2}
+  _cooldown: 4
+  _oncePerTurn: 0
+  _distinctColorManaCost: 0
+  _castPrompt: 0
+  _physicalSkill: 0
+  _archetype: 1
+  <_animationName>k__BackingField: BasicAttack

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
+  m_Name: HeavySlash
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
+  <_skillName>k__BackingField: Mocne Cięcie
+  _description: Zadaje 8 obrażeń fizycznych. Podstawowy, niezależny od warunków atak.
+  _artwork: {fileID: 21300000, guid: 03b8cf54fbc7c1c449a861a9c88493bb, type: 3}
+  _manaCosts:
+  - TileType: {fileID: 11400000, guid: fb0e43bb3e72afb43a017902700c99c4, type: 2}
+    Amount: 3
+  _effects:
+  - {fileID: 11400000, guid: f675586102704230a0256d029784ed37, type: 2}
+  _cooldown: 0
+  _oncePerTurn: 0
+  _distinctColorManaCost: 0
+  _castPrompt: 0
+  _physicalSkill: 1
+  _archetype: 1
+  <_animationName>k__BackingField: BasicAttack

@@ -1,5 +1,5 @@
-using System;
 using Match3;
+using System;
 using UnityEngine;
 
 namespace M3P
@@ -24,13 +24,31 @@ namespace M3P
     [CreateAssetMenu(fileName = "SkillDefinition", menuName = "M3P/Skill Definition", order = 0)]
     public class SkillDefinition : ScriptableObject
     {
+        [field: SerializeField] public string _skillName { private set; get; } = "Skill Name";
+        [TextArea, SerializeField] string _description;
+        [SerializeField] Sprite _artwork;
         [SerializeField] TileTypeManaCost[] _manaCosts = Array.Empty<TileTypeManaCost>();
         [SerializeField] BattleEffect[] _effects = Array.Empty<BattleEffect>();
         [Tooltip("Turns before this skill can be cast again. Zero means it can be reused immediately.")]
         [Min(0), SerializeField] int _cooldown;
+        [Tooltip("When true, the skill can be used only once during the caster's turn.")]
+        [SerializeField] bool _oncePerTurn;
+        [Tooltip("Spend 1 mana from this many different colours, on top of any authored costs.")]
+        [Min(0), SerializeField] int _distinctColorManaCost;
+        [SerializeField] SkillCastPrompt _castPrompt;
+        [Tooltip("When true, Unyielding-style buffs multiply this skill's damage.")]
+        [SerializeField] bool _physicalSkill;
+        [SerializeField] SkillArchetype _archetype;
         [field: SerializeField] public string _animationName { private set; get; } = "BasicAttack";
 
         [NonSerialized] bool _loggedUnresolvedTileType;
+
+        public string DisplayName =>
+            string.IsNullOrEmpty(_skillName) || _skillName == "Skill Name" ? name : _skillName;
+
+        public string Description => _description ?? string.Empty;
+
+        public Sprite Artwork => _artwork;
 
         public TileTypeManaCost[] ManaCosts => _manaCosts ?? Array.Empty<TileTypeManaCost>();
 
@@ -52,6 +70,16 @@ namespace M3P
 
         /// <summary>Turns the caster must wait after using this skill before casting it again. Zero skips the lockout.</summary>
         public int Cooldown => Mathf.Max(0, _cooldown);
+
+        public bool OncePerTurn => _oncePerTurn;
+
+        public int DistinctColorManaCost => Mathf.Max(0, _distinctColorManaCost);
+
+        public SkillCastPrompt CastPrompt => _castPrompt;
+
+        public bool PhysicalSkill => _physicalSkill;
+
+        public SkillArchetype Archetype => _archetype;
 
         public int GetManaCostForTileType(Match3TileTypeDefinition tileType)
         {
@@ -99,7 +127,7 @@ namespace M3P
                     return false;
             }
 
-            return true;
+            return HasEnoughDistinctColorMana(softStats);
         }
 
         public bool TrySpendMana(SoftStats softStats)
@@ -116,6 +144,48 @@ namespace M3P
                 int tileTypeId = ResolveTileTypeId(costs[i].TileType);
                 int remaining = softStats.GetManaForTileType(tileTypeId) - costs[i].Amount;
                 softStats.SetManaForTileType(tileTypeId, remaining);
+            }
+
+            if (DistinctColorManaCost <= 0)
+                return true;
+
+            var spendOrder = new System.Collections.Generic.List<int>();
+            if (!SkillCombat.TryCollectDistinctColorSpendOrder(softStats, this, spendOrder, subtractAuthoredCosts: false))
+                return false;
+
+            for (int i = 0; i < spendOrder.Count; i++)
+            {
+                int tileTypeId = spendOrder[i];
+                softStats.SetManaForTileType(tileTypeId, softStats.GetManaForTileType(tileTypeId) - 1);
+            }
+
+            return true;
+        }
+
+        bool HasEnoughDistinctColorMana(SoftStats softStats)
+        {
+            if (DistinctColorManaCost <= 0)
+                return true;
+
+            var spendOrder = new System.Collections.Generic.List<int>();
+            return SkillCombat.TryCollectDistinctColorSpendOrder(softStats, this, spendOrder, subtractAuthoredCosts: true);
+        }
+
+        /// <summary>Extra requirements from effect logics, such as souls or a non-empty discard pile.</summary>
+        public bool MeetsCastRequirements(BattleCharacter caster, BattleCharacter target)
+        {
+            if (caster == null)
+                return false;
+
+            if (OncePerTurn && caster.HasUsedSkillThisTurn(this))
+                return false;
+
+            BattleEffect[] effects = Effects;
+            for (int i = 0; i < effects.Length; i++)
+            {
+                if (effects[i]?.Logic is ISkillCastRequirement requirement
+                    && !requirement.CanCast(caster, target, this))
+                    return false;
             }
 
             return true;
@@ -149,15 +219,28 @@ namespace M3P
             _loggedUnresolvedTileType = false;
         }
 
-        public void UseSkill(BattleCharacter caster, BattleCharacter target)
+        public void UseSkill(BattleCharacter caster, BattleCharacter target, SkillCastChoice choice = default)
         {
             BattleEffect[] effects = Effects;
             if (effects.Length == 0)
                 return;
 
-            var context = new BattleEffectContext(caster, target);
+            float multiplier = 1f;
+            if (PhysicalSkill && caster != null)
+                multiplier = caster.Modifiers.ConsumeNextPhysicalSkillMultiplier();
+
+            var context = new BattleEffectContext(
+                caster,
+                target,
+                directHit: true,
+                skillDamageMultiplier: multiplier,
+                choicePrimary: choice.Primary,
+                choiceSecondary: choice.Secondary);
+
             for (int i = 0; i < effects.Length; i++)
                 effects[i]?.Apply(context);
+
+            caster?.MarkSkillUsedThisTurn(this);
         }
     }
 }

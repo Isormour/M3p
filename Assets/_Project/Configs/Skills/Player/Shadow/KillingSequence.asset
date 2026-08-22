@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
+  m_Name: KillingSequence
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
+  <_skillName>k__BackingField: Zabójcza Sekwencja
+  _description: Zadaje 4 obrażenia za każdą kartę wykonaną w ostatniej kolejce, maksymalnie 20. Jeśli kolejka utworzyła dokładnie jeden match bez kaskady, zadaje dodatkowe 5 obrażeń. Cooldown: 3 tury.
+  _artwork: {fileID: 21300000, guid: a0f68b13f97d04e41850a06d55a44717, type: 3}
+  _manaCosts:
+  - TileType: {fileID: 11400000, guid: 031c32cbcfb4a0f4e97c6bd265a1bb5d, type: 2}
+    Amount: 3
+  - TileType: {fileID: 11400000, guid: 3b3c19c61b9ce4a4ea680cbd46f909a6, type: 2}
+    Amount: 2
+  _effects:
+  - {fileID: 11400000, guid: 47dbace2cd6746398d3fea36b943183a, type: 2}
+  _cooldown: 3
+  _oncePerTurn: 0
+  _distinctColorManaCost: 0
+  _castPrompt: 0
+  _physicalSkill: 1
+  _archetype: 3
+  <_animationName>k__BackingField: BasicAttack

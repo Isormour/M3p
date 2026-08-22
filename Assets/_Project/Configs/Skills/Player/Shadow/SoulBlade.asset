@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
+  m_Name: SoulBlade
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
+  <_skillName>k__BackingField: Ostrze Dusz
+  _description: Zużywa maksymalnie 4 Dusze. Za każdą wykonuje trafienie zadające 4 obrażenia.
+  _artwork: {fileID: 21300000, guid: d583c7ea9fdc93544a6d91d7db3d5f56, type: 3}
+  _manaCosts:
+  - TileType: {fileID: 11400000, guid: 3b3c19c61b9ce4a4ea680cbd46f909a6, type: 2}
+    Amount: 2
+  - TileType: {fileID: 11400000, guid: fb0e43bb3e72afb43a017902700c99c4, type: 2}
+    Amount: 1
+  _effects:
+  - {fileID: 11400000, guid: 35d8d18afa2c4db8b99018e6980146f6, type: 2}
+  _cooldown: 0
+  _oncePerTurn: 0
+  _distinctColorManaCost: 0
+  _castPrompt: 0
+  _physicalSkill: 1
+  _archetype: 3
+  <_animationName>k__BackingField: BasicAttack

@@ -21,6 +21,7 @@ namespace M3P.Editor
         [SerializeField] bool _showProgression = true;
         [SerializeField] bool _showHardStats = true;
         [SerializeField] bool _showSkills = true;
+        [SerializeField] bool _showSkillLoadout = true;
         [SerializeField] bool _showCards = true;
         [SerializeField] bool _showTiles = true;
         [SerializeField] bool _showShards = true;
@@ -76,6 +77,7 @@ namespace M3P.Editor
             DrawHardStats();
             DrawCombatPreview();
             DrawSkills();
+            DrawSkillLoadout();
             DrawCards();
             DrawTiles();
             DrawShards();
@@ -237,6 +239,81 @@ namespace M3P.Editor
                 _working.Skills.RemoveAt(removeAt);
                 MarkDirty();
             }
+        }
+
+        void DrawSkillLoadout()
+        {
+            _working.SkillLoadout ??= new List<int>();
+            _showSkillLoadout = EditorGUILayout.Foldout(
+                _showSkillLoadout,
+                $"Skill Loadout ({_working.SkillLoadout.Count}/{SkillConfig.MaxLoadoutSize})",
+                true);
+            if (!_showSkillLoadout)
+                return;
+
+            SkillConfig skills = _config != null ? _config.Skills : null;
+            int removeAt = -1;
+
+            using (new EditorGUI.IndentLevelScope())
+            {
+                EditorGUILayout.HelpBox(
+                    "Up to five owned skills taken into battle. Classes are archetypes, not locks.",
+                    MessageType.None);
+
+                for (int i = 0; i < _working.SkillLoadout.Count; i++)
+                {
+                    int skillId = _working.SkillLoadout[i];
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        SkillDefinition current = skills != null ? skills.GetSkill(skillId) : null;
+                        EditorGUILayout.ObjectField(current, typeof(SkillDefinition), false);
+                        if (GUILayout.Button("–", GUILayout.Width(22f)))
+                            removeAt = i;
+                    }
+                }
+
+                if (_working.SkillLoadout.Count < SkillConfig.MaxLoadoutSize
+                    && GUILayout.Button("Add Owned Skill To Loadout"))
+                    ShowAddLoadoutMenu(skills);
+            }
+
+            if (removeAt >= 0)
+            {
+                _working.TryRemoveLoadoutAt(removeAt);
+                MarkDirty();
+            }
+        }
+
+        void ShowAddLoadoutMenu(SkillConfig skills)
+        {
+            GenericMenu menu = new GenericMenu();
+            bool added = false;
+
+            if (_working.Skills != null && skills != null)
+            {
+                for (int i = 0; i < _working.Skills.Count; i++)
+                {
+                    int skillId = _working.Skills[i].SkillId;
+                    if (skillId == SkillConfig.InvalidSkillId
+                        || (_working.SkillLoadout != null && _working.SkillLoadout.Contains(skillId)))
+                        continue;
+
+                    SkillDefinition skill = skills.GetSkill(skillId);
+                    string label = skill != null ? skill.DisplayName : $"Id {skillId}";
+                    menu.AddItem(new GUIContent(label), false, () =>
+                    {
+                        if (_working.TryAddSkillToLoadout(skillId))
+                            MarkDirty();
+                        Repaint();
+                    });
+                    added = true;
+                }
+            }
+
+            if (!added)
+                menu.AddDisabledItem(new GUIContent("No owned skills left"));
+
+            menu.ShowAsContext();
         }
 
         void DrawCards()
@@ -738,6 +815,7 @@ namespace M3P.Editor
                 menu.AddItem(new GUIContent(skillName), false, () =>
                 {
                     _working.Skills.Add(new CharacterSkill(skillId, 1, skillName));
+                    _working.TryAddSkillToLoadout(skillId);
                     MarkDirty();
                     Repaint();
                 });

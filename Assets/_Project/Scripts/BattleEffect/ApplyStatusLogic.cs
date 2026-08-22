@@ -7,8 +7,10 @@ namespace M3P
     public class ApplyStatusLogic : BattleEffectLogic
     {
         [SerializeField] StatusEffectDefinition _status;
+        [Min(1), SerializeField] int _stacks = 1;
 
         public StatusEffectDefinition Status => _status;
+        public int Stacks => Mathf.Max(1, _stacks);
 
         public override void Apply(BattleEffectContext context, EEffectTarget target)
         {
@@ -16,7 +18,12 @@ namespace M3P
                 return;
 
             BattleCharacter character = context.Resolve(target);
-            character?.ApplyStatus(_status, context.Caster);
+            if (character == null)
+                return;
+
+            int stacks = Stacks;
+            for (int i = 0; i < stacks; i++)
+                character.ApplyStatus(_status, context.Caster);
         }
     }
 }

@@ -99,7 +99,7 @@ namespace M3P
             if (_label != null)
             {
                 string suffix = _cleared && NodeType != MapNodeType.Start ? " ✓" : string.Empty;
-                _label.text = NodeType + suffix;
+                _label.text = NodeType.DisplayName() + suffix;
             }
 
             float scaleMul = _isCurrent ? 1.25f : _reachable ? 1.1f : 1f;

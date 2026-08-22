@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace M3P
 {
@@ -19,8 +20,37 @@ namespace M3P
         public bool IsActive { get; private set; }
         public bool IsGenerated { get; private set; }
         public MapGraphSnapshot GraphSnapshot { get; private set; }
+        public int FloorIndex { get; private set; } = 1;
 
         public bool HasPendingBattle => !string.IsNullOrEmpty(PendingBattleNodeId);
+
+        /// <summary>True when the fight the Battle scene is resolving is the floor boss.</summary>
+        public bool IsPendingBossBattle
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(PendingBattleNodeId))
+                    return false;
+
+                if (PendingEncounter != null && PendingEncounter.Type == MapNodeType.Boss)
+                    return true;
+
+                if (PendingBattleNodeId.IndexOf("boss", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return true;
+
+                if (GraphSnapshot?.Nodes == null)
+                    return false;
+
+                for (int i = 0; i < GraphSnapshot.Nodes.Length; i++)
+                {
+                    MapGraphSnapshot.Node node = GraphSnapshot.Nodes[i];
+                    if (node != null && node.Id == PendingBattleNodeId)
+                        return node.Type == MapNodeType.Boss;
+                }
+
+                return false;
+            }
+        }
 
         /// <summary>Enemy from the pending battle encounter, if any.</summary>
         public EnemyDefinition PendingEnemy =>
@@ -28,7 +58,11 @@ namespace M3P
 
         public IReadOnlyCollection<string> ClearedNodeIds => _clearedNodeIds;
 
-        public void BeginRun(string graphName, string startNodeId, MapGraphSnapshot generatedGraph = null)
+        public void BeginRun(
+            string graphName,
+            string startNodeId,
+            MapGraphSnapshot generatedGraph = null,
+            int floorIndex = 1)
         {
             GraphName = graphName;
             CurrentNodeId = startNodeId;
@@ -40,8 +74,14 @@ namespace M3P
                 _clearedNodeIds.Add(startNodeId);
             IsGenerated = generatedGraph != null;
             GraphSnapshot = generatedGraph;
+            FloorIndex = Mathf.Max(1, floorIndex);
             IsActive = true;
             Active = this;
+        }
+
+        public void SetFloorIndex(int floorIndex)
+        {
+            FloorIndex = Mathf.Max(1, floorIndex);
         }
 
         public void Restore(MapRunSave save)
@@ -69,6 +109,7 @@ namespace M3P
 
             IsGenerated = save.IsGenerated;
             GraphSnapshot = save.Graph != null ? save.Graph.Clone() : null;
+            FloorIndex = save.FloorIndex > 0 ? save.FloorIndex : 1;
             IsActive = true;
             Active = this;
         }
@@ -85,6 +126,7 @@ namespace M3P
             {
                 IsActive = true,
                 IsGenerated = IsGenerated,
+                FloorIndex = FloorIndex,
                 GraphName = GraphName,
                 CurrentNodeId = CurrentNodeId,
                 PreviousNodeId = PreviousNodeId,
@@ -150,6 +192,7 @@ namespace M3P
             _clearedNodeIds.Clear();
             IsGenerated = false;
             GraphSnapshot = null;
+            FloorIndex = 1;
             IsActive = false;
         }
     }

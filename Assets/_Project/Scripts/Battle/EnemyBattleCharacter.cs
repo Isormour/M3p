@@ -15,6 +15,22 @@ namespace M3P
 
         EnemyDefinition _definition;
 
+        public SkillDefinition TelegraphedSkill { get; private set; }
+
+        public bool IsTelegraphingOffensive =>
+            TelegraphedSkill != null && TelegraphedSkill.AffectsOpponent();
+
+        public void RefreshTelegraph()
+        {
+            TelegraphedSkill = null;
+            SkillDefinition[] skills = _definition?.Skills;
+            if (skills == null)
+                return;
+
+            TryGetReadySkill(skills, 0, out SkillDefinition skill, out _);
+            TelegraphedSkill = skill;
+        }
+
         public EnemyDefinition Definition => _definition;
 
         public void Configure(EnemyDefinition definition)

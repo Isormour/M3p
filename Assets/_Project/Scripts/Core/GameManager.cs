@@ -24,6 +24,9 @@ namespace M3P
         ProfileManager _profileManager;
         ProgressionService _progression;
         MapRunState _mapRun;
+        MapGraphDefinition _mapGenerationSource;
+        float _generatedLayerSpacing = 3.5f;
+        float _generatedNodeSpacing = 3.5f;
 
         public GameConfig Config => _config;
 
@@ -99,6 +102,65 @@ namespace M3P
             PersistMapRun();
             LaunchMode = MapLaunchMode.NewGenerated;
             SceneFlow.LoadMap();
+        }
+
+        /// <summary>
+        /// Encounter template and spacing used to roll a floor before the Map scene loads.
+        /// Cached from <see cref="MapManager"/> so Battle can generate the next floor after a boss.
+        /// </summary>
+        public void ConfigureMapGeneration(MapGraphDefinition source, float layerSpacing, float nodeSpacing)
+        {
+            if (source != null)
+                _mapGenerationSource = source;
+
+            _generatedLayerSpacing = Mathf.Max(1f, layerSpacing);
+            _generatedNodeSpacing = Mathf.Max(1f, nodeSpacing);
+        }
+
+        /// <summary>
+        /// Builds a new floor immediately, then loads Map onto that graph. Profile progress is kept.
+        /// </summary>
+        public void StartNextGeneratedMap()
+        {
+            int nextFloor = MapRun.IsGenerated ? MapRun.FloorIndex + 1 : 1;
+            MapRun.Clear();
+            MapRun.SetFloorIndex(nextFloor);
+
+            MapGraphDefinition generated = TryGenerateFloor(nextFloor);
+            if (generated != null)
+            {
+                MapRun.BeginRun(
+                    generated.name,
+                    generated.StartNodeId,
+                    generated.ToSnapshot(),
+                    nextFloor);
+                Destroy(generated);
+                LaunchMode = MapLaunchMode.Continue;
+            }
+            else
+            {
+                LaunchMode = MapLaunchMode.NewGenerated;
+            }
+
+            PersistMapRun();
+            SceneFlow.LoadMap();
+        }
+
+        MapGraphDefinition TryGenerateFloor(int floorIndex)
+        {
+            if (_mapGenerationSource == null)
+                return null;
+
+            MapEncounterPools pools = MapEncounterPools.FromGraph(_mapGenerationSource);
+            if (pools.Battles.Count == 0)
+                return null;
+
+            return MapGenerator.Generate(
+                pools,
+                unchecked(System.Environment.TickCount),
+                _generatedLayerSpacing,
+                _generatedNodeSpacing,
+                floorIndex);
         }
 
         public void StartDebugMap()

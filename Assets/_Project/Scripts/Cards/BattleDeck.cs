@@ -26,6 +26,8 @@ namespace M3P
 
         public int DrawPileCount => _drawPile.Count;
 
+        public IReadOnlyList<BoardActionCardDefinition> DiscardPile => _discardPile;
+
         public int DiscardPileCount => _discardPile.Count;
 
         /// <summary>Cards committed to the queue: out of hand, not yet discarded, still recoverable by Undo.</summary>
@@ -166,6 +168,19 @@ namespace M3P
             _discardPile.AddRange(_sequence);
             _sequence.Clear();
             Changed?.Invoke();
+        }
+
+        /// <summary>Moves one card from discard back into the hand. Used by Recycle.</summary>
+        public bool TryReturnFromDiscardToHand(int discardIndex)
+        {
+            if (discardIndex < 0 || discardIndex >= _discardPile.Count)
+                return false;
+
+            BoardActionCardDefinition card = _discardPile[discardIndex];
+            _discardPile.RemoveAt(discardIndex);
+            _hand.Add(card);
+            Changed?.Invoke();
+            return true;
         }
 
         void RecycleDiscardPile()

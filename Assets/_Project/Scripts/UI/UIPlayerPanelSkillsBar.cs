@@ -8,6 +8,7 @@ namespace M3P
     public sealed class UIPlayerPanelSkillsBar : MonoBehaviour
     {
         [SerializeField] Button _button;
+        [SerializeField] Image _artworkImage;
         [SerializeField] TextMeshProUGUI _skillNameLabel;
         [SerializeField] RectTransform _costContainer;
         [SerializeField] UIPlayerPanelSkillsCostLabel _costLabelPrefab;
@@ -15,6 +16,7 @@ namespace M3P
         SkillDefinition _skill;
         PlayerBattleCharacter _player;
         SoftStats _boundSoftStats;
+        UICardChoiceOverlay _promptOverlay;
 
         readonly List<UIPlayerPanelSkillsCostLabel> _costLabels = new List<UIPlayerPanelSkillsCostLabel>();
 
@@ -37,6 +39,7 @@ namespace M3P
             }
 
             RefreshSkillName();
+            RefreshArtwork();
 
             if (skill == null || _costLabelPrefab == null)
             {
@@ -56,6 +59,14 @@ namespace M3P
                 UIPlayerPanelSkillsCostLabel label = Instantiate(_costLabelPrefab, _costContainer);
                 label.name = $"CostLabel_{costs[i].TileType.name}";
                 label.Configure(costs[i].TileType.Sprite, costs[i].Amount);
+                _costLabels.Add(label);
+            }
+
+            if (skill.DistinctColorManaCost > 0)
+            {
+                UIPlayerPanelSkillsCostLabel label = Instantiate(_costLabelPrefab, _costContainer);
+                label.name = "CostLabel_DistinctColors";
+                label.Configure(null, skill.DistinctColorManaCost);
                 _costLabels.Add(label);
             }
 
@@ -84,7 +95,7 @@ namespace M3P
                 return;
 
             BattleManager manager = BattleManager.Instance;
-            if (manager == null || !manager.IsPlayerTurn)
+            if (manager == null || !manager.IsPlayerTurn || manager.IsAwaitingSkillChoice)
                 return;
 
             if (!_player.IsSkillReady(_skill))
@@ -98,8 +109,83 @@ namespace M3P
             if (target == null)
                 return;
 
+            if (_skill.CastPrompt == SkillCastPrompt.DiscardCard)
+            {
+                BeginDiscardPrompt(manager, target);
+                return;
+            }
+
+            if (_skill.CastPrompt == SkillCastPrompt.TransmuteMana)
+            {
+                BeginTransmutePrompt(manager, target);
+                return;
+            }
+
             manager.TryExecuteSkill(_skill, _player, target);
             RefreshInteractable();
+        }
+
+        void BeginDiscardPrompt(BattleManager manager, BattleCharacter target)
+        {
+            HidePrompt();
+            manager.BeginSkillChoice();
+            _promptOverlay = SkillCastPromptUI.ShowDiscardReturn(
+                manager.CardPlay != null ? manager.CardPlay.Deck : null,
+                index => CompleteCast(manager, target, new SkillCastChoice(index)),
+                () => CancelPrompt(manager));
+        }
+
+        void BeginTransmutePrompt(BattleManager manager, BattleCharacter target)
+        {
+            HidePrompt();
+            manager.BeginSkillChoice();
+            _promptOverlay = SkillCastPromptUI.ShowManaColor(
+                "Z",
+                _player.Stats?.Soft,
+                _skill,
+                excludeTypeId: -1,
+                remainingAfterCost: true,
+                requirePositiveAmount: true,
+                picked => HandleTransmuteSourcePicked(manager, target, picked),
+                () => CancelPrompt(manager));
+        }
+
+        void HandleTransmuteSourcePicked(BattleManager manager, BattleCharacter target, int sourceTypeId)
+        {
+            HidePrompt();
+            _promptOverlay = SkillCastPromptUI.ShowManaColor(
+                "Na",
+                _player.Stats?.Soft,
+                _skill,
+                excludeTypeId: sourceTypeId,
+                remainingAfterCost: false,
+                requirePositiveAmount: false,
+                picked => CompleteCast(manager, target, new SkillCastChoice(sourceTypeId, picked)),
+                () => CancelPrompt(manager));
+        }
+
+        void CompleteCast(BattleManager manager, BattleCharacter target, SkillCastChoice choice)
+        {
+            HidePrompt();
+            manager.CancelSkillChoice();
+            manager.TryExecuteSkill(_skill, _player, target, choice);
+            RefreshInteractable();
+        }
+
+        void CancelPrompt(BattleManager manager)
+        {
+            HidePrompt();
+            manager.CancelSkillChoice();
+            RefreshInteractable();
+        }
+
+        void HidePrompt()
+        {
+            if (_promptOverlay == null)
+                return;
+
+            _promptOverlay.Dismiss();
+            _promptOverlay = null;
         }
 
         void BindSoftStats()
@@ -124,6 +210,10 @@ namespace M3P
 
         public void RefreshInteractable()
         {
+            BattleManager manager = BattleManager.Instance;
+            if (manager == null || !manager.IsPlayerTurn)
+                HidePrompt();
+
             if (_button == null)
                 _button = GetComponent<Button>();
 
@@ -148,8 +238,47 @@ namespace M3P
 
             int remaining = _player != null ? _player.GetRemainingCooldown(_skill) : 0;
             _skillNameLabel.text = remaining > 0
-                ? $"{_skill.name} ({remaining})"
-                : _skill.name;
+                ? $"{_skill.DisplayName} ({remaining})"
+                : _skill.DisplayName;
+        }
+
+        void RefreshArtwork()
+        {
+            EnsureArtworkImage();
+            if (_artworkImage == null)
+                return;
+
+            Sprite artwork = _skill != null ? _skill.Artwork : null;
+            _artworkImage.sprite = artwork;
+            _artworkImage.enabled = artwork != null;
+        }
+
+        void EnsureArtworkImage()
+        {
+            if (_artworkImage != null)
+                return;
+
+            Transform existing = transform.Find("Artwork");
+            if (existing != null)
+                _artworkImage = existing.GetComponent<Image>();
+
+            if (_artworkImage != null)
+                return;
+
+            var artworkObject = new GameObject("Artwork", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            artworkObject.transform.SetParent(transform, false);
+            artworkObject.transform.SetAsFirstSibling();
+
+            RectTransform rect = (RectTransform)artworkObject.transform;
+            rect.anchorMin = new Vector2(0.08f, 0.28f);
+            rect.anchorMax = new Vector2(0.92f, 0.82f);
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            _artworkImage = artworkObject.GetComponent<Image>();
+            _artworkImage.preserveAspect = true;
+            _artworkImage.raycastTarget = false;
+            _artworkImage.color = Color.white;
         }
 
         bool CanInteractWithSkill()
@@ -158,7 +287,7 @@ namespace M3P
                 return false;
 
             BattleManager manager = BattleManager.Instance;
-            if (manager == null || !manager.IsPlayerTurn)
+            if (manager == null || !manager.IsPlayerTurn || manager.IsAwaitingSkillChoice)
                 return false;
 
             if (!_player.IsSkillReady(_skill))
@@ -169,7 +298,9 @@ namespace M3P
                 return false;
 
             SoftStats softStats = _player.Stats.Soft;
-            return _skill.HasEnoughActionPoints(softStats) && _skill.HasEnoughMana(softStats);
+            return _skill.HasEnoughActionPoints(softStats)
+                && _skill.HasEnoughMana(softStats)
+                && _skill.MeetsCastRequirements(_player, target);
         }
 
         void ClearCostLabels()
@@ -189,6 +320,7 @@ namespace M3P
                 _button.onClick.RemoveListener(HandleClick);
 
             UnbindSoftStats();
+            HidePrompt();
             ClearCostLabels();
         }
     }

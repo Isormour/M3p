@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace M3P
 {
-    /// <summary>Authorable floor graph: nodes with encounters and undirected connections.</summary>
+    /// <summary>Authorable or generated floor graph: nodes with encounters and connections.</summary>
     [CreateAssetMenu(fileName = "MapGraphDefinition", menuName = "M3P/Map Graph", order = 20)]
     public class MapGraphDefinition : ScriptableObject
     {
@@ -23,7 +23,7 @@ namespace M3P
             [Tooltip("Position on the map plane (X/Z). Y is ignored at runtime.")]
             public Vector2 Position;
 
-            public MapNodeType ResolvedType => Encounter != null ? Encounter.Type : Type;
+            public MapNodeType ResolvedType => Type;
         }
 
         [Serializable]
@@ -36,16 +36,27 @@ namespace M3P
         [SerializeField] string _startNodeId = "start";
         [SerializeField] List<Node> _nodes = new List<Node>();
         [SerializeField] List<Edge> _edges = new List<Edge>();
+        [SerializeField] bool _directed;
+        [SerializeField] int _seed;
 
         public string StartNodeId => _startNodeId;
         public IReadOnlyList<Node> Nodes => _nodes;
         public IReadOnlyList<Edge> Edges => _edges;
+        public bool Directed => _directed;
+        public int Seed => _seed;
 
-        public void ReplaceContents(string startNodeId, List<Node> nodes, List<Edge> edges)
+        public void ReplaceContents(
+            string startNodeId,
+            List<Node> nodes,
+            List<Edge> edges,
+            bool directed = false,
+            int seed = 0)
         {
             _startNodeId = startNodeId;
             _nodes = nodes ?? new List<Node>();
             _edges = edges ?? new List<Edge>();
+            _directed = directed;
+            _seed = seed;
         }
 
         public MapGraphSnapshot ToSnapshot()
@@ -54,6 +65,8 @@ namespace M3P
             {
                 Name = name,
                 StartNodeId = _startNodeId,
+                Directed = _directed,
+                Seed = _seed,
                 Nodes = new MapGraphSnapshot.Node[_nodes != null ? _nodes.Count : 0],
                 Edges = new MapGraphSnapshot.Edge[_edges != null ? _edges.Count : 0],
             };
@@ -126,7 +139,7 @@ namespace M3P
                     {
                         Id = saved.Id,
                         Encounter = encounter,
-                        Type = encounter != null ? encounter.Type : saved.Type,
+                        Type = saved.Type,
                         Position = saved.Position,
                     });
                 }
@@ -148,7 +161,9 @@ namespace M3P
             graph.ReplaceContents(
                 string.IsNullOrEmpty(snapshot.StartNodeId) ? "start" : snapshot.StartNodeId,
                 nodes,
-                edges);
+                edges,
+                snapshot.Directed,
+                snapshot.Seed);
             return graph;
         }
 
@@ -184,7 +199,10 @@ namespace M3P
 
                 if (edge.FromId == nodeId && !string.IsNullOrEmpty(edge.ToId) && !neighbors.Contains(edge.ToId))
                     neighbors.Add(edge.ToId);
-                else if (edge.ToId == nodeId && !string.IsNullOrEmpty(edge.FromId) && !neighbors.Contains(edge.FromId))
+                else if (!_directed &&
+                         edge.ToId == nodeId &&
+                         !string.IsNullOrEmpty(edge.FromId) &&
+                         !neighbors.Contains(edge.FromId))
                     neighbors.Add(edge.FromId);
             }
 
@@ -207,7 +225,7 @@ namespace M3P
                 new Node { Id = "battle_c", Type = MapNodeType.Battle, Position = new Vector2(0f, 6f) },
                 new Node { Id = "chest_b", Type = MapNodeType.Chest, Position = new Vector2(-2f, 9f) },
                 new Node { Id = "shop_b", Type = MapNodeType.Shop, Position = new Vector2(2f, 9f) },
-                new Node { Id = "battle_boss", Type = MapNodeType.Battle, Position = new Vector2(0f, 12f) }
+                new Node { Id = "battle_boss", Type = MapNodeType.Boss, Position = new Vector2(0f, 12f) }
             };
             graph._edges = new List<Edge>
             {
@@ -242,9 +260,6 @@ namespace M3P
 
                 if (string.IsNullOrWhiteSpace(node.Id))
                     node.Id = $"node_{i}";
-
-                if (node.Encounter != null)
-                    node.Type = node.Encounter.Type;
 
                 if (!seen.Add(node.Id))
                     Debug.LogWarning($"{nameof(MapGraphDefinition)} '{name}': duplicate node id '{node.Id}'.", this);
