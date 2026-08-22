@@ -37,9 +37,14 @@ namespace M3P
         [Tooltip("Arc drawn from a tile's current cell to the cell a queued card will move it to.")]
         [SerializeField] TileMoveIndicator _tileMoveIndicatorPrefab;
 
+        [Header("Tile Destroy Preview")]
+        [Tooltip("Mark drawn on a tile a queued Destroy card will crack and remove.")]
+        [SerializeField] TileGhost _tileDestroyIndicatorPrefab;
+
         Match3Board _board;
         CardPlayController _cardPlay;
         readonly List<TileMoveIndicator> _moveIndicators = new List<TileMoveIndicator>();
+        readonly List<TileGhost> _destroyIndicators = new List<TileGhost>();
         readonly Dictionary<int, Vector2Int> _predictedCellsByTileId = new Dictionary<int, Vector2Int>();
         int _matchWaveIndex;
 
@@ -74,7 +79,7 @@ namespace M3P
                 BindBoard(_battleManager.ActiveBoard);
 
             BindCardPlay();
-            RefreshMoveIndicators();
+            RefreshPlanningIndicators();
         }
 
         void OnDisable()
@@ -94,7 +99,7 @@ namespace M3P
         {
             BindBoard(board);
             BindCardPlay();
-            RefreshMoveIndicators();
+            RefreshPlanningIndicators();
         }
 
         void BindBoard(Match3Board board)
@@ -124,7 +129,7 @@ namespace M3P
             _matchWaveIndex = 0;
             _cascadeIndicator?.Hide();
             _superMatchIndicator?.Hide();
-            HideMoveIndicators();
+            HidePlanningIndicators();
         }
 
         void BindCardPlay()
@@ -145,12 +150,24 @@ namespace M3P
                 _cardPlay.Changed -= HandleCardPlayChanged;
 
             _cardPlay = null;
-            HideMoveIndicators();
+            HidePlanningIndicators();
         }
 
         void HandleCardPlayChanged()
         {
+            RefreshPlanningIndicators();
+        }
+
+        void RefreshPlanningIndicators()
+        {
             RefreshMoveIndicators();
+            RefreshDestroyIndicators();
+        }
+
+        void HidePlanningIndicators()
+        {
+            HideMoveIndicators();
+            HideDestroyIndicators();
         }
 
         void RefreshMoveIndicators()
@@ -230,6 +247,90 @@ namespace M3P
             HideUnusedMoveIndicators(0);
         }
 
+        void RefreshDestroyIndicators()
+        {
+            int used = 0;
+            SimBoard predicted = _cardPlay != null ? _cardPlay.PredictedBoard : null;
+            bool planning = _board != null
+                && predicted != null
+                && !_board.IsResolving
+                && _cardPlay.HasQueuedCards
+                && _tileDestroyIndicatorPrefab != null;
+
+            if (planning)
+            {
+                _predictedCellsByTileId.Clear();
+                for (int x = 0; x < predicted.Width; x++)
+                {
+                    for (int y = 0; y < predicted.Height; y++)
+                    {
+                        SimTile tile = predicted.GetTile(x, y);
+                        if (tile != null)
+                            _predictedCellsByTileId[tile.Id] = new Vector2Int(x, y);
+                    }
+                }
+
+                for (int x = 0; x < _board.Width; x++)
+                {
+                    for (int y = 0; y < _board.Height; y++)
+                    {
+                        Match3Tile actual = _board.GetTile(x, y);
+                        if (actual == null || actual.IsCracked)
+                            continue;
+
+                        if (!_predictedCellsByTileId.TryGetValue(actual.TileId, out Vector2Int destination))
+                            continue;
+
+                        SimTile expected = predicted.GetTile(destination.x, destination.y);
+                        if (expected == null || !expected.IsCracked)
+                            continue;
+
+                        TileGhost indicator = RentDestroyIndicator(used++);
+                        indicator.Present(_board.GridToWorld(x, y), GetTileSprite(actual.TypeId));
+                    }
+                }
+            }
+
+            HideUnusedDestroyIndicators(used);
+        }
+
+        TileGhost RentDestroyIndicator(int index)
+        {
+            while (_destroyIndicators.Count <= index)
+                _destroyIndicators.Add(null);
+
+            TileGhost existing = _destroyIndicators[index];
+            if (existing != null)
+                return existing;
+
+            TileGhost created = Instantiate(_tileDestroyIndicatorPrefab, transform);
+            _destroyIndicators[index] = created;
+            return created;
+        }
+
+        void HideUnusedDestroyIndicators(int used)
+        {
+            for (int i = used; i < _destroyIndicators.Count; i++)
+            {
+                if (_destroyIndicators[i] != null)
+                    _destroyIndicators[i].Hide();
+            }
+        }
+
+        void HideDestroyIndicators()
+        {
+            HideUnusedDestroyIndicators(0);
+        }
+
+        Sprite GetTileSprite(int typeId)
+        {
+            TileTypeGraphics graphics = _board != null ? _board.GetTileTypeTileGraphics(typeId) : null;
+            if (graphics != null && graphics.MainSprite != null)
+                return graphics.MainSprite;
+
+            return _board != null ? _board.GetTileTypeSprite(typeId) : null;
+        }
+
         void HandleTileDestroyed(Vector3 worldPosition, int typeId)
         {
             SpawnDestroyParticle(worldPosition, typeId);
@@ -264,7 +365,7 @@ namespace M3P
         void HandleSequenceResolved(ResolveReport report)
         {
             _matchWaveIndex = 0;
-            HideMoveIndicators();
+            HidePlanningIndicators();
         }
 
         void UpdateBattleIndicators(IReadOnlyList<MatchGroup> groups)

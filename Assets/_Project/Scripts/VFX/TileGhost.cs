@@ -3,8 +3,8 @@ using UnityEngine;
 namespace M3P
 {
     /// <summary>
-    /// Preview of a tile that a Recolor will turn into another colour. Uses the prefab's ghost
-    /// material and the destination type's sprite; the extra sprite's material takes that type's colour.
+    /// Planning overlay on a tile. Recolor writes a ghost sprite and type colour; Destroy copies
+    /// the tile sprite onto the prefab renderer and leaves authored colour and alpha alone.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class TileGhost : MonoBehaviour
@@ -29,6 +29,18 @@ namespace M3P
                 _colorRenderer = FindColorRenderer();
 
             _block = new MaterialPropertyBlock();
+        }
+
+        public void Present(Vector3 worldPosition, Sprite sprite)
+        {
+            transform.position = worldPosition;
+            gameObject.SetActive(true);
+
+            if (_renderer == null || sprite == null)
+                return;
+
+            _renderer.sprite = sprite;
+            _renderer.enabled = true;
         }
 
         public void Present(Vector3 worldPosition, Sprite sprite, Color color)

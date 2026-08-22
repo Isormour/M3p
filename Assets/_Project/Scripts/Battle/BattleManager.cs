@@ -617,7 +617,11 @@ namespace M3P
             EndBattle();
 
             if (returnToMap)
+            {
+                if (GameManager.Instance != null)
+                    GameManager.Instance.PersistMapRun();
                 SceneFlow.LoadMap();
+            }
         }
 
         void HideEndBattlePanel()

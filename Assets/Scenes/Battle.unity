@@ -3016,6 +3016,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4539769848149030793, guid: da442e1730132ff49954b00ade761e32, type: 3}
   m_PrefabInstance: {fileID: 314273369}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &314273371 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3592417686276738126, guid: da442e1730132ff49954b00ade761e32, type: 3}
+  m_PrefabInstance: {fileID: 314273369}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1831f592d7830134c9de8ccdd54cc574, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
 --- !u!4 &321520212 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 432056, guid: faa8739308e4c154f9332d2624b6e47c, type: 3}
@@ -12091,9 +12102,11 @@ MonoBehaviour:
   _shardPrefab: {fileID: 6127203197330401241, guid: b0514901340202642909d80cabbff2be, type: 3}
   _shardTarget: {fileID: 1571649512}
   _shardVfxLifetime: 2
-  _cascadeIndicator: {fileID: 0}
-  _superMatchIndicator: {fileID: 0}
+  _cascadeIndicator: {fileID: 1398081733}
+  _superMatchIndicator: {fileID: 314273371}
   _superMatchMinSize: 4
+  _tileMoveIndicatorPrefab: {fileID: 2718480398615337550, guid: 381b6da82f48fdc48850477a5dd0fcb1, type: 3}
+  _tileDestroyIndicatorPrefab: {fileID: 5647382910475628391, guid: 0fdbdca812cf5e54ca3f0ecd7cf6e8e4, type: 3}
 --- !u!4 &1116244960
 Transform:
   m_ObjectHideFlags: 0
@@ -15099,6 +15112,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3176446695959365916, guid: c92a21d77016dc14a9edd1beeab6bcd3, type: 3}
   m_PrefabInstance: {fileID: 1398081731}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1398081733 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6804741817930219008, guid: c92a21d77016dc14a9edd1beeab6bcd3, type: 3}
+  m_PrefabInstance: {fileID: 1398081731}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd7431f6ed7f2fd41992ee160b369ae5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CascadeIndicator
 --- !u!4 &1398243869 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 444028, guid: b9cff604e7a459c4581b58993fc28f1d, type: 3}

@@ -44,6 +44,13 @@ namespace M3P
         [Tooltip("Shown before the token walks to a neighbour. Confirm moves; Close cancels.")]
         [SerializeField] UIMapPanelWalkNodeConfirm _walkNodeConfirmPanel;
 
+        [Header("Generated map")]
+        [SerializeField] int _generatedLayerCount = 4;
+        [SerializeField] int _generatedNodesPerLayerMin = 2;
+        [SerializeField] int _generatedNodesPerLayerMax = 3;
+        [SerializeField] float _generatedLayerSpacing = 3.5f;
+        [SerializeField] float _generatedNodeSpacing = 3.5f;
+
         readonly Dictionary<string, MapNode> _nodeViews = new Dictionary<string, MapNode>();
         readonly Dictionary<string, Vector3> _nodePositions = new Dictionary<string, Vector3>();
 
@@ -120,6 +127,25 @@ namespace M3P
 
         void EnsureGraph()
         {
+            MapRunState run = Run;
+            GameManager.MapLaunchMode mode = GameManager.Instance != null
+                ? GameManager.Instance.LaunchMode
+                : GameManager.MapLaunchMode.None;
+
+            if (run.IsActive && run.IsGenerated && run.GraphSnapshot != null)
+            {
+                _activeGraph = MapGraphDefinition.CreateFromSnapshot(run.GraphSnapshot, ResolveEncounterByName);
+                _ownsRuntimeGraph = true;
+                return;
+            }
+
+            if (mode == GameManager.MapLaunchMode.NewGenerated)
+            {
+                _activeGraph = GenerateGraph();
+                _ownsRuntimeGraph = _activeGraph != _graph;
+                return;
+            }
+
             if (_graph != null)
             {
                 _activeGraph = _graph;
@@ -143,11 +169,30 @@ namespace M3P
                 return;
 
             MapRunState run = Run;
-            bool sameGraph = run.IsActive && run.GraphName == _activeGraph.name;
-            if (!sameGraph)
-                run.BeginRun(_activeGraph.name, _activeGraph.StartNodeId);
-            else
+            if (run.IsActive && run.GraphName == _activeGraph.name)
+            {
+                SanitizeRunAgainstGraph(run);
                 MapRunState.Active = run;
+                return;
+            }
+
+            MapGraphSnapshot snapshot = _activeGraph.name == MapGenerator.GeneratedGraphName
+                ? _activeGraph.ToSnapshot()
+                : null;
+            run.BeginRun(_activeGraph.name, _activeGraph.StartNodeId, snapshot);
+            PersistRun();
+        }
+
+        void SanitizeRunAgainstGraph(MapRunState run)
+        {
+            if (run == null || _activeGraph == null)
+                return;
+
+            if (!_activeGraph.TryGetNode(run.CurrentNodeId, out _))
+                run.MoveTo(_activeGraph.StartNodeId);
+
+            if (string.IsNullOrEmpty(run.CurrentNodeId) || !_activeGraph.TryGetNode(run.CurrentNodeId, out _))
+                run.BeginRun(_activeGraph.name, _activeGraph.StartNodeId, run.GraphSnapshot);
         }
 
         void BuildVisuals()
@@ -309,8 +354,16 @@ namespace M3P
                 return;
 
             string currentId = Run.CurrentNodeId;
-            if (currentId != null && _nodePositions.TryGetValue(currentId, out Vector3 pos))
-                _token.SnapTo(pos);
+            if (currentId == null || !_nodePositions.TryGetValue(currentId, out Vector3 pos))
+            {
+                currentId = _activeGraph != null ? _activeGraph.StartNodeId : null;
+                if (currentId == null || !_nodePositions.TryGetValue(currentId, out pos))
+                    return;
+
+                Run.MoveTo(currentId);
+            }
+
+            _token.SnapTo(pos);
         }
 
         void RefreshNodeStates()
@@ -397,6 +450,7 @@ namespace M3P
         {
             _inputLocked = false;
             RefreshNodeStates();
+            PersistRun();
             ResolveNode(Run.CurrentNodeId, arrivedFresh: true);
         }
 
@@ -478,6 +532,7 @@ namespace M3P
                 {
                     Run.MarkCleared(nodeId);
                     RefreshNodeStates();
+                    PersistRun();
                 });
         }
 
@@ -510,6 +565,7 @@ namespace M3P
 
                     Run.MarkCleared(nodeId);
                     RefreshNodeStates();
+                    PersistRun();
                 });
         }
 
@@ -522,6 +578,147 @@ namespace M3P
                 case MapNodeType.Chest: return _chestColor;
                 default: return _battleColor;
             }
+        }
+
+        MapGraphDefinition GenerateGraph()
+        {
+            CollectEncounterPools(
+                out EncounterConfig start,
+                out List<EncounterConfig> battles,
+                out EncounterConfig boss,
+                out List<EncounterConfig> chests,
+                out List<EncounterConfig> shops);
+
+            if (battles.Count == 0)
+            {
+                Debug.LogError(
+                    $"{nameof(MapManager)}: cannot generate a map, no battle encounters found on {nameof(_graph)}.",
+                    this);
+                return _graph != null ? _graph : MapGraphDefinition.CreateRuntimeDemo();
+            }
+
+            return MapGenerator.Generate(
+                start,
+                battles,
+                boss != null ? boss : battles[battles.Count - 1],
+                chests,
+                shops,
+                _generatedLayerCount,
+                _generatedNodesPerLayerMin,
+                _generatedNodesPerLayerMax,
+                _generatedLayerSpacing,
+                _generatedNodeSpacing,
+                unchecked(System.Environment.TickCount));
+        }
+
+        void CollectEncounterPools(
+            out EncounterConfig start,
+            out List<EncounterConfig> battles,
+            out EncounterConfig boss,
+            out List<EncounterConfig> chests,
+            out List<EncounterConfig> shops)
+        {
+            start = null;
+            boss = null;
+            battles = new List<EncounterConfig>();
+            chests = new List<EncounterConfig>();
+            shops = new List<EncounterConfig>();
+
+            IReadOnlyList<MapGraphDefinition.Node> nodes = _graph != null ? _graph.Nodes : null;
+            if (nodes == null)
+                return;
+
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                MapGraphDefinition.Node node = nodes[i];
+                if (node == null || node.Encounter == null)
+                    continue;
+
+                switch (node.ResolvedType)
+                {
+                    case MapNodeType.Start:
+                        if (start == null)
+                            start = node.Encounter;
+                        break;
+                    case MapNodeType.Chest:
+                        if (!chests.Contains(node.Encounter))
+                            chests.Add(node.Encounter);
+                        break;
+                    case MapNodeType.Shop:
+                        if (!shops.Contains(node.Encounter))
+                            shops.Add(node.Encounter);
+                        break;
+                    default:
+                        if (node.Id != null &&
+                            node.Id.IndexOf("boss", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                            boss = node.Encounter;
+                        else if (!battles.Contains(node.Encounter))
+                            battles.Add(node.Encounter);
+                        break;
+                }
+            }
+        }
+
+        EncounterConfig ResolveEncounterByName(string encounterName)
+        {
+            if (string.IsNullOrEmpty(encounterName))
+                return null;
+
+            CollectEncounterPools(
+                out EncounterConfig start,
+                out List<EncounterConfig> battles,
+                out EncounterConfig boss,
+                out List<EncounterConfig> chests,
+                out List<EncounterConfig> shops);
+
+            if (MatchesEncounter(start, encounterName))
+                return start;
+            if (MatchesEncounter(boss, encounterName))
+                return boss;
+
+            EncounterConfig match = FindEncounter(battles, encounterName)
+                ?? FindEncounter(chests, encounterName)
+                ?? FindEncounter(shops, encounterName);
+            if (match != null)
+                return match;
+
+            IReadOnlyList<MapGraphDefinition.Node> nodes = _graph != null ? _graph.Nodes : null;
+            if (nodes == null)
+                return null;
+
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                EncounterConfig encounter = nodes[i] != null ? nodes[i].Encounter : null;
+                if (MatchesEncounter(encounter, encounterName))
+                    return encounter;
+            }
+
+            return null;
+        }
+
+        static EncounterConfig FindEncounter(List<EncounterConfig> pool, string encounterName)
+        {
+            if (pool == null)
+                return null;
+
+            for (int i = 0; i < pool.Count; i++)
+            {
+                if (MatchesEncounter(pool[i], encounterName))
+                    return pool[i];
+            }
+
+            return null;
+        }
+
+        static bool MatchesEncounter(EncounterConfig encounter, string encounterName)
+        {
+            return encounter != null && encounter.name == encounterName;
+        }
+
+        void PersistRun()
+        {
+            if (GameManager.Instance != null)
+                GameManager.Instance.PersistMapRun();
         }
 
         void FrameCamera()

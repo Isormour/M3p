@@ -41,6 +41,117 @@ namespace M3P
         public IReadOnlyList<Node> Nodes => _nodes;
         public IReadOnlyList<Edge> Edges => _edges;
 
+        public void ReplaceContents(string startNodeId, List<Node> nodes, List<Edge> edges)
+        {
+            _startNodeId = startNodeId;
+            _nodes = nodes ?? new List<Node>();
+            _edges = edges ?? new List<Edge>();
+        }
+
+        public MapGraphSnapshot ToSnapshot()
+        {
+            var snapshot = new MapGraphSnapshot
+            {
+                Name = name,
+                StartNodeId = _startNodeId,
+                Nodes = new MapGraphSnapshot.Node[_nodes != null ? _nodes.Count : 0],
+                Edges = new MapGraphSnapshot.Edge[_edges != null ? _edges.Count : 0],
+            };
+
+            if (_nodes != null)
+            {
+                for (int i = 0; i < _nodes.Count; i++)
+                {
+                    Node node = _nodes[i];
+                    if (node == null)
+                        continue;
+
+                    snapshot.Nodes[i] = new MapGraphSnapshot.Node
+                    {
+                        Id = node.Id,
+                        EncounterName = node.Encounter != null ? node.Encounter.name : null,
+                        Type = node.ResolvedType,
+                        Position = node.Position,
+                    };
+                }
+            }
+
+            if (_edges != null)
+            {
+                for (int i = 0; i < _edges.Count; i++)
+                {
+                    Edge edge = _edges[i];
+                    if (edge == null)
+                        continue;
+
+                    snapshot.Edges[i] = new MapGraphSnapshot.Edge
+                    {
+                        FromId = edge.FromId,
+                        ToId = edge.ToId,
+                    };
+                }
+            }
+
+            return snapshot;
+        }
+
+        public static MapGraphDefinition CreateFromSnapshot(
+            MapGraphSnapshot snapshot,
+            Func<string, EncounterConfig> resolveEncounter)
+        {
+            var graph = CreateInstance<MapGraphDefinition>();
+            graph.name = snapshot != null && !string.IsNullOrEmpty(snapshot.Name)
+                ? snapshot.Name
+                : MapGenerator.GeneratedGraphName;
+
+            if (snapshot == null)
+            {
+                graph.ReplaceContents("start", new List<Node>(), new List<Edge>());
+                return graph;
+            }
+
+            var nodes = new List<Node>();
+            if (snapshot.Nodes != null)
+            {
+                for (int i = 0; i < snapshot.Nodes.Length; i++)
+                {
+                    MapGraphSnapshot.Node saved = snapshot.Nodes[i];
+                    if (saved == null || string.IsNullOrEmpty(saved.Id))
+                        continue;
+
+                    EncounterConfig encounter = resolveEncounter != null
+                        ? resolveEncounter(saved.EncounterName)
+                        : null;
+                    nodes.Add(new Node
+                    {
+                        Id = saved.Id,
+                        Encounter = encounter,
+                        Type = encounter != null ? encounter.Type : saved.Type,
+                        Position = saved.Position,
+                    });
+                }
+            }
+
+            var edges = new List<Edge>();
+            if (snapshot.Edges != null)
+            {
+                for (int i = 0; i < snapshot.Edges.Length; i++)
+                {
+                    MapGraphSnapshot.Edge saved = snapshot.Edges[i];
+                    if (saved == null)
+                        continue;
+
+                    edges.Add(new Edge { FromId = saved.FromId, ToId = saved.ToId });
+                }
+            }
+
+            graph.ReplaceContents(
+                string.IsNullOrEmpty(snapshot.StartNodeId) ? "start" : snapshot.StartNodeId,
+                nodes,
+                edges);
+            return graph;
+        }
+
         public bool TryGetNode(string nodeId, out Node node)
         {
             node = null;

@@ -35,6 +35,9 @@ namespace M3P
         public PendingTalentChoice PendingTalent;
         public HardStats HardStats;
 
+        /// <summary>Current dungeon-map run: floor graph, player node and cleared encounters.</summary>
+        public MapRunSave MapRun;
+
         public PlayerProfile()
         {
             HardStats = new HardStats(1, 1, 1, 1);
@@ -294,6 +297,7 @@ namespace M3P
                 : new List<int>();
             PendingTalent = source.PendingTalent;
             HardStats = source.HardStats;
+            MapRun = source.MapRun != null ? source.MapRun.Clone() : null;
         }
 
         [Serializable]
@@ -311,6 +315,7 @@ namespace M3P
             public int[] UnlockedTalentIds;
             public PendingTalentChoice PendingTalent;
             public HardStats HardStats;
+            public MapRunSave MapRun;
 
             public static PlayerProfileSaveData FromProfile(PlayerProfile profile)
             {
@@ -330,6 +335,7 @@ namespace M3P
                         : Array.Empty<int>(),
                     PendingTalent = profile.PendingTalent,
                     HardStats = profile.HardStats,
+                    MapRun = profile.MapRun != null ? profile.MapRun.Clone() : null,
                 };
             }
 
@@ -355,6 +361,7 @@ namespace M3P
                         : new List<int>(),
                     PendingTalent = PendingTalent,
                     HardStats = HardStats,
+                    MapRun = MapRun != null ? MapRun.Clone() : null,
                 };
             }
         }

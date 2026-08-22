@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace M3P
 {
@@ -6,11 +7,19 @@ namespace M3P
     {
         public static GameManager Instance { get; private set; }
 
+        public enum MapLaunchMode
+        {
+            None,
+            NewGenerated,
+            Debug,
+            Continue,
+        }
+
         [SerializeField] GameConfig _config;
 
         [Header("Flow")]
-        [Tooltip("Loads the Map scene after bootstrap so play can start from Main.")]
-        [SerializeField] bool _loadMapOnStart = true;
+        [Tooltip("Loads the Menu scene after bootstrap so play can start from Boot.")]
+        [SerializeField] bool _loadMenuOnStart = true;
 
         ProfileManager _profileManager;
         ProgressionService _progression;
@@ -39,6 +48,23 @@ namespace M3P
             }
         }
 
+        /// <summary>How the next Map scene should build its floor. Consumed by <see cref="MapManager"/>.</summary>
+        public MapLaunchMode LaunchMode { get; private set; }
+
+        public bool HasContinuableRun
+        {
+            get
+            {
+                if (!M3P.ProfileManager.HasSave)
+                    return false;
+
+                MapRunSave save = ProfileManager.CurrentProfile != null
+                    ? ProfileManager.CurrentProfile.MapRun
+                    : null;
+                return save != null && save.CanContinue;
+            }
+        }
+
         void Awake()
         {
             if (Instance != null && Instance != this)
@@ -57,11 +83,8 @@ namespace M3P
             if (Instance != this)
                 return;
 
-            if (_loadMapOnStart &&
-                UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == SceneFlow.MainScene)
-            {
-                SceneFlow.LoadMap();
-            }
+            if (_loadMenuOnStart && SceneManager.GetActiveScene().name == SceneFlow.BootScene)
+                SceneFlow.LoadMenu();
         }
 
         void OnDestroy()
@@ -70,9 +93,48 @@ namespace M3P
                 Instance = null;
         }
 
+        public void StartNewGeneratedMap()
+        {
+            MapRun.Clear();
+            PersistMapRun();
+            LaunchMode = MapLaunchMode.NewGenerated;
+            SceneFlow.LoadMap();
+        }
+
+        public void StartDebugMap()
+        {
+            MapRun.Clear();
+            PersistMapRun();
+            LaunchMode = MapLaunchMode.Debug;
+            SceneFlow.LoadMap();
+        }
+
+        public bool TryContinueMap()
+        {
+            if (!HasContinuableRun)
+                return false;
+
+            MapRun.Restore(ProfileManager.CurrentProfile.MapRun);
+            LaunchMode = MapLaunchMode.Continue;
+            SceneFlow.LoadMap();
+            return true;
+        }
+
+        public void PersistMapRun()
+        {
+            PlayerProfile profile = ProfileManager.CurrentProfile;
+            if (profile == null)
+                return;
+
+            profile.MapRun = MapRun.ToSave();
+            ProfileManager.Save();
+        }
+
         [ContextMenu("Reset Profile Save")]
         public void ResetProfileSave()
         {
+            MapRun.Clear();
+            LaunchMode = MapLaunchMode.None;
             ProfileManager.ResetToStartingProfile();
             Debug.Log($"{nameof(GameManager)}: profile save cleared ({M3P.ProfileManager.SavePath}).", this);
         }

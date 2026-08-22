@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: ColorChangeIndicator
-  m_Shader: {fileID: -6465566751694194690, guid: 07ecf3bd95ac1e249a847c92b6ca1c7a, type: 3}
+  m_Name: TileDestroyIndicator
+  m_Shader: {fileID: -6465566751694194690, guid: 15f834b2a2c395840a79f6219e78c342, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -59,7 +59,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: bca88c83f561fd3489b5206e4b85420d, type: 3}
+        m_Texture: {fileID: 2800000, guid: 327046896b1d88640992bee5c023405f, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTexture:
@@ -139,7 +139,7 @@ Material:
     - _ClearCoatSmoothness: 0
     - _ColorAdd: 1
     - _ColorMode: 0
-    - _ColorMult: 10
+    - _ColorMult: 5
     - _Cull: 2
     - _Cutoff: 0.5
     - _DetailAlbedoMapScale: 1
@@ -165,7 +165,7 @@ Material:
     - _Parallax: 0.005
     - _QueueControl: 0
     - _QueueOffset: -1
-    - _RadialScale: 5
+    - _RadialScale: 4
     - _ReceiveShadows: 1
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
@@ -174,19 +174,19 @@ Material:
     - _SoftParticlesNearFadeDistance: 0
     - _SpecularHighlights: 1
     - _Speed: 1
-    - _Spread: 6
+    - _Spread: 2
     - _SrcBlend: 5
     - _SrcBlendAlpha: 1
     - _Surface: 1
     - _WorkflowMode: 1
     - _XRMotionVectorsPass: 1
     - _ZWrite: 0
-    - _highlight: 0
+    - _highlight: 0.33
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _BaseColorAddSubDiff: {r: 0, g: 0, b: 0, a: 0}
     - _CameraFadeParams: {r: 0, g: Infinity, b: 0, a: 0}
-    - _Col: {r: 0, g: 0.3758235, b: 1, a: 0.5}
+    - _Col: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Dir: {r: -1, g: 0, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
@@ -194,7 +194,7 @@ Material:
     - _PolarCenter: {r: 0.5, g: 0.5, b: 0, a: 0}
     - _SoftParticleFadeParams: {r: 0, g: 0, b: 0, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
-    - _Speed: {r: 1, g: 0, b: 0, a: 0}
+    - _Speed: {r: 1.02, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &1081081478501848182
