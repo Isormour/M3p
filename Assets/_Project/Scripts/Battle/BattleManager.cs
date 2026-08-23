@@ -43,6 +43,7 @@ namespace M3P
 
         Match3Board _activeBoard;
         EnemyDefinition _activeEnemyDefinition;
+        EnemyRuntimeSpec _activeEnemySpec;
         EnemyBattleCharacter _activeEnemy;
         bool _isPlayerTurn = true;
         bool _battleResolved;
@@ -68,6 +69,9 @@ namespace M3P
 
         /// <summary>Enemy data asset used for the current battle.</summary>
         public EnemyDefinition ActiveEnemyDefinition => _activeEnemyDefinition;
+
+        /// <summary>Floor- and encounter-scaled enemy used for the current battle.</summary>
+        public EnemyRuntimeSpec ActiveEnemySpec => _activeEnemySpec;
 
         /// <summary>Deck and hand for the current battle.</summary>
         public CardPlayController CardPlay => _cardPlay;
@@ -264,7 +268,7 @@ namespace M3P
             _player?.PrepareForBattle();
 
             ResolveEnemyDefinition();
-            _sessionRewards.Begin(_activeEnemyDefinition);
+            _sessionRewards.Begin(_activeEnemySpec);
             SpawnEnemyBattleCharacter();
 
             Transform parent = _boardParent != null ? _boardParent : transform;
@@ -290,15 +294,29 @@ namespace M3P
 
         void ResolveEnemyDefinition()
         {
+            _activeEnemySpec = null;
+
             // Map encounters win: the enemy on EncounterConfig is authoritative for that fight.
-            EnemyDefinition fromMap = MapRunState.Active != null ? MapRunState.Active.PendingEnemy : null;
+            MapRunState mapRun = MapRunState.Active;
+            EnemyDefinition fromMap = mapRun != null ? mapRun.PendingEnemy : null;
             if (fromMap != null)
             {
                 _activeEnemyDefinition = fromMap;
+                _activeEnemySpec = EnemyProgressionResolver.Resolve(
+                    fromMap,
+                    mapRun.FloorIndex,
+                    mapRun.PendingEncounterType);
                 return;
             }
 
             PickRandomEnemyDefinition();
+            if (_activeEnemyDefinition != null)
+            {
+                _activeEnemySpec = EnemyProgressionResolver.Resolve(
+                    _activeEnemyDefinition,
+                    1,
+                    MapNodeType.Battle);
+            }
         }
 
         void PickRandomEnemyDefinition()
@@ -339,13 +357,17 @@ namespace M3P
                     $"{nameof(BattleManager)}: set {nameof(EnemyDefinition.EnemyCharacterPrefab)} on {_activeEnemyDefinition.name}.",
                     this);
                 _activeEnemyDefinition = null;
+                _activeEnemySpec = null;
                 return;
             }
 
             Transform parent = _enemySpawnParent != null ? _enemySpawnParent : transform;
             EnemyBattleCharacter spawned = Instantiate(prefab, parent);
             spawned.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-            spawned.Configure(_activeEnemyDefinition);
+            spawned.Configure(_activeEnemySpec ?? EnemyProgressionResolver.Resolve(
+                _activeEnemyDefinition,
+                1,
+                MapNodeType.Battle));
             _activeEnemy = spawned;
 
             _battleWorld?.SpawnEnemyModel(_activeEnemyDefinition.EnemyModelPrefab);
@@ -772,6 +794,7 @@ namespace M3P
             }
 
             _activeEnemyDefinition = null;
+            _activeEnemySpec = null;
         }
     }
 }

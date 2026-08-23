@@ -16,6 +16,8 @@ namespace M3P
 
         public abstract EEffectSource EffectSource { get; }
 
+        public abstract IReadOnlyList<SkillDefinition> Skills { get; }
+
         public CharacterStats Stats => _characterStats;
 
         public bool IsAlive => _characterStats != null && _characterStats.IsAlive;

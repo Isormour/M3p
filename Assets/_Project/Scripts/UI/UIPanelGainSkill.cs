@@ -23,6 +23,7 @@ namespace M3P
         protected override void OnInitialize()
         {
             HideTemplate(cardPrefab);
+            Hide();
         }
 
         void OnDisable()

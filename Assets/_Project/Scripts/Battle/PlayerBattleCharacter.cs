@@ -14,7 +14,7 @@ namespace M3P
         public override EEffectSource EffectSource => EEffectSource.Player;
 
         /// <summary>Skills the profile brought into this battle, resolved from their saved ids.</summary>
-        public IReadOnlyList<SkillDefinition> Skills => _skills;
+        public override IReadOnlyList<SkillDefinition> Skills => _skills;
 
         /// <summary>The persistent profile this character fights with.</summary>
         public PlayerProfile Profile => ResolveProfile();

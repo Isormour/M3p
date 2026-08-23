@@ -85,7 +85,7 @@ namespace M3P
                 _playerManaPanel.SetPlayer(_player);
 
             if (_playerSkillsPanel != null)
-                _playerSkillsPanel.SetPlayer(_player);
+                _playerSkillsPanel.Set(_player);
 
             BindIndicators();
         }

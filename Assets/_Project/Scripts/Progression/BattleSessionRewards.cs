@@ -27,11 +27,17 @@ namespace M3P
             _shardsByTileType.Clear();
         }
 
+        /// <summary>Starts a new session and seeds it with the runtime enemy's scaled EXP.</summary>
+        public void Begin(EnemyRuntimeSpec spec)
+        {
+            Reset();
+            Experience = spec != null ? System.Math.Max(0, spec.ExperienceReward) : 0;
+        }
+
         /// <summary>Starts a new session and seeds it with what the chosen enemy pays on a win.</summary>
         public void Begin(EnemyDefinition enemy)
         {
-            Reset();
-            Experience = enemy != null ? System.Math.Max(0, enemy.ExperienceReward) : 0;
+            Begin(EnemyProgressionResolver.Resolve(enemy, 1, MapNodeType.Battle));
         }
 
         /// <summary>Adds bonus experience earned during the fight. Only committed after a win.</summary>

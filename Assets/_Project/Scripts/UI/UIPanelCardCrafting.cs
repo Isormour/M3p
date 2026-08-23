@@ -206,7 +206,7 @@ namespace M3P
                 UIPanelPlayerManaBar view = Instantiate(CostPrefab, CostParent);
                 view.gameObject.SetActive(true);
                 view.name = $"CraftCost_{cost.TileType.name}";
-                view.Configure(typeId, icon, runeGraphics?.SpriteMaterial);
+                view.Configure(typeId, icon, runeGraphics.SpriteMaterial);
                 view.SetAmount(cost.Amount);
                 _costViews.Add(view);
             }

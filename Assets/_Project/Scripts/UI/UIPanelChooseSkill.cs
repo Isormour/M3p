@@ -6,8 +6,8 @@ using UnityEngine.UI;
 namespace M3P
 {
     /// <summary>
-    /// Map HUD panel: owned skills in the grid, the battle loadout in the five slots.
-    /// Clicking a grid skill adds it; clicking a chosen slot removes it. Hover previews the skill.
+    /// Map HUD panel: owned skills in the grid, equipped skills in the five chosen slots.
+    /// Clicking a grid skill equips or unequips it. Hover previews the skill.
     /// </summary>
     public sealed class UIPanelChooseSkill : UIPanelClosable
     {
@@ -117,8 +117,7 @@ namespace M3P
                 return;
             }
 
-            bool loadoutFull = profile.SkillLoadout != null
-                && profile.SkillLoadout.Count >= SkillConfig.MaxLoadoutSize;
+            bool loadoutFull = IsLoadoutFull(profile);
 
             if (profile.Skills == null)
                 return;
@@ -129,13 +128,14 @@ namespace M3P
                 if (!skillConfig.TryGetSkill(skillId, out SkillDefinition skill) || skill == null)
                     continue;
 
-                bool inLoadout = IsInLoadout(profile, skillId);
+                bool equipped = IsInLoadout(profile, skillId);
                 Button view = Instantiate(skillButtonPrefab, skillsGrid.transform);
                 view.gameObject.SetActive(true);
                 view.name = $"OwnedSkill_{skill.name}";
                 ApplySkillIcon(view, skill);
+                ApplyEquippedVisual(view, equipped);
                 BindSkillTarget(view, skill, HandleOwnedSkillClicked, HandleSkillHovered, ClearPreview);
-                view.interactable = !inLoadout && !loadoutFull;
+                view.interactable = equipped || !loadoutFull;
                 _ownedViews.Add(view);
             }
         }
@@ -161,6 +161,7 @@ namespace M3P
                     skillConfig.TryGetSkill(loadout[i], out skill);
 
                 ApplySkillIcon(slot, skill);
+                ApplyEquippedVisual(slot, skill != null);
                 BindSkillTarget(slot, skill, _ => HandleChosenSkillClicked(slotIndex), HandleSkillHovered, ClearPreview);
                 slot.interactable = skill != null;
             }
@@ -177,7 +178,13 @@ namespace M3P
                 return;
 
             int skillId = skillConfig.GetSkillId(skill);
-            if (!profile.TryAddSkillToLoadout(skillId))
+            if (skillId == SkillConfig.InvalidSkillId)
+                return;
+
+            bool changed = IsInLoadout(profile, skillId)
+                ? profile.TryRemoveSkillFromLoadout(skillId)
+                : profile.TryAddSkillToLoadout(skillId);
+            if (!changed)
                 return;
 
             Profiles.Save();
@@ -279,6 +286,22 @@ namespace M3P
             Sprite artwork = skill != null ? skill.Artwork : null;
             icon.sprite = artwork;
             icon.enabled = artwork != null;
+            icon.gameObject.SetActive(artwork != null);
+        }
+
+        static void ApplyEquippedVisual(Button button, bool equipped)
+        {
+            Image icon = FindIconImage(button);
+            if (icon == null)
+                return;
+
+            icon.color = equipped ? Color.white : new Color(1f, 1f, 1f, 0.45f);
+        }
+
+        static bool IsLoadoutFull(PlayerProfile profile)
+        {
+            return profile.SkillLoadout != null
+                && profile.SkillLoadout.Count >= SkillConfig.MaxLoadoutSize;
         }
 
         static Image FindIconImage(Button button)

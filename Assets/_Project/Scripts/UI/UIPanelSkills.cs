@@ -11,59 +11,74 @@ namespace M3P
         [SerializeField] RectTransform _barContainer;
         [SerializeField] UIPlayerPanelSkillsBar _barPrefab;
 
-        PlayerBattleCharacter _player;
-        Coroutine _watchPlayerRoutine;
+        BattleCharacter _owner;
+        Coroutine _watchOwnerRoutine;
         Match3Board _board;
 
         UIPlayerPanelSkillsBar[] _skillBars = System.Array.Empty<UIPlayerPanelSkillsBar>();
 
         public UIPlayerPanelSkillsBar[] SkillBars => _skillBars;
 
+        public void Set(BattleCharacter owner)
+        {
+            _owner = owner;
+            BuildBars();
+        }
+
         public void SetPlayer(PlayerBattleCharacter player)
         {
-            _player = player;
-            BuildBars();
+            Set(player);
         }
 
         void OnEnable()
         {
-            if (_watchPlayerRoutine == null)
-                _watchPlayerRoutine = StartCoroutine(WatchPlayerRoutine());
+            if (_watchOwnerRoutine == null)
+                _watchOwnerRoutine = StartCoroutine(WatchOwnerRoutine());
         }
 
         void OnDisable()
         {
-            if (_watchPlayerRoutine != null)
+            if (_watchOwnerRoutine != null)
             {
-                StopCoroutine(_watchPlayerRoutine);
-                _watchPlayerRoutine = null;
+                StopCoroutine(_watchOwnerRoutine);
+                _watchOwnerRoutine = null;
             }
 
             ClearBars();
         }
 
-        IEnumerator WatchPlayerRoutine()
+        IEnumerator WatchOwnerRoutine()
         {
             while (true)
             {
-                PlayerBattleCharacter activePlayer = BattleManager.Instance?.Player;
-                Match3Board activeBoard = BattleManager.Instance?.ActiveBoard;
-
-                if (activePlayer != _player)
-                {
-                    _player = activePlayer;
-                    BuildBars();
-                }
-
-                if (activeBoard != _board)
-                {
-                    _board = activeBoard;
-                    BuildBars();
-                }
-
+                WatchOwner();
                 RefreshSkillBars();
-
                 yield return null;
+            }
+        }
+
+        void WatchOwner()
+        {
+            if (_owner == null)
+                return;
+
+            BattleManager battleManager = BattleManager.Instance;
+            if (battleManager == null)
+                return;
+
+            BattleCharacter live = _owner.IsPlayerControlled
+                ? battleManager.Player
+                : battleManager.ActiveEnemy;
+
+            Match3Board activeBoard = battleManager.ActiveBoard;
+            bool boardChanged = _owner.IsPlayerControlled && activeBoard != _board;
+            if (boardChanged)
+                _board = activeBoard;
+
+            if (live != _owner || boardChanged)
+            {
+                _owner = live;
+                BuildBars();
             }
         }
 
@@ -80,16 +95,14 @@ namespace M3P
         {
             ClearBars();
 
-            if (_player == null || _barPrefab == null)
+            if (_barPrefab == null)
             {
-                if (_barPrefab == null)
-                    Debug.LogError($"{nameof(UIPanelSkills)}: assign {nameof(_barPrefab)}.", this);
-
+                Debug.LogError($"{nameof(UIPanelSkills)}: assign {nameof(_barPrefab)}.", this);
                 _skillBars = System.Array.Empty<UIPlayerPanelSkillsBar>();
                 return;
             }
 
-            IReadOnlyList<SkillDefinition> skills = _player.Skills;
+            IReadOnlyList<SkillDefinition> skills = _owner != null ? _owner.Skills : null;
             if (skills == null || skills.Count == 0)
             {
                 _skillBars = System.Array.Empty<UIPlayerPanelSkillsBar>();
@@ -107,7 +120,7 @@ namespace M3P
 
                 UIPlayerPanelSkillsBar bar = Instantiate(_barPrefab, _barContainer);
                 bar.name = $"SkillBar_{skill.name}";
-                bar.Configure(skill, _player);
+                bar.Configure(skill, _owner);
                 bars[barIndex++] = bar;
             }
 

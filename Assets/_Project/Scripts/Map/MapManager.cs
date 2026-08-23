@@ -514,7 +514,7 @@ namespace M3P
                 case MapNodeType.Elite:
                 case MapNodeType.Boss:
                     if (!Run.IsCleared(nodeId))
-                        EnterBattle(nodeId, node.Encounter);
+                        EnterBattle(nodeId, node.Encounter, node.ResolvedType);
                     break;
 
                 case MapNodeType.Shop:
@@ -534,7 +534,7 @@ namespace M3P
             }
         }
 
-        void EnterBattle(string nodeId, EncounterConfig encounter)
+        void EnterBattle(string nodeId, EncounterConfig encounter, MapNodeType encounterType)
         {
             if (encounter != null && encounter.IsBattle && encounter.Enemy == null)
             {
@@ -543,7 +543,7 @@ namespace M3P
                     encounter);
             }
 
-            Run.BeginBattle(nodeId, encounter);
+            Run.BeginBattle(nodeId, encounter, encounterType);
             _inputLocked = true;
             SceneFlow.LoadBattle();
         }

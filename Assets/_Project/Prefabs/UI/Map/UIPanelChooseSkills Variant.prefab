@@ -805,6 +805,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52aeb173d4402ed4cad844fcaf2b24f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  _panelRoot: {fileID: 8670517190927527716}
+  _closeButton: {fileID: 8843928714628956342}
   skillsGrid: {fileID: 3417487672265407273}
   skillButtonPrefab: {fileID: 306347740558370793, guid: c92f4b1c7769c444ba42a9a50b0c33e7, type: 3}
   chosenSkillVisuals: {fileID: 2230947748394084631}
@@ -816,6 +818,17 @@ MonoBehaviour:
   - {fileID: 365782554933933470}
   manaPrefab: {fileID: 8838815868471324775, guid: 9480069b80130f64a892774d7e8ebe28, type: 3}
   manaLayout: {fileID: 8658788120837374822}
+--- !u!114 &8843928714628956342 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3347900284394146160, guid: 1b1170e6c52b49f4ebd7ec872ffce2b3, type: 3}
+  m_PrefabInstance: {fileID: 6110773215903615430}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!1001 &6519215065771129437
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -824,9 +837,45 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5740667887448929794}
     m_Modifications:
+    - target: {fileID: 2918199190800026300, guid: a460973a9e007b546a49a686d1a5737a, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+    - target: {fileID: 2918199190800026300, guid: a460973a9e007b546a49a686d1a5737a, type: 3}
+      propertyPath: m_VerticalAlignment
+      value: 256
+      objectReference: {fileID: 0}
+    - target: {fileID: 2918199190800026300, guid: a460973a9e007b546a49a686d1a5737a, type: 3}
+      propertyPath: m_hasFontAssetChanged
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3264844295546912706, guid: a460973a9e007b546a49a686d1a5737a, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 267
+      objectReference: {fileID: 0}
+    - target: {fileID: 3264844295546912706, guid: a460973a9e007b546a49a686d1a5737a, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 422.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3264844295546912706, guid: a460973a9e007b546a49a686d1a5737a, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 45
+      objectReference: {fileID: 0}
     - target: {fileID: 4788897797911174713, guid: a460973a9e007b546a49a686d1a5737a, type: 3}
       propertyPath: m_Name
       value: SkillVisuals
+      objectReference: {fileID: 0}
+    - target: {fileID: 7236306839055951904, guid: a460973a9e007b546a49a686d1a5737a, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7236306839055951904, guid: a460973a9e007b546a49a686d1a5737a, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7236306839055951904, guid: a460973a9e007b546a49a686d1a5737a, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -150
       objectReference: {fileID: 0}
     - target: {fileID: 8035613293639851208, guid: a460973a9e007b546a49a686d1a5737a, type: 3}
       propertyPath: m_Pivot.x
@@ -858,7 +907,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8035613293639851208, guid: a460973a9e007b546a49a686d1a5737a, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 400
+      value: 726.5
       objectReference: {fileID: 0}
     - target: {fileID: 8035613293639851208, guid: a460973a9e007b546a49a686d1a5737a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -894,7 +943,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8035613293639851208, guid: a460973a9e007b546a49a686d1a5737a, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 133
+      value: 22.3
       objectReference: {fileID: 0}
     - target: {fileID: 8035613293639851208, guid: a460973a9e007b546a49a686d1a5737a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x

@@ -7,26 +7,34 @@ namespace M3P
 {
     public sealed class UIPlayerPanelSkillsBar : MonoBehaviour
     {
+        const string ColorMultProperty = "_ColorMult";
+        const float ColorMultUnselected = 0f;
+        const float ColorMultSelected = 8f;
+
         [SerializeField] Button _button;
         [SerializeField] Image _artworkImage;
+        [SerializeField] Image _borderImage;
         [SerializeField] TextMeshProUGUI _skillNameLabel;
         [SerializeField] RectTransform _costContainer;
         [SerializeField] UIPlayerPanelSkillsCostLabel _costLabelPrefab;
 
         SkillDefinition _skill;
+        BattleCharacter _owner;
         PlayerBattleCharacter _player;
         SoftStats _boundSoftStats;
         UICardChoiceOverlay _promptOverlay;
+        Material _borderMaterial;
 
         readonly List<UIPlayerPanelSkillsCostLabel> _costLabels = new List<UIPlayerPanelSkillsCostLabel>();
 
         public SkillDefinition Skill => _skill;
         public IReadOnlyList<UIPlayerPanelSkillsCostLabel> CostLabels => _costLabels;
 
-        public void Configure(SkillDefinition skill, PlayerBattleCharacter player)
+        public void Configure(SkillDefinition skill, BattleCharacter owner)
         {
             _skill = skill;
-            _player = player;
+            _owner = owner;
+            _player = owner as PlayerBattleCharacter;
 
             UnbindSoftStats();
             BindSoftStats();
@@ -40,6 +48,7 @@ namespace M3P
 
             RefreshSkillName();
             RefreshArtwork();
+            RefreshBorder();
 
             if (skill == null || _costLabelPrefab == null)
             {
@@ -218,6 +227,7 @@ namespace M3P
                 _button = GetComponent<Button>();
 
             RefreshSkillName();
+            RefreshBorder();
 
             if (_button == null)
                 return;
@@ -236,10 +246,50 @@ namespace M3P
                 return;
             }
 
-            int remaining = _player != null ? _player.GetRemainingCooldown(_skill) : 0;
+            int remaining = _owner != null ? _owner.GetRemainingCooldown(_skill) : 0;
             _skillNameLabel.text = remaining > 0
                 ? $"{_skill.DisplayName} ({remaining})"
                 : _skill.DisplayName;
+        }
+
+        void RefreshBorder()
+        {
+            EnsureBorderMaterial();
+            if (_borderMaterial == null)
+                return;
+
+            _borderMaterial.SetFloat(ColorMultProperty, IsSelected() ? ColorMultSelected : ColorMultUnselected);
+        }
+
+        bool IsSelected()
+        {
+            if (_skill == null)
+                return false;
+
+            if (_owner is EnemyBattleCharacter enemy)
+                return enemy.TelegraphedSkill == _skill;
+
+            return _promptOverlay != null;
+        }
+
+        void EnsureBorderMaterial()
+        {
+            if (_borderImage == null)
+            {
+                Transform border = transform.Find("Border");
+                if (border != null)
+                    _borderImage = border.GetComponent<Image>();
+            }
+
+            if (_borderImage == null || _borderMaterial != null)
+                return;
+
+            Material source = _borderImage.material;
+            if (source == null)
+                return;
+
+            _borderMaterial = new Material(source);
+            _borderImage.material = _borderMaterial;
         }
 
         void RefreshArtwork()
@@ -322,6 +372,9 @@ namespace M3P
             UnbindSoftStats();
             HidePrompt();
             ClearCostLabels();
+
+            if (_borderMaterial != null)
+                Destroy(_borderMaterial);
         }
     }
 }

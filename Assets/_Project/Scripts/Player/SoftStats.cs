@@ -176,6 +176,17 @@ namespace M3P
             NotifyChanged();
         }
 
+        /// <summary>Scales max and current HP after CON has already been applied. Elite fights use 1.25.</summary>
+        public void ScaleMaxHealth(float multiplier)
+        {
+            if (multiplier <= 0f || Mathf.Approximately(multiplier, 1f))
+                return;
+
+            MaxHP = Mathf.Max(1, Mathf.RoundToInt(MaxHP * multiplier));
+            CurrentHealth = MaxHP;
+            NotifyChanged();
+        }
+
         public void RecalculateFromHard(HardStats hard, StatProgressionConfig progression, TalentBonuses talents = default)
         {
             progression ??= StatProgressionConfig.CreateDefault();

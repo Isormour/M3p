@@ -1,5 +1,6 @@
 using Match3;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace M3P
@@ -10,10 +11,11 @@ namespace M3P
 
         public override EEffectSource EffectSource => EEffectSource.Enemy;
 
-        [Tooltip("Delay before the first attack, and between extra attacks from Agility.")]
+        [Tooltip("Delay before the telegraphed action plays.")]
         [SerializeField] float _thinkSeconds = 0.35f;
 
-        EnemyDefinition _definition;
+        EnemyRuntimeSpec _spec;
+        SkillDefinition _lastUsedSkill;
 
         public SkillDefinition TelegraphedSkill { get; private set; }
 
@@ -23,32 +25,47 @@ namespace M3P
         public void RefreshTelegraph()
         {
             TelegraphedSkill = null;
-            SkillDefinition[] skills = _definition?.Skills;
-            if (skills == null)
+            IReadOnlyList<SkillDefinition> skills = Skills;
+            if (skills == null || skills.Count == 0)
                 return;
 
-            TryGetReadySkill(skills, 0, out SkillDefinition skill, out _);
+            TryGetReadySkill(skills, out SkillDefinition skill);
             TelegraphedSkill = skill;
         }
 
-        public EnemyDefinition Definition => _definition;
+        public EnemyRuntimeSpec RuntimeSpec => _spec;
+
+        public EnemyDefinition Definition => _spec != null ? _spec.Definition : null;
+
+        public override IReadOnlyList<SkillDefinition> Skills =>
+            _spec != null && _spec.ActiveSkills != null
+                ? _spec.ActiveSkills
+                : System.Array.Empty<SkillDefinition>();
 
         public void Configure(EnemyDefinition definition)
         {
-            _definition = definition;
+            Configure(EnemyProgressionResolver.Resolve(definition, 1, MapNodeType.Battle));
+        }
+
+        public void Configure(EnemyRuntimeSpec spec)
+        {
+            _spec = spec;
+            _lastUsedSkill = null;
+            TelegraphedSkill = null;
             ClearStatuses();
             ClearSkillCooldowns();
-            if (definition == null)
+            if (spec == null || spec.Definition == null)
                 return;
 
             GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
             CharacterStats stats = new CharacterStats(
-                definition.HardStats,
+                spec.HardStats,
                 config != null ? config.StatProgression : null);
             stats.RecalculateSoftStatsForBattle();
+            stats.Soft?.ScaleMaxHealth(spec.HealthMultiplier);
             SetCharacterStats(stats);
 
-            string displayName = definition.Name;
+            string displayName = spec.DisplayName;
             if (!string.IsNullOrEmpty(displayName))
                 gameObject.name = $"{nameof(EnemyBattleCharacter)}_{displayName}";
         }
@@ -57,8 +74,8 @@ namespace M3P
         {
             yield return new WaitForSeconds(_thinkSeconds);
 
-            SkillDefinition[] skills = _definition?.Skills;
-            if (skills == null || skills.Length == 0)
+            IReadOnlyList<SkillDefinition> skills = Skills;
+            if (skills == null || skills.Count == 0)
                 yield break;
 
             BattleManager manager = BattleManager.Instance;
@@ -66,46 +83,62 @@ namespace M3P
                 yield break;
 
             BattleCharacter target = manager.Player;
-            if (target == null)
+            if (target == null || !IsAlive || !target.IsAlive)
                 yield break;
 
-            int attackCount = Mathf.Max(0, GetEffectiveHard().Agility);
-            int searchStart = 0;
-            for (int attack = 0; attack < attackCount; attack++)
+            SkillDefinition skill = TelegraphedSkill;
+            if (skill == null || !IsSkillReady(skill))
             {
-                if (!IsAlive || target == null || !target.IsAlive)
+                if (!TryGetReadySkill(skills, out skill))
                     yield break;
-
-                if (!TryGetReadySkill(skills, searchStart, out SkillDefinition skill, out int usedIndex))
-                    yield break;
-
-                manager.ExecuteSkill(skill, this, target);
-                StartSkillCooldown(skill);
-                searchStart = usedIndex + 1;
-
-                if (attack < attackCount - 1)
-                    yield return new WaitForSeconds(_thinkSeconds);
             }
+
+            manager.ExecuteSkill(skill, this, target);
+            StartSkillCooldown(skill);
+            _lastUsedSkill = skill;
         }
 
-        bool TryGetReadySkill(SkillDefinition[] skills, int searchStart, out SkillDefinition skill, out int index)
+        bool TryGetReadySkill(IReadOnlyList<SkillDefinition> skills, out SkillDefinition skill)
         {
             skill = null;
-            index = -1;
             if (skills == null)
                 return false;
 
-            int count = skills.Length;
-            for (int offset = 0; offset < count; offset++)
+            int readyCount = 0;
+            int readyExceptLast = 0;
+            for (int i = 0; i < skills.Count; i++)
             {
-                int candidateIndex = (searchStart + offset) % count;
-                SkillDefinition candidate = skills[candidateIndex];
+                SkillDefinition candidate = skills[i];
                 if (candidate == null || !IsSkillReady(candidate))
                     continue;
 
-                skill = candidate;
-                index = candidateIndex;
-                return true;
+                readyCount++;
+                if (candidate != _lastUsedSkill)
+                    readyExceptLast++;
+            }
+
+            if (readyCount == 0)
+                return false;
+
+            bool skipLastUsed = readyExceptLast > 0;
+            int poolSize = skipLastUsed ? readyExceptLast : readyCount;
+            int pick = Random.Range(0, poolSize);
+            for (int i = 0; i < skills.Count; i++)
+            {
+                SkillDefinition candidate = skills[i];
+                if (candidate == null || !IsSkillReady(candidate))
+                    continue;
+
+                if (skipLastUsed && candidate == _lastUsedSkill)
+                    continue;
+
+                if (pick == 0)
+                {
+                    skill = candidate;
+                    return true;
+                }
+
+                pick--;
             }
 
             return false;

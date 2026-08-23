@@ -143,6 +143,14 @@ namespace M3P
             return true;
         }
 
+        public bool TryRemoveSkillFromLoadout(int skillId)
+        {
+            if (SkillLoadout == null)
+                return false;
+
+            return TryRemoveLoadoutAt(SkillLoadout.IndexOf(skillId));
+        }
+
         /// <summary>Owned skill ids taken into battle, capped at <see cref="SkillConfig.MaxLoadoutSize"/>.</summary>
         public void CollectBattleSkillIds(List<int> destination)
         {
