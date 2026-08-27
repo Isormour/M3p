@@ -4697,7 +4697,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
   m_IsGlobal: 1
-  priority: 0
+  priority: 10
   blendDistance: 0
   weight: 1
   sharedProfile: {fileID: 11400000, guid: bda55067076909646bf73ace4d0ea5cc, type: 2}
@@ -12102,8 +12102,6 @@ MonoBehaviour:
   _boardParent: {fileID: 1114082209}
   _player: {fileID: 355532236}
   _enemySpawnParent: {fileID: 1114082209}
-  _enemyDefinitions:
-  - {fileID: 11400000, guid: 8c4e2a91d7b046f3ae5c1f0b9d6e3472, type: 2}
   _cardPlay: {fileID: 1705604810}
   _battleWorld: {fileID: 1315308677}
   _startBattleImmediately: 1

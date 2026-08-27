@@ -37,6 +37,9 @@ namespace M3P
         [Tooltip("Every talent in the game, and the ids profiles use to remember picks.")]
         [SerializeField] TalentConfig _talents;
 
+        [Tooltip("Every enemy archetype in the game.")]
+        [SerializeField] EnemiesConfig _enemies;
+
         [Header("Basic Attack")]
         [Tooltip("Flat damage before Strength scaling and match-length bonus.")]
         [SerializeField] int _basePhysicalDamage = 1;
@@ -69,6 +72,8 @@ namespace M3P
                 : _fallbackStatProgression ??= StatProgressionConfig.CreateDefault();
 
         public TalentConfig Talents => _talents;
+
+        public EnemiesConfig Enemies => _enemies;
 
         public int TileTypeCount => _tileTypes != null ? _tileTypes.Length : 0;
 

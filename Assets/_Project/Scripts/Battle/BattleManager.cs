@@ -20,7 +20,6 @@ namespace M3P
         [SerializeField] PlayerBattleCharacter _player;
         [Tooltip("Optional transform for spawned enemies; defaults under this manager.")]
         [SerializeField] Transform _enemySpawnParent;
-        [SerializeField] List<EnemyDefinition> _enemyDefinitions = new List<EnemyDefinition>();
 
         [Header("Cards")]
         [SerializeField] CardPlayController _cardPlay;
@@ -323,23 +322,12 @@ namespace M3P
         {
             _activeEnemyDefinition = null;
 
-            if (_enemyDefinitions == null || _enemyDefinitions.Count == 0)
+            GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
+            EnemiesConfig enemies = config != null ? config.Enemies : null;
+            if (enemies == null)
                 return;
 
-            int seen = 0;
-            EnemyDefinition pick = null;
-            for (int i = 0; i < _enemyDefinitions.Count; i++)
-            {
-                EnemyDefinition candidate = _enemyDefinitions[i];
-                if (candidate == null)
-                    continue;
-
-                seen++;
-                if (UnityEngine.Random.Range(0, seen) == 0)
-                    pick = candidate;
-            }
-
-            _activeEnemyDefinition = pick;
+            _activeEnemyDefinition = enemies.PickRandom();
         }
 
         void SpawnEnemyBattleCharacter()
@@ -595,7 +583,7 @@ namespace M3P
             if (_activeEnemy == null)
             {
                 Debug.LogWarning(
-                    $"{nameof(BattleManager)}: ensure {nameof(_enemyDefinitions)} are set and each has {nameof(EnemyDefinition.EnemyCharacterPrefab)}.",
+                    $"{nameof(BattleManager)}: assign {nameof(EnemiesConfig)} on {nameof(GameConfig)} and each enemy needs {nameof(EnemyDefinition.EnemyCharacterPrefab)}.",
                     this);
                 BeginPlayerTurn();
                 return;
