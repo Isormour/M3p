@@ -39,11 +39,16 @@ public class WorldCharacter : MonoBehaviour
 
     public void PlayDie()
     {
-        if (_animator == null)
-            return;
+        if (_animator != null)
+        {
+            _animator.ResetTrigger(GetHitId);
+            _animator.SetTrigger(DieId);
+        }
 
-        _animator.ResetTrigger(GetHitId);
-        _animator.SetTrigger(DieId);
+        var flying = GetComponent<FlyingCharacterAnimation>();
+        if (flying == null)
+            flying = GetComponentInChildren<FlyingCharacterAnimation>(true);
+        flying?.Die();
     }
 
     public void PlayHitReaction(bool died)
