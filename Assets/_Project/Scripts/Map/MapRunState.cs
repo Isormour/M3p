@@ -56,9 +56,18 @@ namespace M3P
             }
         }
 
-        /// <summary>Enemy from the pending battle encounter, if any.</summary>
-        public EnemyDefinition PendingEnemy =>
-            PendingEncounter != null && PendingEncounter.IsBattle ? PendingEncounter.Enemy : null;
+        /// <summary>Enemy picked from the pending battle encounter, if any.</summary>
+        public EnemyDefinition PendingEnemy { get; private set; }
+
+        /// <summary>Picks one enemy from <paramref name="encounter"/> for this node. Stable for the run.</summary>
+        public EnemyDefinition PickEncounterEnemy(EncounterConfig encounter, string nodeId)
+        {
+            if (encounter == null || !encounter.IsBattle)
+                return null;
+
+            int seed = GraphSnapshot != null ? GraphSnapshot.Seed : 0;
+            return encounter.PickEnemy(unchecked(seed + FloorIndex * 13), nodeId);
+        }
 
         public IReadOnlyCollection<string> ClearedNodeIds => _clearedNodeIds;
 
@@ -74,6 +83,7 @@ namespace M3P
             PendingBattleNodeId = null;
             PendingEncounter = null;
             PendingEncounterType = MapNodeType.Battle;
+            PendingEnemy = null;
             _clearedNodeIds.Clear();
             if (!string.IsNullOrEmpty(startNodeId))
                 _clearedNodeIds.Add(startNodeId);
@@ -103,6 +113,7 @@ namespace M3P
             PendingBattleNodeId = null;
             PendingEncounter = null;
             PendingEncounterType = MapNodeType.Battle;
+            PendingEnemy = null;
             _clearedNodeIds.Clear();
             if (save.ClearedNodeIds != null)
             {
@@ -169,6 +180,7 @@ namespace M3P
             PendingBattleNodeId = nodeId;
             PendingEncounter = encounter;
             PendingEncounterType = encounterType;
+            PendingEnemy = PickEncounterEnemy(encounter, nodeId);
         }
 
         public void ResolveBattle(bool won)
@@ -177,6 +189,7 @@ namespace M3P
             PendingBattleNodeId = null;
             PendingEncounter = null;
             PendingEncounterType = MapNodeType.Battle;
+            PendingEnemy = null;
 
             if (string.IsNullOrEmpty(battleNodeId))
                 return;
@@ -201,6 +214,7 @@ namespace M3P
             PendingBattleNodeId = null;
             PendingEncounter = null;
             PendingEncounterType = MapNodeType.Battle;
+            PendingEnemy = null;
             _clearedNodeIds.Clear();
             IsGenerated = false;
             GraphSnapshot = null;

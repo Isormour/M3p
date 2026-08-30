@@ -22,7 +22,9 @@ namespace M3P
         {
             ClearSpawnedCharacter();
 
-            EnemyDefinition enemy = Encounter != null ? Encounter.Enemy : null;
+            EnemyDefinition enemy = MapRunState.Active != null
+                ? MapRunState.Active.PickEncounterEnemy(Encounter, NodeId)
+                : Encounter != null ? Encounter.PickEnemy(0, NodeId) : null;
             GameObject prefab = enemy != null ? enemy.EnemyModelPrefab : null;
             if (prefab == null)
             {
@@ -41,6 +43,7 @@ namespace M3P
             _spawnedCharacter.name = prefab.name;
             _spawnedCharacter.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             _spawnedCharacter.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
+            _spawnedCharacter.transform.rotation = Quaternion.Euler(0, 180, 0);
             // Marker collider handles clicks; character mesh must not steal raycasts.
             Collider[] colliders = _spawnedCharacter.GetComponentsInChildren<Collider>(true);
             for (int i = 0; i < colliders.Length; i++)

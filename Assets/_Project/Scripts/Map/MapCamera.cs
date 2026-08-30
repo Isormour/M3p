@@ -34,13 +34,21 @@ public class MapCamera : MonoBehaviour
 
     public void SetTarget(MapNode newTarget)
     {
-        if (newTarget == null || newTarget.camTarget == null)
+        if (newTarget == null)
+            return;
+
+        SetTarget(newTarget.camTarget);
+    }
+
+    public void SetTarget(Transform newTarget)
+    {
+        if (newTarget == null)
             return;
 
         CaptureStartIfNeeded();
 
         oldTarget = returnToStart ? null : currentTarget;
-        currentTarget = newTarget.camTarget;
+        currentTarget = newTarget;
         returnToStart = false;
         lerpTime = 0f;
     }

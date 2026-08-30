@@ -31,6 +31,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2497402645389444437}
+  - {fileID: 2037202659895836190}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5000000000000000005
@@ -46,11 +47,43 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::M3P.MapPlayerToken
   _moveSpeed: 6
-  _hoverHeight: 0.65
-  _animator: {fileID: 0}
+  _hoverHeight: 0
+  _animator: {fileID: 3086746537237539251}
   _moveBoolParameter: Walk
   _faceMoveDirection: 1
   _turnSpeed: 720
+  <camTarget>k__BackingField: {fileID: 2037202659895836190}
+--- !u!1 &7531749528304913925
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2037202659895836190}
+  m_Layer: 0
+  m_Name: CameraPosition
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2037202659895836190
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7531749528304913925}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.17871761, y: 0.68414915, z: -0.17871761, w: 0.68414915}
+  m_LocalPosition: {x: -4.52, y: 6.21, z: -0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5000000000000000002}
+  m_LocalEulerAnglesHint: {x: 29.28, y: 90, z: 0}
 --- !u!1001 &2690496474547885231
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -115,5 +148,10 @@ PrefabInstance:
 --- !u!4 &2497402645389444437 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 575930996161057274, guid: bdbd11b852d47f649bb7fefcf26b42c5, type: 3}
+  m_PrefabInstance: {fileID: 2690496474547885231}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &3086746537237539251 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 1117108035327360284, guid: bdbd11b852d47f649bb7fefcf26b42c5, type: 3}
   m_PrefabInstance: {fileID: 2690496474547885231}
   m_PrefabAsset: {fileID: 0}

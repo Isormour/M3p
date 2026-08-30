@@ -13,6 +13,7 @@ namespace M3P
         [SerializeField] string _moveBoolParameter = "Walk";
         [SerializeField] bool _faceMoveDirection = true;
         [SerializeField] float _turnSpeed = 720f;
+        [field: SerializeField] public Transform camTarget { get; private set; }
 
         Coroutine _moveRoutine;
         int _moveBoolHash;
@@ -21,6 +22,13 @@ namespace M3P
 
         void Awake()
         {
+            if (camTarget == null)
+            {
+                Transform cameraPosition = transform.Find("CameraPosition");
+                if (cameraPosition != null)
+                    camTarget = cameraPosition;
+            }
+
             if (_animator == null)
                 _animator = GetComponentInChildren<Animator>(true);
 
