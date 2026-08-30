@@ -536,7 +536,7 @@ namespace M3P
 
         void EnterBattle(string nodeId, EncounterConfig encounter, MapNodeType encounterType)
         {
-            if (encounter != null && encounter.IsBattle && encounter.Enemy == null)
+            if (encounter != null && encounter.IsBattle && !encounter.HasEnemy)
             {
                 Debug.LogError(
                     $"{nameof(MapManager)}: encounter '{encounter.name}' on node '{nodeId}' has no enemy.",
@@ -709,6 +709,12 @@ namespace M3P
 
         void FrameCamera()
         {
+            if (_mapCam != null && _token != null && _token.camTarget != null)
+            {
+                _mapCam.SetTarget(_token.camTarget);
+                return;
+            }
+
             Camera cameraRef = Camera.main;
             if (cameraRef == null || _nodePositions.Count == 0)
                 return;

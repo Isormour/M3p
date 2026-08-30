@@ -295,7 +295,7 @@ namespace M3P
         {
             _activeEnemySpec = null;
 
-            // Map encounters win: the enemy on EncounterConfig is authoritative for that fight.
+            // Map encounters win: the enemy picked from EncounterConfig is authoritative for that fight.
             MapRunState mapRun = MapRunState.Active;
             EnemyDefinition fromMap = mapRun != null ? mapRun.PendingEnemy : null;
             if (fromMap != null)

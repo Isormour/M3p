@@ -39,7 +39,7 @@ namespace M3P
             ApplyVisualState();
         }
 
-        public void SetState(bool isCurrent, bool reachable, bool cleared)
+        public virtual void SetState(bool isCurrent, bool reachable, bool cleared)
         {
             _isCurrent = isCurrent;
             _reachable = reachable;
@@ -107,32 +107,6 @@ namespace M3P
 
             if (!_tintRenderers || _materials == null)
                 return;
-
-            Color color = _baseColor;
-            if (_cleared && !_isCurrent)
-                color *= 0.45f;
-            else if (_reachable)
-                color = Color.Lerp(color, Color.white, 0.35f);
-
-            float emission = _isCurrent ? 0.55f : _reachable ? 0.28f : 0f;
-
-            for (int i = 0; i < _materials.Length; i++)
-            {
-                Material material = _materials[i];
-                if (material == null)
-                    continue;
-
-                if (material.HasProperty("_BaseColor"))
-                    material.SetColor("_BaseColor", color);
-                else
-                    material.color = color;
-
-                if (material.HasProperty("_EmissionColor"))
-                {
-                    material.EnableKeyword("_EMISSION");
-                    material.SetColor("_EmissionColor", color * emission);
-                }
-            }
         }
 
         void OnDestroy()
