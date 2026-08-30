@@ -39,7 +39,7 @@ namespace M3P
             ApplyVisualState();
         }
 
-        public void SetState(bool isCurrent, bool reachable, bool cleared)
+        public virtual void SetState(bool isCurrent, bool reachable, bool cleared)
         {
             _isCurrent = isCurrent;
             _reachable = reachable;

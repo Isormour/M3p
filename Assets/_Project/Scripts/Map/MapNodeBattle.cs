@@ -3,7 +3,7 @@ using UnityEngine;
 namespace M3P
 {
     /// <summary>
-    /// Battle map marker: spawns the encounter enemy's visual model when configured.
+    /// Battle map marker: spawns the encounter enemy's visual model when the node is still uncleared.
     /// </summary>
     public class MapNodeBattle : MapNode
     {
@@ -18,9 +18,21 @@ namespace M3P
             SpawnCharacterFromEncounter();
         }
 
+        public override void SetState(bool isCurrent, bool reachable, bool cleared)
+        {
+            base.SetState(isCurrent, reachable, cleared);
+            if (cleared)
+                ClearSpawnedCharacter();
+            else if (_spawnedCharacter == null)
+                SpawnCharacterFromEncounter();
+        }
+
         void SpawnCharacterFromEncounter()
         {
             ClearSpawnedCharacter();
+
+            if (IsEncounterCleared())
+                return;
 
             EnemyDefinition enemy = MapRunState.Active != null
                 ? MapRunState.Active.PickEncounterEnemy(Encounter, NodeId)
@@ -57,6 +69,19 @@ namespace M3P
 
             Destroy(_spawnedCharacter);
             _spawnedCharacter = null;
+        }
+
+        static MapRunState ResolveRun()
+        {
+            if (MapRunState.Active != null)
+                return MapRunState.Active;
+            return GameManager.Instance != null ? GameManager.Instance.MapRun : null;
+        }
+
+        bool IsEncounterCleared()
+        {
+            MapRunState run = ResolveRun();
+            return run != null && run.IsCleared(NodeId);
         }
     }
 }
