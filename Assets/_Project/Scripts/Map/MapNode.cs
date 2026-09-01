@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -19,10 +20,16 @@ namespace M3P
         bool _isCurrent;
         bool _cleared;
         bool _configured;
+        bool _previewSelected;
+        [SerializeField] PillarHighlight[] _highlights;
+        readonly List<VFXMapNodeLine> _connectedEdges = new List<VFXMapNodeLine>();
 
         public string NodeId { get; private set; }
         public MapNodeType NodeType { get; private set; }
         public EncounterConfig Encounter { get; private set; }
+        public bool IsCurrent => _isCurrent;
+        public bool IsCleared => _cleared;
+        public bool ShouldHighlight => _isCurrent || _previewSelected;
 
         public virtual void Configure(string nodeId, EncounterConfig encounter, MapNodeType type, Color color)
         {
@@ -44,8 +51,29 @@ namespace M3P
             _isCurrent = isCurrent;
             _reachable = reachable;
             _cleared = cleared;
+            if (isCurrent)
+                _previewSelected = false;
             if (_configured)
                 ApplyVisualState();
+        }
+
+        public void SetPreviewSelected(bool selected)
+        {
+            if (_previewSelected == selected)
+                return;
+
+            _previewSelected = selected;
+            if (_configured)
+                ApplyHighlightState();
+        }
+
+        public void RegisterEdge(VFXMapNodeLine edge)
+        {
+            if (edge == null || _connectedEdges.Contains(edge))
+                return;
+
+            _connectedEdges.Add(edge);
+            edge.SetEndpointHighlighted(NodeId, ShouldHighlight);
         }
 
         void EnsureCollider()
@@ -105,8 +133,29 @@ namespace M3P
             float scaleMul = _isCurrent ? 1.25f : _reachable ? 1.1f : 1f;
             transform.localScale = _baseScale * scaleMul;
 
+            ApplyHighlightState();
+
             if (!_tintRenderers || _materials == null)
                 return;
+        }
+
+        void ApplyHighlightState()
+        {
+            if (_highlights == null || _highlights.Length == 0)
+                _highlights = GetComponentsInChildren<PillarHighlight>(true);
+
+            bool on = ShouldHighlight;
+            for (int i = 0; i < _highlights.Length; i++)
+            {
+                if (_highlights[i] != null)
+                    _highlights[i].SetHighlighted(on);
+            }
+
+            for (int i = 0; i < _connectedEdges.Count; i++)
+            {
+                if (_connectedEdges[i] != null)
+                    _connectedEdges[i].SetEndpointHighlighted(NodeId, on);
+            }
         }
 
         void OnDestroy()

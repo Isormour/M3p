@@ -27,8 +27,7 @@ namespace M3P
 
         [SerializeField] float _nodeWorldY = 0f;
         [SerializeField] float _nodeRadius = 0.55f;
-        [SerializeField] float _edgeWidth = 0.08f;
-        [SerializeField] Color _edgeColor = new Color(0.55f, 0.58f, 0.65f, 0.9f);
+        [SerializeField] VFXMapNodeLine _edgePrefab;
         [SerializeField] Color _startColor = new Color(0.75f, 0.75f, 0.8f);
         [SerializeField] Color _battleColor = new Color(0.85f, 0.25f, 0.22f);
         [SerializeField] Color _shopColor = new Color(0.25f, 0.45f, 0.9f);
@@ -63,6 +62,7 @@ namespace M3P
         UIPanelTileCrafting _forgePanel;
         UIPanelGainSkill _gainSkillPanel;
         Transform _visualRoot;
+        MapNode _previewNode;
         bool _ownsRuntimeGraph;
         bool _inputLocked;
 
@@ -222,6 +222,7 @@ namespace M3P
 
             _nodeViews.Clear();
             _nodePositions.Clear();
+            ClearPreviewNode();
 
             _visualRoot = new GameObject("MapVisuals").transform;
             _visualRoot.SetParent(transform, false);
@@ -263,7 +264,7 @@ namespace M3P
                     !_nodePositions.TryGetValue(edge.ToId, out Vector3 to))
                     continue;
 
-                CreateEdge(edgesRoot, from, to, i);
+                CreateEdge(edgesRoot, edge.FromId, edge.ToId, from, to, i);
             }
 
             SpawnPlayerToken();
@@ -336,36 +337,24 @@ namespace M3P
             }
         }
 
-        void CreateEdge(Transform parent, Vector3 from, Vector3 to, int index)
+        void CreateEdge(Transform parent, string fromId, string toId, Vector3 from, Vector3 to, int index)
         {
-            var edgeObject = new GameObject($"Edge_{index}");
-            edgeObject.transform.SetParent(parent, false);
+            if (_edgePrefab == null)
+            {
+                Debug.LogError($"{nameof(MapManager)}: assign {nameof(_edgePrefab)}.", this);
+                return;
+            }
 
-            var line = edgeObject.AddComponent<LineRenderer>();
-            line.positionCount = 2;
-            line.SetPosition(0, from + Vector3.up * 0.05f);
-            line.SetPosition(1, to + Vector3.up * 0.05f);
-            line.startWidth = _edgeWidth;
-            line.endWidth = _edgeWidth;
-            line.useWorldSpace = true;
-            line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            line.receiveShadows = false;
+            VFXMapNodeLine edge = Instantiate(_edgePrefab, parent);
+            edge.name = $"Edge_{index}";
+            edge.transform.localPosition = Vector3.zero;
+            edge.transform.localRotation = Quaternion.identity;
+            edge.Configure(fromId, toId, from, to);
 
-            Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
-            if (shader == null)
-                shader = Shader.Find("Unlit/Color");
-            if (shader == null)
-                shader = Shader.Find("Sprites/Default");
-
-            var material = new Material(shader);
-            if (material.HasProperty("_BaseColor"))
-                material.SetColor("_BaseColor", _edgeColor);
-            else
-                material.color = _edgeColor;
-
-            line.sharedMaterial = material;
-            line.startColor = _edgeColor;
-            line.endColor = _edgeColor;
+            if (_nodeViews.TryGetValue(fromId, out MapNode fromNode))
+                fromNode.RegisterEdge(edge);
+            if (_nodeViews.TryGetValue(toId, out MapNode toNode))
+                toNode.RegisterEdge(edge);
         }
 
         void PlaceTokenAtCurrentNode()
@@ -430,10 +419,10 @@ namespace M3P
                 return;
             _mapCam.SetTarget(node);
 
-            PromptWalkTo(nodeId, target);
+            PromptWalkTo(nodeId, target, node);
         }
 
-        void PromptWalkTo(string nodeId, Vector3 target)
+        void PromptWalkTo(string nodeId, Vector3 target, MapNode node)
         {
             EnsureWalkConfirmPanel();
 
@@ -446,10 +435,12 @@ namespace M3P
                 return;
             }
 
+            SetPreviewNode(node);
             _walkNodeConfirmPanel.Show(
                 () => BeginWalkTo(nodeId, target),
                 () =>
                 {
+                    ClearPreviewNode();
                     if (_mapCam != null)
                         _mapCam.RestorePrevious();
                 });
@@ -461,9 +452,30 @@ namespace M3P
                 return;
 
             _inputLocked = true;
+            ClearPreviewNode();
             Run.MoveTo(nodeId);
             RefreshNodeStates();
             _token.MoveTo(target, OnArrivedAtNode);
+        }
+
+        void SetPreviewNode(MapNode node)
+        {
+            if (_previewNode == node)
+                return;
+
+            ClearPreviewNode();
+            _previewNode = node;
+            if (_previewNode != null)
+                _previewNode.SetPreviewSelected(true);
+        }
+
+        void ClearPreviewNode()
+        {
+            if (_previewNode == null)
+                return;
+
+            _previewNode.SetPreviewSelected(false);
+            _previewNode = null;
         }
 
         void OnArrivedAtNode()
