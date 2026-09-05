@@ -18,9 +18,9 @@ namespace M3P
             SpawnCharacterFromEncounter();
         }
 
-        public override void SetState(bool isCurrent, bool reachable, bool cleared)
+        public override void SetState(bool isCurrent, bool reachable, bool cleared, bool highlighted)
         {
-            base.SetState(isCurrent, reachable, cleared);
+            base.SetState(isCurrent, reachable, cleared, highlighted);
             if (cleared)
                 ClearSpawnedCharacter();
             else if (_spawnedCharacter == null)
@@ -51,15 +51,34 @@ namespace M3P
             }
 
             Transform parent = _characterParent != null ? _characterParent : transform;
+            if (!parent.gameObject.activeInHierarchy)
+                parent = transform;
+
             _spawnedCharacter = Instantiate(prefab, parent);
             _spawnedCharacter.name = prefab.name;
             _spawnedCharacter.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             _spawnedCharacter.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
             _spawnedCharacter.transform.rotation = Quaternion.Euler(0, 180, 0);
+            ApplyFlyingMapHover(_spawnedCharacter);
             // Marker collider handles clicks; character mesh must not steal raycasts.
             Collider[] colliders = _spawnedCharacter.GetComponentsInChildren<Collider>(true);
             for (int i = 0; i < colliders.Length; i++)
                 Destroy(colliders[i]);
+        }
+
+        static void ApplyFlyingMapHover(GameObject root)
+        {
+            WorldCharacter character = root.GetComponent<WorldCharacter>();
+            if (character == null)
+                character = root.GetComponentInChildren<WorldCharacter>();
+            if (character == null || character.CharacterType != ECharacterType.Flying)
+                return;
+
+            FlyingCharacterAnimation flying = character.GetComponent<FlyingCharacterAnimation>();
+            if (flying == null)
+                flying = character.GetComponentInChildren<FlyingCharacterAnimation>(true);
+            if (flying != null)
+                flying.HipHoverHeight = 0.4f;
         }
 
         void ClearSpawnedCharacter()

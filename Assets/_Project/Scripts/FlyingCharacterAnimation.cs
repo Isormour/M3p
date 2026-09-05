@@ -12,7 +12,7 @@ public class FlyingCharacterAnimation : MonoBehaviour
     [SerializeField] Transform RightEar;
     [SerializeField] CharacterAnimation CharacterAnimation;
 
-    [SerializeField] float HipHoverHeight = 0.45f;
+    [SerializeField] public float HipHoverHeight = 0.45f;
     [SerializeField] float HipSineAmplitude = 0.08f;
     [SerializeField] float WingFlapSpeed = 2.4f;
     [SerializeField] float FallGravity = 18f;

@@ -11,6 +11,7 @@ namespace M3P
         public static MapRunState Active { get; set; }
 
         readonly HashSet<string> _clearedNodeIds = new HashSet<string>();
+        readonly List<string> _pathNodeIds = new List<string>();
 
         public string GraphName { get; set; }
         public string CurrentNodeId { get; set; }
@@ -24,6 +25,7 @@ namespace M3P
         public int FloorIndex { get; private set; } = 1;
 
         public bool HasPendingBattle => !string.IsNullOrEmpty(PendingBattleNodeId);
+        public IReadOnlyList<string> PathNodeIds => _pathNodeIds;
 
         /// <summary>True when the fight the Battle scene is resolving is the floor boss.</summary>
         public bool IsPendingBossBattle
@@ -85,8 +87,13 @@ namespace M3P
             PendingEncounterType = MapNodeType.Battle;
             PendingEnemy = null;
             _clearedNodeIds.Clear();
+            _pathNodeIds.Clear();
             if (!string.IsNullOrEmpty(startNodeId))
+            {
                 _clearedNodeIds.Add(startNodeId);
+                _pathNodeIds.Add(startNodeId);
+            }
+
             IsGenerated = generatedGraph != null;
             GraphSnapshot = generatedGraph;
             FloorIndex = Mathf.Max(1, floorIndex);
@@ -115,12 +122,22 @@ namespace M3P
             PendingEncounterType = MapNodeType.Battle;
             PendingEnemy = null;
             _clearedNodeIds.Clear();
+            _pathNodeIds.Clear();
             if (save.ClearedNodeIds != null)
             {
                 for (int i = 0; i < save.ClearedNodeIds.Length; i++)
                 {
                     if (!string.IsNullOrEmpty(save.ClearedNodeIds[i]))
                         _clearedNodeIds.Add(save.ClearedNodeIds[i]);
+                }
+            }
+
+            if (save.PathNodeIds != null)
+            {
+                for (int i = 0; i < save.PathNodeIds.Length; i++)
+                {
+                    if (!string.IsNullOrEmpty(save.PathNodeIds[i]) && !_pathNodeIds.Contains(save.PathNodeIds[i]))
+                        _pathNodeIds.Add(save.PathNodeIds[i]);
                 }
             }
 
@@ -138,6 +155,8 @@ namespace M3P
 
             var cleared = new string[_clearedNodeIds.Count];
             _clearedNodeIds.CopyTo(cleared);
+            var path = new string[_pathNodeIds.Count];
+            _pathNodeIds.CopyTo(path);
 
             return new MapRunSave
             {
@@ -148,6 +167,7 @@ namespace M3P
                 CurrentNodeId = CurrentNodeId,
                 PreviousNodeId = PreviousNodeId,
                 ClearedNodeIds = cleared,
+                PathNodeIds = path,
                 Graph = GraphSnapshot != null ? GraphSnapshot.Clone() : null,
             };
         }
@@ -155,6 +175,33 @@ namespace M3P
         public bool IsCleared(string nodeId)
         {
             return !string.IsNullOrEmpty(nodeId) && _clearedNodeIds.Contains(nodeId);
+        }
+
+        public bool IsOnPath(string nodeId)
+        {
+            return !string.IsNullOrEmpty(nodeId) && _pathNodeIds.Contains(nodeId);
+        }
+
+        public bool HasWalkedEdge(string fromId, string toId)
+        {
+            if (string.IsNullOrEmpty(fromId) || string.IsNullOrEmpty(toId))
+                return false;
+
+            for (int i = 0; i < _pathNodeIds.Count - 1; i++)
+            {
+                if (_pathNodeIds[i] == fromId && _pathNodeIds[i + 1] == toId)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public void EnsurePath(MapGraphDefinition graph)
+        {
+            if (IsPathValid(graph))
+                return;
+
+            ReconstructPath(graph);
         }
 
         public void MarkCleared(string nodeId)
@@ -170,6 +217,7 @@ namespace M3P
 
             PreviousNodeId = CurrentNodeId;
             CurrentNodeId = nodeId;
+            AddToPath(nodeId);
         }
 
         public void BeginBattle(
@@ -198,12 +246,16 @@ namespace M3P
             {
                 MarkCleared(battleNodeId);
                 CurrentNodeId = battleNodeId;
+                AddToPath(battleNodeId);
                 return;
             }
 
             // Loss: step back so the player can pick another route or retry.
             if (!string.IsNullOrEmpty(PreviousNodeId))
+            {
                 CurrentNodeId = PreviousNodeId;
+                AddToPath(PreviousNodeId);
+            }
         }
 
         public void Clear()
@@ -216,10 +268,131 @@ namespace M3P
             PendingEncounterType = MapNodeType.Battle;
             PendingEnemy = null;
             _clearedNodeIds.Clear();
+            _pathNodeIds.Clear();
             IsGenerated = false;
             GraphSnapshot = null;
             FloorIndex = 1;
             IsActive = false;
+        }
+
+        void AddToPath(string nodeId)
+        {
+            if (string.IsNullOrEmpty(nodeId))
+                return;
+
+            int existing = _pathNodeIds.IndexOf(nodeId);
+            if (existing >= 0)
+            {
+                int removeFrom = existing + 1;
+                if (removeFrom < _pathNodeIds.Count)
+                    _pathNodeIds.RemoveRange(removeFrom, _pathNodeIds.Count - removeFrom);
+                return;
+            }
+
+            _pathNodeIds.Add(nodeId);
+        }
+
+        bool IsPathValid(MapGraphDefinition graph)
+        {
+            if (_pathNodeIds.Count == 0 || string.IsNullOrEmpty(CurrentNodeId))
+                return false;
+
+            if (_pathNodeIds[_pathNodeIds.Count - 1] != CurrentNodeId)
+                return false;
+
+            if (graph != null &&
+                !string.IsNullOrEmpty(graph.StartNodeId) &&
+                _pathNodeIds[0] != graph.StartNodeId)
+                return false;
+
+            if (graph == null)
+                return true;
+
+            for (int i = 0; i < _pathNodeIds.Count; i++)
+            {
+                if (!graph.TryGetNode(_pathNodeIds[i], out _))
+                    return false;
+            }
+
+            for (int i = 0; i < _pathNodeIds.Count - 1; i++)
+            {
+                if (!AreNeighbors(graph, _pathNodeIds[i], _pathNodeIds[i + 1]))
+                    return false;
+            }
+
+            return true;
+        }
+
+        void ReconstructPath(MapGraphDefinition graph)
+        {
+            _pathNodeIds.Clear();
+            string startId = graph != null ? graph.StartNodeId : null;
+            if (string.IsNullOrEmpty(CurrentNodeId))
+            {
+                if (!string.IsNullOrEmpty(startId))
+                    _pathNodeIds.Add(startId);
+                return;
+            }
+
+            if (graph == null || string.IsNullOrEmpty(startId) || CurrentNodeId == startId)
+            {
+                if (!string.IsNullOrEmpty(startId))
+                    _pathNodeIds.Add(startId);
+                if (!string.IsNullOrEmpty(CurrentNodeId) && CurrentNodeId != startId)
+                    _pathNodeIds.Add(CurrentNodeId);
+                return;
+            }
+
+            var allowed = new HashSet<string>(_clearedNodeIds) { CurrentNodeId };
+            var visited = new HashSet<string> { startId };
+            var parent = new Dictionary<string, string>();
+            var queue = new Queue<string>();
+            queue.Enqueue(startId);
+
+            while (queue.Count > 0)
+            {
+                string id = queue.Dequeue();
+                if (id == CurrentNodeId)
+                    break;
+
+                List<string> neighbors = graph.GetNeighborIds(id);
+                for (int i = 0; i < neighbors.Count; i++)
+                {
+                    string next = neighbors[i];
+                    if (string.IsNullOrEmpty(next) || !allowed.Contains(next) || !visited.Add(next))
+                        continue;
+
+                    parent[next] = id;
+                    queue.Enqueue(next);
+                }
+            }
+
+            if (CurrentNodeId != startId && !parent.ContainsKey(CurrentNodeId))
+            {
+                _pathNodeIds.Add(startId);
+                _pathNodeIds.Add(CurrentNodeId);
+                return;
+            }
+
+            var reversed = new List<string>();
+            string cursor = CurrentNodeId;
+            while (true)
+            {
+                reversed.Add(cursor);
+                if (cursor == startId)
+                    break;
+                if (!parent.TryGetValue(cursor, out cursor))
+                    break;
+            }
+
+            for (int i = reversed.Count - 1; i >= 0; i--)
+                _pathNodeIds.Add(reversed[i]);
+        }
+
+        static bool AreNeighbors(MapGraphDefinition graph, string fromId, string toId)
+        {
+            List<string> neighbors = graph.GetNeighborIds(fromId);
+            return neighbors.Contains(toId);
         }
     }
 }

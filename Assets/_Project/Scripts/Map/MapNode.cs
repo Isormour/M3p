@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -20,16 +19,21 @@ namespace M3P
         bool _isCurrent;
         bool _cleared;
         bool _configured;
-        bool _previewSelected;
+        bool _highlighted;
         [SerializeField] PillarHighlight[] _highlights;
-        readonly List<VFXMapNodeLine> _connectedEdges = new List<VFXMapNodeLine>();
 
         public string NodeId { get; private set; }
         public MapNodeType NodeType { get; private set; }
         public EncounterConfig Encounter { get; private set; }
         public bool IsCurrent => _isCurrent;
         public bool IsCleared => _cleared;
-        public bool ShouldHighlight => _isCurrent || _previewSelected;
+        public bool ShouldHighlight => _highlighted;
+        [field: SerializeField] public Light NodeLight { get; private set; }
+
+        void Awake()
+        {
+            ApplyLightState();
+        }
 
         public virtual void Configure(string nodeId, EncounterConfig encounter, MapNodeType type, Color color)
         {
@@ -42,38 +46,17 @@ namespace M3P
 
             EnsureCollider();
             CacheRenderers();
-            EnsureLabel();
             ApplyVisualState();
         }
 
-        public virtual void SetState(bool isCurrent, bool reachable, bool cleared)
+        public virtual void SetState(bool isCurrent, bool reachable, bool cleared, bool highlighted)
         {
             _isCurrent = isCurrent;
             _reachable = reachable;
             _cleared = cleared;
-            if (isCurrent)
-                _previewSelected = false;
+            _highlighted = highlighted;
             if (_configured)
                 ApplyVisualState();
-        }
-
-        public void SetPreviewSelected(bool selected)
-        {
-            if (_previewSelected == selected)
-                return;
-
-            _previewSelected = selected;
-            if (_configured)
-                ApplyHighlightState();
-        }
-
-        public void RegisterEdge(VFXMapNodeLine edge)
-        {
-            if (edge == null || _connectedEdges.Contains(edge))
-                return;
-
-            _connectedEdges.Add(edge);
-            edge.SetEndpointHighlighted(NodeId, ShouldHighlight);
         }
 
         void EnsureCollider()
@@ -104,24 +87,6 @@ namespace M3P
             }
         }
 
-        void EnsureLabel()
-        {
-            if (_label != null)
-                return;
-
-            var labelObject = new GameObject("Label");
-            labelObject.transform.SetParent(transform, false);
-            labelObject.transform.localPosition = new Vector3(0f, _labelHeight, 0f);
-
-            _label = labelObject.AddComponent<TextMeshPro>();
-            _label.alignment = TextAlignmentOptions.Center;
-            _label.fontSize = 3.2f;
-            _label.color = Color.white;
-            _label.text = NodeType.ToString();
-            _label.rectTransform.sizeDelta = new Vector2(3f, 1f);
-            labelObject.transform.localRotation = Quaternion.Euler(50f, 0f, 0f);
-        }
-
         void ApplyVisualState()
         {
             if (_label != null)
@@ -144,18 +109,22 @@ namespace M3P
             if (_highlights == null || _highlights.Length == 0)
                 _highlights = GetComponentsInChildren<PillarHighlight>(true);
 
-            bool on = ShouldHighlight;
             for (int i = 0; i < _highlights.Length; i++)
             {
                 if (_highlights[i] != null)
-                    _highlights[i].SetHighlighted(on);
+                    _highlights[i].SetHighlighted(_highlighted);
             }
 
-            for (int i = 0; i < _connectedEdges.Count; i++)
-            {
-                if (_connectedEdges[i] != null)
-                    _connectedEdges[i].SetEndpointHighlighted(NodeId, on);
-            }
+            ApplyLightState();
+        }
+
+        void ApplyLightState()
+        {
+            if (NodeLight == null)
+                NodeLight = GetComponentInChildren<Light>(true);
+
+            if (NodeLight != null)
+                NodeLight.enabled = _highlighted;
         }
 
         void OnDestroy()

@@ -13,9 +13,6 @@ namespace M3P
         [SerializeField] float _endpointDistance = 0.55f;
         [SerializeField] float _heightOffset = 0.05f;
 
-        bool _fromHighlighted;
-        bool _toHighlighted;
-
         public string FromId { get; private set; }
         public string ToId { get; private set; }
 
@@ -23,31 +20,24 @@ namespace M3P
         {
             FromId = fromId;
             ToId = toId;
-            _fromHighlighted = false;
-            _toHighlighted = false;
             EnsureLine();
             EnsureHighlight();
             Place(from, to);
-            ApplyHighlight();
+            SetHighlighted(false);
         }
 
-        public void SetEndpointHighlighted(string nodeId, bool highlighted)
-        {
-            if (nodeId == FromId)
-                _fromHighlighted = highlighted;
-            else if (nodeId == ToId)
-                _toHighlighted = highlighted;
-            else
-                return;
-
-            ApplyHighlight();
-        }
-
-        void ApplyHighlight()
+        public void SetHighlighted(bool highlighted)
         {
             EnsureHighlight();
             if (_highlight != null)
-                _highlight.SetHighlighted(_fromHighlighted || _toHighlighted);
+                _highlight.SetHighlighted(highlighted);
+        }
+
+        public bool Connects(string fromId, string toId, bool undirected = false)
+        {
+            if (FromId == fromId && ToId == toId)
+                return true;
+            return undirected && FromId == toId && ToId == fromId;
         }
 
         void EnsureLine()

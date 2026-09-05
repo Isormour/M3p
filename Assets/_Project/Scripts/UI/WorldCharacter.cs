@@ -1,5 +1,10 @@
 using UnityEngine;
 
+public enum ECharacterType
+{
+    Ground,
+    Flying
+}
 public class WorldCharacter : MonoBehaviour
 {
     static readonly int AttackVariantsId = Animator.StringToHash("AttackVariants");
@@ -8,6 +13,7 @@ public class WorldCharacter : MonoBehaviour
 
     [SerializeField] Animator _animator;
     [SerializeField] int _attackVariantCount = 5;
+    [field: SerializeField] public ECharacterType CharacterType { private set; get; } = ECharacterType.Ground;
 
     public Animator Anim => _animator;
 

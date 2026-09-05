@@ -54,6 +54,7 @@ namespace M3P
 
         readonly Dictionary<string, MapNode> _nodeViews = new Dictionary<string, MapNode>();
         readonly Dictionary<string, Vector3> _nodePositions = new Dictionary<string, Vector3>();
+        readonly List<VFXMapNodeLine> _edgeViews = new List<VFXMapNodeLine>();
 
         MapGraphDefinition _activeGraph;
         MapPlayerToken _token;
@@ -210,6 +211,8 @@ namespace M3P
 
             if (string.IsNullOrEmpty(run.CurrentNodeId) || !_activeGraph.TryGetNode(run.CurrentNodeId, out _))
                 run.BeginRun(_activeGraph.name, _activeGraph.StartNodeId, run.GraphSnapshot, run.FloorIndex);
+
+            run.EnsurePath(_activeGraph);
         }
 
         void BuildVisuals()
@@ -222,7 +225,8 @@ namespace M3P
 
             _nodeViews.Clear();
             _nodePositions.Clear();
-            ClearPreviewNode();
+            _edgeViews.Clear();
+            ClearPreviewNode(refresh: false);
 
             _visualRoot = new GameObject("MapVisuals").transform;
             _visualRoot.SetParent(transform, false);
@@ -348,13 +352,8 @@ namespace M3P
             VFXMapNodeLine edge = Instantiate(_edgePrefab, parent);
             edge.name = $"Edge_{index}";
             edge.transform.localPosition = Vector3.zero;
-            edge.transform.localRotation = Quaternion.identity;
             edge.Configure(fromId, toId, from, to);
-
-            if (_nodeViews.TryGetValue(fromId, out MapNode fromNode))
-                fromNode.RegisterEdge(edge);
-            if (_nodeViews.TryGetValue(toId, out MapNode toNode))
-                toNode.RegisterEdge(edge);
+            _edgeViews.Add(edge);
         }
 
         void PlaceTokenAtCurrentNode()
@@ -381,13 +380,29 @@ namespace M3P
             List<string> neighbors = _activeGraph != null
                 ? _activeGraph.GetNeighborIds(run.CurrentNodeId)
                 : new List<string>();
+            string previewId = _previewNode != null ? _previewNode.NodeId : null;
 
             foreach (KeyValuePair<string, MapNode> pair in _nodeViews)
             {
                 bool isCurrent = pair.Key == run.CurrentNodeId;
                 bool reachable = neighbors.Contains(pair.Key);
                 bool cleared = run.IsCleared(pair.Key);
-                pair.Value.SetState(isCurrent, reachable, cleared);
+                bool highlighted = run.IsOnPath(pair.Key) || pair.Key == previewId;
+                pair.Value.SetState(isCurrent, reachable, cleared, highlighted);
+            }
+
+            bool undirected = _activeGraph != null && !_activeGraph.Directed;
+            for (int i = 0; i < _edgeViews.Count; i++)
+            {
+                VFXMapNodeLine edge = _edgeViews[i];
+                if (edge == null)
+                    continue;
+
+                bool walked = run.HasWalkedEdge(edge.FromId, edge.ToId) ||
+                              undirected && run.HasWalkedEdge(edge.ToId, edge.FromId);
+                bool toPreview = !string.IsNullOrEmpty(previewId) &&
+                                 edge.Connects(run.CurrentNodeId, previewId, undirected);
+                edge.SetHighlighted(walked || toPreview);
             }
         }
 
@@ -452,7 +467,7 @@ namespace M3P
                 return;
 
             _inputLocked = true;
-            ClearPreviewNode();
+            _previewNode = null;
             Run.MoveTo(nodeId);
             RefreshNodeStates();
             _token.MoveTo(target, OnArrivedAtNode);
@@ -463,19 +478,18 @@ namespace M3P
             if (_previewNode == node)
                 return;
 
-            ClearPreviewNode();
             _previewNode = node;
-            if (_previewNode != null)
-                _previewNode.SetPreviewSelected(true);
+            RefreshNodeStates();
         }
 
-        void ClearPreviewNode()
+        void ClearPreviewNode(bool refresh = true)
         {
             if (_previewNode == null)
                 return;
 
-            _previewNode.SetPreviewSelected(false);
             _previewNode = null;
+            if (refresh)
+                RefreshNodeStates();
         }
 
         void OnArrivedAtNode()

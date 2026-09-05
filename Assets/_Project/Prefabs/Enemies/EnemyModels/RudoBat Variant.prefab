@@ -596,6 +596,7 @@ MonoBehaviour:
   HipHoverHeight: 1
   HipSineAmplitude: 0.08
   WingFlapSpeed: 1.5
+  FallGravity: 18
   LeftWingFlapFrom: {x: -4.76, y: -69.148, z: 8.506}
   LeftWingFlapTo: {x: -4.76, y: -69.148, z: 79.935}
   RightWingFlapFrom: {x: 5.486, y: -68.821, z: -13.135}
@@ -704,6 +705,10 @@ PrefabInstance:
       propertyPath: _animator
       value: 
       objectReference: {fileID: 3486995834007826830}
+    - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: <CharacterType>k__BackingField
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5393355372502565080, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

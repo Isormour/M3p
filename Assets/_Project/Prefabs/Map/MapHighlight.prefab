@@ -62,8 +62,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 617ed0a396ad3984085b1dbdd54aef9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::M3P.PillarHighlight
-  _onColor: {r: 1, g: 0.6313726, b: 0, a: 1}
-  _offColor: {r: 0.18039216, g: 0.2, b: 0.23921569, a: 0.34901962}
+  _onColor: {r: 0.56078434, g: 0.35686275, b: 0, a: 1}
+  _offColor: {r: 0.2784314, g: 0.2784314, b: 0.2784314, a: 0.20784314}
 --- !u!120 &6998940606392882242
 LineRenderer:
   serializedVersion: 3
@@ -118,7 +118,7 @@ LineRenderer:
   - {x: 0, y: 0, z: 10}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.03
+    widthMultiplier: 0.12
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -136,8 +136,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.18039216, g: 0.2, b: 0.23921569, a: 0.34901962}
-      key1: {r: 0.18039216, g: 0.2, b: 0.23921569, a: 0.34901962}
+      key0: {r: 0.2784314, g: 0.2784314, b: 0.2784314, a: 0.20784314}
+      key1: {r: 0.2784314, g: 0.2784314, b: 0.2784314, a: 0.20784314}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}

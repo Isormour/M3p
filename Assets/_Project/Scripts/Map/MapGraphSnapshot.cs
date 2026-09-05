@@ -95,6 +95,7 @@ namespace M3P
         public string CurrentNodeId;
         public string PreviousNodeId;
         public string[] ClearedNodeIds;
+        public string[] PathNodeIds;
         public MapGraphSnapshot Graph;
 
         public bool CanContinue =>
@@ -111,6 +112,7 @@ namespace M3P
                 CurrentNodeId = CurrentNodeId,
                 PreviousNodeId = PreviousNodeId,
                 ClearedNodeIds = ClearedNodeIds != null ? (string[])ClearedNodeIds.Clone() : Array.Empty<string>(),
+                PathNodeIds = PathNodeIds != null ? (string[])PathNodeIds.Clone() : Array.Empty<string>(),
                 Graph = Graph != null ? Graph.Clone() : null,
             };
         }
