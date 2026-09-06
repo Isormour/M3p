@@ -43,6 +43,9 @@ namespace M3P
         [Tooltip("Basic-attack damage, supermatch bonuses and extra cascade hits.")]
         [SerializeField] BattleConfig _battle;
 
+        [Tooltip("Status outline palettes and other authored combat VFX.")]
+        [SerializeField] VFXConfig _vfx;
+
         Dictionary<Match3TileTypeDefinition, int> _tileTypeIds;
         StatProgressionConfig _fallbackStatProgression;
         BattleConfig _fallbackBattle;
@@ -76,6 +79,8 @@ namespace M3P
             _battle != null
                 ? _battle
                 : _fallbackBattle ??= BattleConfig.CreateDefault();
+
+        public VFXConfig VFX => _vfx;
 
         public int TileTypeCount => _tileTypes != null ? _tileTypes.Length : 0;
 

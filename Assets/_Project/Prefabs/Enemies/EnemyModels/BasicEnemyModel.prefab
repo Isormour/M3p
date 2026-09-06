@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5393355372502565080}
   - component: {fileID: 3334003410193672422}
+  - component: {fileID: 1115763737850123812}
   m_Layer: 0
   m_Name: BasicEnemyModel
   m_TagString: Untagged
@@ -47,7 +48,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WorldCharacter
   _animator: {fileID: 8419219727045254202}
   _attackVariantCount: 5
+  _vfx: {fileID: 1115763737850123812}
   <CharacterType>k__BackingField: 0
+--- !u!114 &1115763737850123812
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2277848116310433148}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bdcdc01bf5e0d142a7f6da526d88868, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterVFX
+  renderers:
+  - {fileID: 8415594508287208519}
 --- !u!1001 &2719477178642129323
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -132,6 +148,11 @@ PrefabInstance:
 --- !u!4 &2465509039484929600 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2c63495758124e2489779bbcd4507e66, type: 3}
+  m_PrefabInstance: {fileID: 2719477178642129323}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &8415594508287208519 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -3353012884172894740, guid: 2c63495758124e2489779bbcd4507e66, type: 3}
   m_PrefabInstance: {fileID: 2719477178642129323}
   m_PrefabAsset: {fileID: 0}
 --- !u!95 &8419219727045254202 stripped

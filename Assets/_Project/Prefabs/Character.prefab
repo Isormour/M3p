@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6397870304647428305}
   - component: {fileID: 8549864065874350994}
+  - component: {fileID: 6568488526419764991}
   m_Layer: 0
   m_Name: Character
   m_TagString: Untagged
@@ -46,3 +47,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   _animator: {fileID: 0}
   _attackVariantCount: 5
+  _vfx: {fileID: 6568488526419764991}
+  <CharacterType>k__BackingField: 0
+--- !u!114 &6568488526419764991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6410925094509423486}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bdcdc01bf5e0d142a7f6da526d88868, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterVFX
+  renderers: []

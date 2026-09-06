@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -24,6 +25,9 @@ namespace M3P
 
         public IReadOnlyList<StatusInstance> Statuses => _statuses;
 
+        /// <summary>Raised after the status list is added to, removed from, refreshed or cleared.</summary>
+        public event Action StatusesChanged;
+
         public CombatModifiers Modifiers => _modifiers;
 
         protected void SetCharacterStats(CharacterStats stats)
@@ -42,6 +46,7 @@ namespace M3P
             _statuses.Clear();
             _skillsUsedThisTurn.Clear();
             _modifiers.Clear();
+            RaiseStatusesChanged();
         }
 
         /// <summary>
@@ -170,6 +175,9 @@ namespace M3P
                 consumed++;
             }
 
+            if (consumed > 0)
+                RaiseStatusesChanged();
+
             return consumed;
         }
 
@@ -194,11 +202,13 @@ namespace M3P
 
                     existing.RemainingTurns = duration;
                     existing.Source = source;
+                    RaiseStatusesChanged();
                     return;
                 }
             }
 
             _statuses.Add(new StatusInstance(definition, source, duration));
+            RaiseStatusesChanged();
         }
 
         /// <summary>
@@ -238,6 +248,7 @@ namespace M3P
             if (_statuses.Count == 0)
                 return;
 
+            bool changed = false;
             for (int i = _statuses.Count - 1; i >= 0; i--)
             {
                 StatusInstance status = _statuses[i];
@@ -245,6 +256,7 @@ namespace M3P
                 if (definition == null)
                 {
                     _statuses.RemoveAt(i);
+                    changed = true;
                     continue;
                 }
 
@@ -252,8 +264,19 @@ namespace M3P
 
                 status.RemainingTurns--;
                 if (status.RemainingTurns <= 0)
+                {
                     _statuses.RemoveAt(i);
+                    changed = true;
+                }
             }
+
+            if (changed)
+                RaiseStatusesChanged();
+        }
+
+        void RaiseStatusesChanged()
+        {
+            StatusesChanged?.Invoke();
         }
     }
 }

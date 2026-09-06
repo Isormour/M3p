@@ -10,6 +10,7 @@ namespace M3P
     [CreateAssetMenu(fileName = "StatusEffect", menuName = "M3P/Status Effect", order = 11)]
     public class StatusEffectDefinition : ScriptableObject
     {
+        [SerializeField] EStatusType _statusType;
         [Min(1), SerializeField] int _durationTurns = 1;
         [Tooltip("When false, re-applying refreshes remaining turns on the existing instance.")]
         [SerializeField] bool _canStack;
@@ -17,6 +18,8 @@ namespace M3P
         [SerializeField] StatusStatModifier[] _statModifiers = Array.Empty<StatusStatModifier>();
         [Tooltip("Fired on the status bearer at the start of each of their turns. Authored Effect Target is ignored; the bearer always receives the effect.")]
         [SerializeField] BattleEffect[] _onTurnEffects = Array.Empty<BattleEffect>();
+
+        public EStatusType StatusType => _statusType;
 
         public int DurationTurns => Mathf.Max(1, _durationTurns);
 

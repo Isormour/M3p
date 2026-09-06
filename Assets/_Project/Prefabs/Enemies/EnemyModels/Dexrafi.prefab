@@ -8,6 +8,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1115763737850123812, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: 'renderers.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8467601033251294484}
     - target: {fileID: 2277848116310433148, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
       propertyPath: m_Name
       value: Dexrafi
@@ -193,3 +197,8 @@ MonoBehaviour:
   _rayUp: 0.5
   _rayDown: 1.5
   _footSoleOffset: 0.02
+--- !u!137 &8467601033251294484 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -5324531855699944674, guid: fcfdbffbd91edd140bf73f90f545870c, type: 3}
+  m_PrefabInstance: {fileID: 4871065459235771914}
+  m_PrefabAsset: {fileID: 0}

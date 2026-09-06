@@ -9806,6 +9806,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 780249979113705196}
   m_SourcePrefab: {fileID: 100100000, guid: 3b66e54943458624aba841160d593be3, type: 3}
+--- !u!137 &201453753409444266 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -4815152262335523322, guid: 3b66e54943458624aba841160d593be3, type: 3}
+  m_PrefabInstance: {fileID: 4604527752843956140}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &587023064152009938 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4018081430491685758, guid: 3b66e54943458624aba841160d593be3, type: 3}
@@ -9841,6 +9846,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 3b66e54943458624aba841160d593be3, type: 3}
   m_PrefabInstance: {fileID: 4604527752843956140}
   m_PrefabAsset: {fileID: 0}
+--- !u!137 &5811547336231195861 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -1206874426333947015, guid: 3b66e54943458624aba841160d593be3, type: 3}
+  m_PrefabInstance: {fileID: 4604527752843956140}
+  m_PrefabAsset: {fileID: 0}
 --- !u!95 &7965746451851620925 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 3b66e54943458624aba841160d593be3, type: 3}
@@ -9854,6 +9864,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1115763737850123812, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: renderers.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1115763737850123812, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: 'renderers.Array.data[0]'
+      value: 
+      objectReference: {fileID: 5811547336231195861}
+    - target: {fileID: 1115763737850123812, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: 'renderers.Array.data[1]'
+      value: 
+      objectReference: {fileID: 201453753409444266}
     - target: {fileID: 2277848116310433148, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
       propertyPath: m_Name
       value: Frenzi Variant

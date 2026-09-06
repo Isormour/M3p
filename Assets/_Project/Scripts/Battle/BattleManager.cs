@@ -306,6 +306,7 @@ namespace M3P
                 return;
             }
             _cardPlay?.BeginBattle(_activeBoard, _player);
+            _battleWorld?.BindStatusVisuals(_player, _activeEnemy);
             OnBattleStarted?.Invoke(_activeBoard);
             StartCoroutine(SetupTurnFlowRoutine());
         }
@@ -863,7 +864,10 @@ namespace M3P
         void ClearSpawnedEnemy()
         {
             if (_battleWorld != null)
+            {
+                _battleWorld.UnbindStatusVisuals();
                 _battleWorld.ClearEnemyModel();
+            }
 
             if (_activeEnemy != null)
             {

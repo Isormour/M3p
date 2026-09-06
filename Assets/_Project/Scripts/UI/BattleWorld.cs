@@ -15,6 +15,8 @@ namespace M3P
         WorldCharacter _playerCharacter;
         WorldCharacter _enemyCharacter;
         GameObject _spawnedEnemyModel;
+        BattleCharacter _boundPlayer;
+        BattleCharacter _boundEnemy;
 
         public Transform PlayerVfxPoint =>
             _playerVfxPoint != null
@@ -44,8 +46,40 @@ namespace M3P
             _enemyCharacter = ResolveWorldCharacter(_spawnedEnemyModel);
         }
 
+        public void BindStatusVisuals(BattleCharacter player, BattleCharacter enemy)
+        {
+            UnbindStatusVisuals();
+
+            _boundPlayer = player;
+            _boundEnemy = enemy;
+
+            if (_boundPlayer != null)
+                _boundPlayer.StatusesChanged += RefreshPlayerStatusVfx;
+            if (_boundEnemy != null)
+                _boundEnemy.StatusesChanged += RefreshEnemyStatusVfx;
+
+            RefreshPlayerStatusVfx();
+            RefreshEnemyStatusVfx();
+        }
+
+        public void UnbindStatusVisuals()
+        {
+            if (_boundPlayer != null)
+                _boundPlayer.StatusesChanged -= RefreshPlayerStatusVfx;
+            if (_boundEnemy != null)
+                _boundEnemy.StatusesChanged -= RefreshEnemyStatusVfx;
+
+            _boundPlayer = null;
+            _boundEnemy = null;
+
+            _playerCharacter?.VFX?.Clear();
+            ResolveEnemyVfx()?.Clear();
+        }
+
         public void ClearEnemyModel()
         {
+            ResolveEnemyVfx()?.Clear();
+
             if (_spawnedEnemyModel != null)
             {
                 Destroy(_spawnedEnemyModel);
@@ -103,6 +137,33 @@ namespace M3P
             character.PlayAttack(triggerName);
         }
 
+        void OnDestroy()
+        {
+            UnbindStatusVisuals();
+        }
+
+        void RefreshPlayerStatusVfx()
+        {
+            CharacterVFX vfx = _playerCharacter != null ? _playerCharacter.VFX : null;
+            if (vfx == null)
+                vfx = ResolveCharacterVfx(_playerObject);
+            vfx?.Refresh(_boundPlayer != null ? _boundPlayer.Statuses : null);
+        }
+
+        void RefreshEnemyStatusVfx()
+        {
+            CharacterVFX vfx = ResolveEnemyVfx();
+            vfx?.Refresh(_boundEnemy != null ? _boundEnemy.Statuses : null);
+        }
+
+        CharacterVFX ResolveEnemyVfx()
+        {
+            if (_enemyCharacter != null && _enemyCharacter.VFX != null)
+                return _enemyCharacter.VFX;
+
+            return ResolveCharacterVfx(_spawnedEnemyModel);
+        }
+
         static WorldCharacter ResolveWorldCharacter(GameObject root)
         {
             if (root == null)
@@ -110,6 +171,19 @@ namespace M3P
 
             WorldCharacter character = root.GetComponent<WorldCharacter>();
             return character != null ? character : root.GetComponentInChildren<WorldCharacter>();
+        }
+
+        static CharacterVFX ResolveCharacterVfx(GameObject root)
+        {
+            if (root == null)
+                return null;
+
+            WorldCharacter character = ResolveWorldCharacter(root);
+            if (character != null && character.VFX != null)
+                return character.VFX;
+
+            CharacterVFX vfx = root.GetComponent<CharacterVFX>();
+            return vfx != null ? vfx : root.GetComponentInChildren<CharacterVFX>(true);
         }
     }
 }

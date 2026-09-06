@@ -21,19 +21,16 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: DwarfBody
-  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: ac8d8b14817030c439c57c433fe1963a, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - _NORMALMAP
-  - _SPECULAR_SETUP
+  m_ValidKeywords: []
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap:
-    RenderType: Opaque
+  stringTagMap: {}
   disabledShaderPasses:
   - MOTIONVECTORS
   m_LockedProperties: 
@@ -68,12 +65,20 @@ Material:
         m_Texture: {fileID: 2800000, guid: 9c8486b72698c7742abe689bcebcdaf4, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _MainTexture:
+        m_Texture: {fileID: 2800000, guid: 9c8486b72698c7742abe689bcebcdaf4, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
         m_Texture: {fileID: 2800000, guid: 9e5947fbf1f08d542aceb7f53308e4c0, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
         m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OutlineTexture:
+        m_Texture: {fileID: 2800000, guid: 7334b61e346149cb95698bf38d0139f5, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ParallaxMap:
@@ -118,7 +123,10 @@ Material:
     - _GlossyReflections: 0
     - _Metallic: 1
     - _OcclusionStrength: 1
+    - _OutlineMult: 40
+    - _OutlineSize: 4
     - _Parallax: 0.005
+    - _QueueControl: 0
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _Smoothness: 0
@@ -134,6 +142,12 @@ Material:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _OutlineColor: {r: 1, g: 0.184, b: 0, a: 1}
+    - _OutlineHighColor: {r: 1, g: 0.8578303, b: 0, a: 1}
+    - _OutlineMidColor: {r: 1, g: 0.05389359, b: 0, a: 1}
+    - _OutlineMult: {r: 0, g: 0, b: 0, a: 0}
+    - _OutlineMultNPower: {r: 1, g: 10, b: 0, a: 0}
+    - _OutlineTNO: {r: 2, g: 1, b: -0.1, a: 0}
     - _SpecColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

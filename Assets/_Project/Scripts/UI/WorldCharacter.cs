@@ -5,6 +5,8 @@ public enum ECharacterType
     Ground,
     Flying
 }
+
+[RequireComponent(typeof(CharacterVFX))]
 public class WorldCharacter : MonoBehaviour
 {
     static readonly int AttackVariantsId = Animator.StringToHash("AttackVariants");
@@ -13,14 +15,39 @@ public class WorldCharacter : MonoBehaviour
 
     [SerializeField] Animator _animator;
     [SerializeField] int _attackVariantCount = 5;
+    [SerializeField] CharacterVFX _vfx;
     [field: SerializeField] public ECharacterType CharacterType { private set; get; } = ECharacterType.Ground;
 
     public Animator Anim => _animator;
+
+    public CharacterVFX VFX => _vfx;
 
     void Awake()
     {
         if (_animator == null)
             _animator = GetComponentInChildren<Animator>();
+
+        EnsureVfx();
+        _vfx?.CollectRenderers();
+    }
+
+    void Reset()
+    {
+        EnsureVfx();
+        _vfx?.CollectRenderers();
+    }
+
+    void OnValidate()
+    {
+        EnsureVfx();
+    }
+
+    void EnsureVfx()
+    {
+        if (_vfx == null)
+            _vfx = GetComponent<CharacterVFX>();
+        if (_vfx == null)
+            _vfx = GetComponentInChildren<CharacterVFX>(true);
     }
 
     public void PlayAttack(string triggerName = "BasicAttack", int variantCount = -1)
