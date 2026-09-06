@@ -351,12 +351,15 @@ namespace M3P
             for (int i = 0; i < groups.Count; i++)
             {
                 bool isLast = i == groups.Count - 1;
+                int damage = _battleManager != null
+                    ? _battleManager.GetBasicAttackDamage(groups[i].Size)
+                    : groups[i].Size;
                 SpawnAttackProjectile(origin, destination, groups[i].TypeId, () =>
                 {
                     bool died = isLast
                         && _battleManager?.ActiveEnemy != null
                         && !_battleManager.ActiveEnemy.IsAlive;
-                    world?.NotifyEnemyHit(died);
+                    world?.NotifyEnemyHit(died, damage);
                     PulseBattleIndicators();
                 });
             }
@@ -426,13 +429,14 @@ namespace M3P
 
             BattleWorld world = _battleManager != null ? _battleManager.BattleWorld : null;
             bool hitPlayer = target != null && target.IsPlayerControlled;
+            int damage = _battleManager != null ? _battleManager.LastOpponentHitDamage : 0;
             SpawnAttackProjectile(origin, destination, onArrived: () =>
             {
                 bool died = target != null && !target.IsAlive;
                 if (hitPlayer)
-                    world?.NotifyPlayerHit(died);
+                    world?.NotifyPlayerHit(died, damage);
                 else
-                    world?.NotifyEnemyHit(died);
+                    world?.NotifyEnemyHit(died, damage);
             });
         }
 

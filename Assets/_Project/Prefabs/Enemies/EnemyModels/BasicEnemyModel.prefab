@@ -47,6 +47,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WorldCharacter
   _animator: {fileID: 8419219727045254202}
   _attackVariantCount: 5
+  <CharacterType>k__BackingField: 0
 --- !u!1001 &2719477178642129323
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -111,6 +112,10 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: -3353012884172894740, guid: 2c63495758124e2489779bbcd4507e66, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 25b5b1485a7dcb0499aa90e3b32f8081, type: 2}
     - target: {fileID: 919132149155446097, guid: 2c63495758124e2489779bbcd4507e66, type: 3}
       propertyPath: m_Name
       value: Goblin

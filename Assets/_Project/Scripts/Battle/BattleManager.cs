@@ -36,10 +36,17 @@ namespace M3P
         [Tooltip("Shown after a boss win. Closing it generates the next floor and returns to Map.")]
         [SerializeField] UIPanelGainSkill _gainSkillPanel;
 
+        [SerializeField] CameraShake _camerShake;
+        [SerializeField] float _cascadeShakeWeight = 1f;
+        [SerializeField] float _superMatchShakeWeight = 2f;
+        [SerializeField] int _superMatchMinSize = 4;
+        [SerializeField] float _hitShakePerDamage = 1f;
+
         readonly BattleSessionRewards _sessionRewards = new BattleSessionRewards();
         readonly ResolveLimits _resolveLimits = new ResolveLimits();
         readonly TurnReport _turnReport = new TurnReport();
 
+        int _matchWaveIndex;
         Match3Board _activeBoard;
         EnemyDefinition _activeEnemyDefinition;
         EnemyRuntimeSpec _activeEnemySpec;
@@ -94,6 +101,9 @@ namespace M3P
 
         public BattleWorld BattleWorld => _battleWorld;
 
+        /// <summary>Damage the last skill actually landed on its target (health + shield).</summary>
+        public int LastOpponentHitDamage { get; private set; }
+
         void Awake()
         {
             if (Instance != null && Instance != this)
@@ -145,7 +155,9 @@ namespace M3P
             if (_battleResolved || skill == null || target == null)
                 return;
 
+            SnapshotVitals(target, out int health, out int shield);
             skill.UseSkill(caster, target, choice);
+            LastOpponentHitDamage = MeasureDamageTaken(target, health, shield);
             NotifySkillAnimation(skill, caster);
             SkillExecuted?.Invoke(skill, caster, target);
             TryResolveBattleOutcome();
@@ -174,18 +186,25 @@ namespace M3P
             if (_battleWorld == null || character == null)
                 return;
 
-            SoftStats soft = character.Stats?.Soft;
-            if (soft == null)
-                return;
-
-            if (soft.CurrentHealth >= healthBefore && soft.CurrentShield >= shieldBefore)
+            int damage = MeasureDamageTaken(character, healthBefore, shieldBefore);
+            if (damage <= 0)
                 return;
 
             bool died = !character.IsAlive;
             if (character == _player)
-                _battleWorld.NotifyPlayerHit(died);
+                _battleWorld.NotifyPlayerHit(died, damage);
             else if (character == _activeEnemy)
-                _battleWorld.NotifyEnemyHit(died);
+                _battleWorld.NotifyEnemyHit(died, damage);
+        }
+
+        static int MeasureDamageTaken(BattleCharacter character, int healthBefore, int shieldBefore)
+        {
+            SoftStats soft = character?.Stats?.Soft;
+            if (soft == null)
+                return 0;
+
+            return Mathf.Max(0, healthBefore - soft.CurrentHealth)
+                + Mathf.Max(0, shieldBefore - soft.CurrentShield);
         }
 
         public bool TryExecuteSkill(SkillDefinition skill, BattleCharacter caster, BattleCharacter target)
@@ -379,6 +398,11 @@ namespace M3P
         /// </summary>
         void HandleMatchWaveCompleted(IReadOnlyList<MatchGroup> groups)
         {
+            if (groups != null && groups.Count > 0)
+                _matchWaveIndex++;
+
+            ShakeCameraFromMatches(groups);
+
             if (_battleResolved || !_isPlayerTurn || _activeEnemy == null || groups == null || groups.Count == 0)
                 return;
 
@@ -408,6 +432,60 @@ namespace M3P
 
             _battleWorld?.NotifyMatchWave(tilesDestroyed);
             TryResolveBattleOutcome();
+        }
+
+        void ShakeCameraFromMatches(IReadOnlyList<MatchGroup> groups)
+        {
+            if (_camerShake == null || groups == null || groups.Count == 0)
+                return;
+
+            Vector3 source = Vector3.zero;
+            int tilesDestroyed = 0;
+            int largest = 0;
+            for (int i = 0; i < groups.Count; i++)
+            {
+                MatchGroup group = groups[i];
+                source += group.Center * group.Size;
+                tilesDestroyed += group.Size;
+                if (group.Size > largest)
+                    largest = group.Size;
+            }
+
+            if (tilesDestroyed <= 0)
+                return;
+
+            int cascade = Mathf.Max(1, _matchWaveIndex);
+            int superExtra = largest >= _superMatchMinSize
+                ? largest - (_superMatchMinSize - 1)
+                : 0;
+            float force = tilesDestroyed * (1f + (cascade - 1) * _cascadeShakeWeight)
+                + superExtra * _superMatchShakeWeight;
+
+            ShakeCamera(source / tilesDestroyed, force);
+        }
+
+        public int GetBasicAttackDamage(int matchSize)
+        {
+            GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
+            if (config == null || matchSize <= 0)
+                return 0;
+
+            HardStats attacker = _player != null ? _player.GetEffectiveHard() : default;
+            TalentBonuses talents = _player?.Stats?.TalentBonuses ?? TalentBonuses.None;
+            return config.CalculateBasicAttackDamage(attacker, matchSize, talents);
+        }
+
+        public void ShakeCamera(Vector3 sourcePosition, float force)
+        {
+            if (_camerShake == null || force <= 0f)
+                return;
+
+            _camerShake.Shake(sourcePosition, force);
+        }
+
+        public void ShakeCameraFromHit(Vector3 sourcePosition, int damage)
+        {
+            ShakeCamera(sourcePosition, damage * _hitShakePerDamage);
         }
 
         MatchRewardRules ResolveMatchRewards(GameConfig config)
@@ -477,6 +555,8 @@ namespace M3P
         /// </summary>
         void HandleSequenceResolved(ResolveReport report)
         {
+            _matchWaveIndex = 0;
+
             if (_battleResolved)
                 return;
 
@@ -766,6 +846,8 @@ namespace M3P
             }
 
             _isPlayerTurn = true;
+            _matchWaveIndex = 0;
+            LastOpponentHitDamage = 0;
 
             ClearSpawnedEnemy();
         }

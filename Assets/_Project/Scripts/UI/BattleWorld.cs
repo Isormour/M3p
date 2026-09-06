@@ -71,14 +71,24 @@ namespace M3P
                 _playerCharacter?.PlayAttack("BasicAttack");
         }
 
-        public void NotifyPlayerHit(bool died)
+        public void NotifyPlayerHit(bool died, int damage)
         {
             _playerCharacter?.PlayHitReaction(died);
+            ShakeFromHit(PlayerVfxPoint, damage);
         }
 
-        public void NotifyEnemyHit(bool died)
+        public void NotifyEnemyHit(bool died, int damage)
         {
             _enemyCharacter?.PlayHitReaction(died);
+            ShakeFromHit(EnemyVfxPoint, damage);
+        }
+
+        static void ShakeFromHit(Transform source, int damage)
+        {
+            if (source == null || damage <= 0 || BattleManager.Instance == null)
+                return;
+
+            BattleManager.Instance.ShakeCameraFromHit(source.position, damage);
         }
 
         static void PlayCharacterAttack(WorldCharacter character, SkillDefinition skill)
