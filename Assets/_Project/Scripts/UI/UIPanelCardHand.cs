@@ -14,6 +14,10 @@ namespace M3P
     public sealed class UIPanelCardHand : MonoBehaviour
     {
         [SerializeField] UIBoardActionCard _defaultCardPrefab;
+        [SerializeField] Button _resolveButton;
+        [SerializeField] Button _undoButton;
+        [SerializeField] Button _endTurnButton;
+        [SerializeField] TextMeshProUGUI _endTurnLabel;
         [SerializeField] float _sidePanelWidth = 110f;
         [SerializeField] float _cardSpacing = 8f;
         [SerializeField] float _sectionSpacing = 12f;
@@ -26,14 +30,12 @@ namespace M3P
         RectTransform _handContainer;
         TextMeshProUGUI _staminaLabel;
         TextMeshProUGUI _queueLabel;
-        Button _resolveButton;
-        Button _undoButton;
-        Button _endTurnButton;
-        TextMeshProUGUI _endTurnLabel;
         Coroutine _watchRoutine;
 
         void OnEnable()
         {
+            ResolveCommandRefs();
+            BindCommands();
             EnsureLayout();
 
             if (_watchRoutine == null)
@@ -48,8 +50,14 @@ namespace M3P
                 _watchRoutine = null;
             }
 
+            UnbindCommands();
             Unbind();
             ClearCardViews();
+        }
+
+        void OnValidate()
+        {
+            ResolveCommandRefs();
         }
 
         void OnRectTransformDimensionsChange()
@@ -86,6 +94,74 @@ namespace M3P
                 _cardPlay.Changed -= HandleCardPlayChanged;
 
             _cardPlay = null;
+        }
+
+        void ResolveCommandRefs()
+        {
+            if (_resolveButton == null)
+                _resolveButton = FindChildButton("ButtonResolve", "Resolve");
+            if (_undoButton == null)
+                _undoButton = FindChildButton("ButtonUndo", "Undo");
+            if (_endTurnButton == null)
+                _endTurnButton = FindChildButton("ButtonEndTurn", "EndTurn");
+            if (_endTurnLabel == null && _endTurnButton != null)
+                _endTurnLabel = _endTurnButton.GetComponentInChildren<TextMeshProUGUI>(true);
+        }
+
+        Button FindChildButton(params string[] names)
+        {
+            Button[] buttons = GetComponentsInChildren<Button>(true);
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                for (int n = 0; n < names.Length; n++)
+                {
+                    if (buttons[i] != null && buttons[i].name == names[n])
+                        return buttons[i];
+                }
+            }
+
+            return null;
+        }
+
+        void BindCommands()
+        {
+            Bind(_resolveButton, HandleResolveClicked);
+            Bind(_undoButton, HandleUndoClicked);
+            Bind(_endTurnButton, HandleEndTurnClicked);
+        }
+
+        void UnbindCommands()
+        {
+            Unbind(_resolveButton, HandleResolveClicked);
+            Unbind(_undoButton, HandleUndoClicked);
+            Unbind(_endTurnButton, HandleEndTurnClicked);
+        }
+
+        static void Bind(Button button, UnityEngine.Events.UnityAction handler)
+        {
+            if (button != null)
+                button.onClick.AddListener(handler);
+        }
+
+        static void Unbind(Button button, UnityEngine.Events.UnityAction handler)
+        {
+            if (button != null)
+                button.onClick.RemoveListener(handler);
+        }
+
+        void HandleResolveClicked()
+        {
+            BattleManager.Instance?.RequestResolve();
+        }
+
+        void HandleUndoClicked()
+        {
+            _cardPlay?.UndoLastCard();
+        }
+
+        void HandleEndTurnClicked()
+        {
+            BattleManager.Instance?.RequestEndTurn();
         }
 
         void HandleCardPlayChanged()
@@ -275,7 +351,6 @@ namespace M3P
             SetupHandContainer();
 
             BuildQueueStrip();
-            BuildCommandColumn();
         }
 
         /// <summary>Reads back the queued sequence in execution order, above the hand.</summary>
@@ -297,71 +372,6 @@ namespace M3P
             _queueLabel.enableAutoSizing = false;
             _queueLabel.fontSize = 16f;
             _queueLabel.overflowMode = TextOverflowModes.Ellipsis;
-        }
-
-        /// <summary>
-        /// Resolve, Undo and End Turn stacked on the right. Undo only reaches the last queued card, and
-        /// End Turn folds a Resolve into itself when the queue is not empty.
-        /// </summary>
-        void BuildCommandColumn()
-        {
-            GameObject column = new GameObject("Commands", typeof(RectTransform));
-            column.transform.SetParent(transform, false);
-            RectTransform columnRect = (RectTransform)column.transform;
-            SetupSidePanel(columnRect, false);
-
-            _resolveButton = CreateCommandButton(
-                columnRect,
-                "Resolve",
-                "Resolve",
-                new Color(0.2f, 0.4f, 0.24f, 0.95f),
-                0,
-                out _);
-            _resolveButton.onClick.AddListener(() => BattleManager.Instance?.RequestResolve());
-
-            _undoButton = CreateCommandButton(
-                columnRect,
-                "Undo",
-                "Undo",
-                new Color(0.28f, 0.28f, 0.34f, 0.95f),
-                1,
-                out _);
-            _undoButton.onClick.AddListener(() => _cardPlay?.UndoLastCard());
-
-            _endTurnButton = CreateCommandButton(
-                columnRect,
-                "EndTurn",
-                "End Turn",
-                new Color(0.42f, 0.2f, 0.2f, 0.95f),
-                2,
-                out _endTurnLabel);
-            _endTurnButton.onClick.AddListener(() => BattleManager.Instance?.RequestEndTurn());
-        }
-
-        Button CreateCommandButton(
-            RectTransform parent,
-            string name,
-            string text,
-            Color color,
-            int slot,
-            out TextMeshProUGUI label)
-        {
-            const int slotCount = 3;
-
-            GameObject button = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
-            button.transform.SetParent(parent, false);
-            button.GetComponent<Image>().color = color;
-
-            float slotHeight = 1f / slotCount;
-            RectTransform rect = (RectTransform)button.transform;
-            rect.anchorMin = new Vector2(0f, 1f - slotHeight * (slot + 1));
-            rect.anchorMax = new Vector2(1f, 1f - slotHeight * slot);
-            rect.offsetMin = new Vector2(0f, 2f);
-            rect.offsetMax = new Vector2(0f, -2f);
-
-            label = CreateLabel(button.transform, text);
-            label.alignment = TextAlignmentOptions.Center;
-            return button.GetComponent<Button>();
         }
 
         void SetupSidePanel(RectTransform rect, bool left)

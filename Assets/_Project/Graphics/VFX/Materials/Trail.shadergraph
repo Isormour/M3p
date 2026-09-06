@@ -26,6 +26,9 @@
         },
         {
             "m_Id": "a0d84467107b46c5b762f716f61ed9d3"
+        },
+        {
+            "m_Id": "571c3ef816d2482da3171abfbe9da250"
         }
     ],
     "m_Keywords": [],
@@ -176,6 +179,9 @@
         },
         {
             "m_Id": "e90f4284dd8244a798395f9aa0579281"
+        },
+        {
+            "m_Id": "932afd1a2ce246eb8ac11e59aa309913"
         }
     ],
     "m_GroupDatas": [],
@@ -543,6 +549,20 @@
                     "m_Id": "7f92bb9561cc4fb1a61e08c813d937f3"
                 },
                 "m_SlotId": 0
+            }
+        },
+        {
+            "m_OutputSlot": {
+                "m_Node": {
+                    "m_Id": "932afd1a2ce246eb8ac11e59aa309913"
+                },
+                "m_SlotId": 0
+            },
+            "m_InputSlot": {
+                "m_Node": {
+                    "m_Id": "47fe2067e61c4d5a9eec6a06e23ecda7"
+                },
+                "m_SlotId": -1036202025
             }
         },
         {
@@ -3015,6 +3035,39 @@
 }
 
 {
+    "m_SGVersion": 1,
+    "m_Type": "UnityEditor.ShaderGraph.Internal.Vector2ShaderProperty",
+    "m_ObjectId": "571c3ef816d2482da3171abfbe9da250",
+    "m_Guid": {
+        "m_GuidSerialized": "70fe423a-c316-4e36-abf2-743f99c9118e"
+    },
+    "promotedFromAssetID": "",
+    "promotedFromCategoryName": "",
+    "promotedOrdering": -1,
+    "m_Name": "DistortionTiling",
+    "m_DefaultRefNameVersion": 1,
+    "m_RefNameGeneratedByDisplayName": "DistortionTiling",
+    "m_DefaultReferenceName": "_DistortionTiling",
+    "m_OverrideReferenceName": "",
+    "m_GeneratePropertyBlock": true,
+    "m_UseCustomSlotLabel": false,
+    "m_CustomSlotLabel": "",
+    "m_DismissedVersion": 0,
+    "m_Precision": 0,
+    "overrideHLSLDeclaration": false,
+    "hlslDeclarationOverride": 0,
+    "m_Hidden": false,
+    "m_PerRendererData": false,
+    "m_customAttributes": [],
+    "m_Value": {
+        "x": 1.0,
+        "y": 2.0,
+        "z": 0.0,
+        "w": 0.0
+    }
+}
+
+{
     "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Internal.Texture2DShaderProperty",
     "m_ObjectId": "57ae375122f14ac99684e74bb06ebc1d",
@@ -3040,7 +3093,7 @@
     "m_PerRendererData": false,
     "m_customAttributes": [],
     "m_Value": {
-        "m_SerializedTexture": "{\"texture\":{\"fileID\":2800000,\"guid\":\"188986f6af92a334c8b22f1bb58d2b98\",\"type\":3}}",
+        "m_SerializedTexture": "",
         "m_Guid": ""
     },
     "isMainTexture": false,
@@ -3469,10 +3522,13 @@
             "m_Id": "d5ac46fe9ba346b591fef03c33f98f9e"
         },
         {
-            "m_Id": "44fad92dcd7a439187985bf2aa5e32fe"
+            "m_Id": "571c3ef816d2482da3171abfbe9da250"
         },
         {
             "m_Id": "2fc8b059d02348568538f55ba2bc93be"
+        },
+        {
+            "m_Id": "44fad92dcd7a439187985bf2aa5e32fe"
         },
         {
             "m_Id": "a0d84467107b46c5b762f716f61ed9d3"
@@ -4257,6 +4313,42 @@
         "w": 0.0
     },
     "m_LiteralMode": false
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.PropertyNode",
+    "m_ObjectId": "932afd1a2ce246eb8ac11e59aa309913",
+    "m_Group": {
+        "m_Id": ""
+    },
+    "m_Name": "Property",
+    "m_DrawState": {
+        "m_Expanded": true,
+        "m_Position": {
+            "serializedVersion": "2",
+            "x": -3916.224365234375,
+            "y": 1095.379638671875,
+            "width": 0.0,
+            "height": 0.0
+        }
+    },
+    "m_Slots": [
+        {
+            "m_Id": "e4fb7f097e9e496bb4c2780ce3162167"
+        }
+    ],
+    "synonyms": [],
+    "m_Precision": 0,
+    "m_PreviewExpanded": true,
+    "m_DismissedVersion": 0,
+    "m_PreviewMode": 0,
+    "m_CustomColors": {
+        "m_SerializableColors": []
+    },
+    "m_Property": {
+        "m_Id": "571c3ef816d2482da3171abfbe9da250"
+    }
 }
 
 {
@@ -6120,6 +6212,27 @@
     "m_ShaderOutputName": "Sampler",
     "m_StageCapability": 3,
     "m_BareResource": false
+}
+
+{
+    "m_SGVersion": 0,
+    "m_Type": "UnityEditor.ShaderGraph.Vector2MaterialSlot",
+    "m_ObjectId": "e4fb7f097e9e496bb4c2780ce3162167",
+    "m_Id": 0,
+    "m_DisplayName": "DistortionTiling",
+    "m_SlotType": 1,
+    "m_Hidden": false,
+    "m_ShaderOutputName": "Out",
+    "m_StageCapability": 3,
+    "m_Value": {
+        "x": 0.0,
+        "y": 0.0
+    },
+    "m_DefaultValue": {
+        "x": 0.0,
+        "y": 0.0
+    },
+    "m_Labels": []
 }
 
 {

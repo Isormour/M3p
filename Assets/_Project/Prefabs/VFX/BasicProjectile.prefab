@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2189420642116045311}
   - component: {fileID: 2688814133265780424}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: headParticle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4867,7 +4867,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2397927583558839}
   m_Father: {fileID: 0}
@@ -4925,27 +4925,27 @@ TrailRenderer:
   m_PreviewTimeScale: 1
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.35
+    widthMultiplier: 0.9
     widthCurve:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 0.5901659
-        inSlope: 3.0521832
-        outSlope: 3.0521832
+        value: 0.58349925
+        inSlope: 1.2639169
+        outSlope: 1.2639169
         tangentMode: 0
         weightedMode: 0
         inWeight: 0.33333334
-        outWeight: 0.13427572
+        outWeight: 0.20294118
       - serializedVersion: 3
         time: 1
         value: 0
-        inSlope: -0.24677347
-        outSlope: -0.24677347
+        inSlope: -1.3178297
+        outSlope: -1.3178297
         tangentMode: 0
         weightedMode: 0
-        inWeight: 0.16607785
+        inWeight: 0.12647057
         outWeight: 0.33333334
       m_PreInfinity: 2
       m_PostInfinity: 2
@@ -4953,25 +4953,25 @@ TrailRenderer:
     colorGradient:
       serializedVersion: 2
       key0: {r: 1, g: 1, b: 1, a: 0}
-      key1: {r: 0, g: 0, b: 0, a: 1}
-      key2: {r: 0, g: 0, b: 0, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
+      key2: {r: 1, g: 0, b: 0, a: 1}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
       key5: {r: 0, g: 0, b: 0, a: 0}
       key6: {r: 0, g: 0, b: 0, a: 0}
       key7: {r: 0, g: 0, b: 0, a: 0}
-      ctime0: 0
+      ctime0: 964
       ctime1: 65535
-      ctime2: 0
-      ctime3: 0
-      ctime4: 0
-      ctime5: 0
-      ctime6: 0
+      ctime2: 65535
+      ctime3: 53777
+      ctime4: 53777
+      ctime5: 53777
+      ctime6: 53777
       ctime7: 0
       atime0: 0
-      atime1: 3662
-      atime2: 43754
-      atime3: 65535
+      atime1: 4433
+      atime2: 30069
+      atime3: 49537
       atime4: 0
       atime5: 0
       atime6: 0
@@ -4987,7 +4987,7 @@ TrailRenderer:
     textureScale: {x: 20, y: 0.97}
     shadowBias: 0.5
     generateLightingData: 0
-  m_MinVertexDistance: 0.05
+  m_MinVertexDistance: 0.36
   m_Autodestruct: 0
   m_Emitting: 1
   m_ApplyActiveColorSpace: 1
@@ -5009,6 +5009,10 @@ MonoBehaviour:
   _arcHeight: 2.5
   _arcHeightJitter: 1.2
   _sideJitter: 1.8
+  _minWidth: 0.5
+  _maxWidth: 4
+  _referenceDamage: 3
+  _heavyDamage: 30
 --- !u!199 &1147924813888908577
 ParticleSystemRenderer:
   serializedVersion: 7
@@ -5172,7 +5176,7 @@ ParticleSystem:
     startLifetime:
       serializedVersion: 2
       minMaxState: 3
-      scalar: 0.5
+      scalar: 0.25
       minScalar: 0.25
       maxCurve:
         serializedVersion: 2
@@ -5807,7 +5811,7 @@ ParticleSystem:
     sphericalDirectionAmount: 0
     randomPositionAmount: 0
     radius:
-      value: 0.0001
+      value: 0.18
       mode: 0
       spread: 0
       speed:

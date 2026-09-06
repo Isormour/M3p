@@ -40,15 +40,12 @@ namespace M3P
         [Tooltip("Every enemy archetype in the game.")]
         [SerializeField] EnemiesConfig _enemies;
 
-        [Header("Basic Attack")]
-        [Tooltip("Flat damage before Strength scaling and match-length bonus.")]
-        [SerializeField] int _basePhysicalDamage = 1;
-
-        [Tooltip("Damage added per matched tile above the minimum-2 threshold, so a match of 3 scores one step.")]
-        [SerializeField] int _damagePerMatchedTile = 1;
+        [Tooltip("Basic-attack damage, supermatch bonuses and extra cascade hits.")]
+        [SerializeField] BattleConfig _battle;
 
         Dictionary<Match3TileTypeDefinition, int> _tileTypeIds;
         StatProgressionConfig _fallbackStatProgression;
+        BattleConfig _fallbackBattle;
 
         public Match3TileTypeDefinition[] TileTypes => _tileTypes;
 
@@ -74,6 +71,11 @@ namespace M3P
         public TalentConfig Talents => _talents;
 
         public EnemiesConfig Enemies => _enemies;
+
+        public BattleConfig Battle =>
+            _battle != null
+                ? _battle
+                : _fallbackBattle ??= BattleConfig.CreateDefault();
 
         public int TileTypeCount => _tileTypes != null ? _tileTypes.Length : 0;
 
@@ -181,15 +183,12 @@ namespace M3P
         }
 
         /// <summary>
-        /// Damage of a single basic attack. One attack fires per match group, so a three-wave cascade
-        /// resolves as three separate attacks rather than one larger hit.
+        /// Damage of a single basic attack. One attack fires per match group, and cascade waves
+        /// can add more via <see cref="BattleConfig.AdditionalAttackPerCascade"/>.
         /// </summary>
         public int CalculateBasicAttackDamage(HardStats attacker, int matchSize, TalentBonuses talents = default)
         {
-            int lengthBonus = _damagePerMatchedTile * (matchSize - (Match3Board.MinimumMatchSize - 1));
-            int raw = _basePhysicalDamage + lengthBonus;
-            float multiplier = StatProgression.GetPhysicalDamageMultiplier(attacker, talents);
-            return Mathf.Max(1, Mathf.RoundToInt(raw * multiplier));
+            return Battle.CalculateBasicAttackDamage(attacker, matchSize, talents);
         }
 
         void OnEnable()

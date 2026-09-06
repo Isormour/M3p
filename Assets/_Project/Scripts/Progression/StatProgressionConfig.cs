@@ -18,9 +18,6 @@ namespace M3P
         [Tooltip("Extra max HP per Constitution point.")]
         [Min(0), SerializeField] int _healthPerConstitution = 5;
 
-        [Tooltip("Physical damage multiplier added per Strength point. 0.05 means +5% per point.")]
-        [Min(0f), SerializeField] float _physicalDamagePercentPerStrength = 0.05f;
-
         [Tooltip("Magic effect multiplier added per Intelligence point.")]
         [Min(0f), SerializeField] float _magicEffectPercentPerIntelligence = 0.05f;
 
@@ -71,7 +68,9 @@ namespace M3P
 
         public float GetPhysicalDamageMultiplier(HardStats hard, TalentBonuses talents = default)
         {
-            float percent = hard.Strength * _physicalDamagePercentPerStrength + talents.PhysicalDamagePercent;
+            GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
+            float perStrength = config != null ? config.Battle.DamagePerStrength : 0.05f;
+            float percent = hard.Strength * perStrength + talents.PhysicalDamagePercent;
             return 1f + percent;
         }
 

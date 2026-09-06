@@ -347,14 +347,17 @@ namespace M3P
             Transform origin = GetPlayerVfxPoint();
             Transform destination = GetEnemyVfxPoint();
             BattleWorld world = _battleManager != null ? _battleManager.BattleWorld : null;
+            int extraAttacks = GetCascadeExtraAttackCount();
+            int largestSize = GetLargestMatchSize(groups);
+            int extraTypeId = GetLargestMatchTypeId(groups);
 
             for (int i = 0; i < groups.Count; i++)
             {
-                bool isLast = i == groups.Count - 1;
+                bool isLast = extraAttacks <= 0 && i == groups.Count - 1;
                 int damage = _battleManager != null
                     ? _battleManager.GetBasicAttackDamage(groups[i].Size)
                     : groups[i].Size;
-                SpawnAttackProjectile(origin, destination, groups[i].TypeId, () =>
+                SpawnAttackProjectile(origin, destination, groups[i].TypeId, damage, () =>
                 {
                     bool died = isLast
                         && _battleManager?.ActiveEnemy != null
@@ -363,6 +366,28 @@ namespace M3P
                     PulseBattleIndicators();
                 });
             }
+
+            int extraDamage = _battleManager != null
+                ? _battleManager.GetBasicAttackDamage(largestSize)
+                : largestSize;
+            for (int i = 0; i < extraAttacks; i++)
+            {
+                bool isLast = i == extraAttacks - 1;
+                SpawnAttackProjectile(origin, destination, extraTypeId, extraDamage, () =>
+                {
+                    bool died = isLast
+                        && _battleManager?.ActiveEnemy != null
+                        && !_battleManager.ActiveEnemy.IsAlive;
+                    world?.NotifyEnemyHit(died, extraDamage);
+                    PulseBattleIndicators();
+                });
+            }
+        }
+
+        int GetCascadeExtraAttackCount()
+        {
+            GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
+            return config != null ? config.Battle.GetExtraAttacksForWave(_matchWaveIndex) : 0;
         }
 
         void HandleSequenceResolved(ResolveReport report)
@@ -409,6 +434,22 @@ namespace M3P
             return size;
         }
 
+        static int GetLargestMatchTypeId(IReadOnlyList<MatchGroup> groups)
+        {
+            int size = 0;
+            int typeId = -1;
+            for (int i = 0; i < groups.Count; i++)
+            {
+                if (groups[i].Size <= size)
+                    continue;
+
+                size = groups[i].Size;
+                typeId = groups[i].TypeId;
+            }
+
+            return typeId;
+        }
+
         void HandleSkillExecuted(SkillDefinition skill, BattleCharacter caster, BattleCharacter target)
         {
             if (skill == null || caster == null || !skill.AffectsOpponent())
@@ -430,7 +471,7 @@ namespace M3P
             BattleWorld world = _battleManager != null ? _battleManager.BattleWorld : null;
             bool hitPlayer = target != null && target.IsPlayerControlled;
             int damage = _battleManager != null ? _battleManager.LastOpponentHitDamage : 0;
-            SpawnAttackProjectile(origin, destination, onArrived: () =>
+            SpawnAttackProjectile(origin, destination, damage: damage, onArrived: () =>
             {
                 bool died = target != null && !target.IsAlive;
                 if (hitPlayer)
@@ -465,7 +506,12 @@ namespace M3P
             Destroy(instance, _destroyVfxLifetime);
         }
 
-        void SpawnAttackProjectile(Transform origin, Transform destination, int typeId = -1, Action onArrived = null)
+        void SpawnAttackProjectile(
+            Transform origin,
+            Transform destination,
+            int typeId = -1,
+            int damage = 0,
+            Action onArrived = null)
         {
             if (_projectilePrefab == null || origin == null || destination == null)
             {
@@ -481,7 +527,7 @@ namespace M3P
 
             if (projectile != null)
             {
-                projectile.Launch(destination, color, onArrived);
+                projectile.Launch(destination, color, damage, onArrived);
                 return;
             }
 

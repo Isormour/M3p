@@ -393,8 +393,9 @@ namespace M3P
         }
 
         /// <summary>
-        /// Resolves one basic attack per match group, so a cascade lands several separate hits while a
-        /// single long line lands one bigger hit. Shards from the same wave are set aside for the win.
+        /// Resolves one basic attack per match group. Cascade waves also fire
+        /// <see cref="BattleConfig.AdditionalAttackPerCascade"/> extra hits. Shards from the same wave
+        /// are set aside for the win.
         /// </summary>
         void HandleMatchWaveCompleted(IReadOnlyList<MatchGroup> groups)
         {
@@ -415,11 +416,14 @@ namespace M3P
             TalentBonuses talents = _player?.Stats?.TalentBonuses ?? TalentBonuses.None;
             SoftStats targetStats = _activeEnemy.Stats?.Soft;
             int tilesDestroyed = 0;
+            int largest = 0;
 
             for (int i = 0; i < groups.Count; i++)
             {
                 MatchGroup group = groups[i];
                 tilesDestroyed += group.Size;
+                if (group.Size > largest)
+                    largest = group.Size;
                 targetStats?.TakeDamage(config.CalculateBasicAttackDamage(attacker, group.Size, talents));
 
                 int shards = matchRewards.GetShardsForMatch(group.Size);
@@ -429,6 +433,10 @@ namespace M3P
                 _sessionRewards.AddShards(group.TypeId, shards);
                 ShardsEarned?.Invoke(new ShardDrop(group.Center, group.TypeId, shards));
             }
+
+            int extraAttacks = config.Battle.GetExtraAttacksForWave(_matchWaveIndex);
+            for (int i = 0; i < extraAttacks; i++)
+                targetStats?.TakeDamage(config.CalculateBasicAttackDamage(attacker, largest, talents));
 
             _battleWorld?.NotifyMatchWave(tilesDestroyed);
             TryResolveBattleOutcome();
