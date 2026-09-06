@@ -311,6 +311,7 @@ namespace M3P
                 nodeObject = Instantiate(markerPrefab, parent);
                 nodeObject.name = $"Node_{node.Id}";
                 nodeObject.transform.position = worldPos;
+                nodeObject.transform.Rotate(0f, Random.Range(-90, 40), 0f, Space.Self);
                 return nodeObject;
             }
 

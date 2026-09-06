@@ -48,6 +48,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -1206874426333947015, guid: 7f90a905c951d4d46bd567453c10e7d5, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 9a5113f52485030418a62bee3fa5f7e7, type: 2}
     - target: {fileID: 919132149155446097, guid: 7f90a905c951d4d46bd567453c10e7d5, type: 3}
       propertyPath: m_Name
       value: PlayerWarriorBody
@@ -89,6 +93,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b68ebe95d4e164f4abe3ed02ef86c725, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterAnimation
+  _useFootIK: 1
+  _footIKWeight: 1
+  _groundMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  _rayUp: 0.5
+  _rayDown: 1.5
+  _footSoleOffset: 0.02
 --- !u!4 &6440410260620846950 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7f90a905c951d4d46bd567453c10e7d5, type: 3}
@@ -187,6 +199,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   _animator: {fileID: 1117108035327360284}
   _attackVariantCount: 5
+  <CharacterType>k__BackingField: 0
 --- !u!4 &575930996161057274 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6397870304647428305, guid: 6981cdb98b2c67846b381bd1ebea7db6, type: 3}
@@ -244,6 +257,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerWarriorHead
       objectReference: {fileID: 0}
+    - target: {fileID: 2236237030686087061, guid: 66007bbb650971c44b0eaaffcfb69d8a, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: cdf3351c1d724a24e895601382a16194, type: 2}
     - target: {fileID: 8879528566716807029, guid: 66007bbb650971c44b0eaaffcfb69d8a, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0

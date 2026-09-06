@@ -23,7 +23,7 @@ namespace M3P
         [SerializeField] PillarHighlight[] _highlights;
 
         public string NodeId { get; private set; }
-        public MapNodeType NodeType { get; private set; }
+        [field: SerializeField] public MapNodeType NodeType { get; private set; }
         public EncounterConfig Encounter { get; private set; }
         public bool IsCurrent => _isCurrent;
         public bool IsCleared => _cleared;
@@ -118,13 +118,34 @@ namespace M3P
             ApplyLightState();
         }
 
+        bool KeepsLightOn =>
+            NodeType == MapNodeType.Shop ||
+            NodeType == MapNodeType.Forge ||
+            NodeType == MapNodeType.Chest;
+
         void ApplyLightState()
         {
             if (NodeLight == null)
                 NodeLight = GetComponentInChildren<Light>(true);
 
-            if (NodeLight != null)
-                NodeLight.enabled = _highlighted;
+            if (NodeLight == null)
+                return;
+
+            if (KeepsLightOn)
+            {
+                NodeLight.enabled = true;
+                NodeLight.intensity = _highlighted ? 15f : 7f;
+                return;
+            }
+
+            if (_reachable)
+            {
+                NodeLight.enabled = true;
+                NodeLight.intensity = 7f;
+                return;
+            }
+
+            NodeLight.enabled = _highlighted;
         }
 
         void OnDestroy()
