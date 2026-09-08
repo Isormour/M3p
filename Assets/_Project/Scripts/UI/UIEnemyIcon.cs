@@ -9,7 +9,7 @@ namespace M3P
         [SerializeField] Image _enemyIcon;
         [SerializeField] TextMeshProUGUI _enemyNameText;
         [SerializeField] UISimpleIndicator _enemyHP;
-
+        [SerializeField] UISimpleIndicator _enemyShield;
         EnemyBattleCharacter _boundEnemy;
 
         public RectTransform PortraitTarget => _enemyIcon != null ? _enemyIcon.rectTransform : null;
@@ -53,30 +53,46 @@ namespace M3P
 
             _boundEnemy = enemy;
 
-            if (_enemyHP == null)
-                return;
-
             if (enemy?.Stats?.Soft == null)
             {
-                _enemyHP.Unbind();
+                UnbindIndicators();
                 return;
             }
 
             SoftStats softStats = enemy.Stats.Soft;
             int maxHealth = enemy.Stats.MaxHealth;
 
-            _enemyHP.Bind(
-                () => softStats.CurrentHealth,
-                () => maxHealth,
-                handler => softStats.Changed += handler,
-                handler => softStats.Changed -= handler);
+            if (_enemyHP != null)
+            {
+                _enemyHP.Bind(
+                    () => softStats.CurrentHealth,
+                    () => maxHealth,
+                    handler => softStats.Changed += handler,
+                    handler => softStats.Changed -= handler);
+            }
+
+            if (_enemyShield != null)
+            {
+                _enemyShield.Bind(
+                    () => softStats.CurrentShield,
+                    () => softStats.CurrentShield > 0 ? softStats.CurrentShield : 1,
+                    handler => softStats.Changed += handler,
+                    handler => softStats.Changed -= handler,
+                    (current, _) => current.ToString());
+            }
         }
 
         void ClearBinding()
         {
             _boundEnemy = null;
-            _enemyHP?.Unbind();
+            UnbindIndicators();
             ApplyDefinition(null);
+        }
+
+        void UnbindIndicators()
+        {
+            _enemyHP?.Unbind();
+            _enemyShield?.Unbind();
         }
     }
 }

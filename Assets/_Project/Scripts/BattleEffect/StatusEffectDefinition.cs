@@ -11,6 +11,8 @@ namespace M3P
     public class StatusEffectDefinition : ScriptableObject
     {
         [SerializeField] EStatusType _statusType;
+        [Tooltip("Sprite shown as the status icon in battle UI.")]
+        [SerializeField] Sprite _icon;
         [Min(1), SerializeField] int _durationTurns = 1;
         [Tooltip("When false, re-applying refreshes remaining turns on the existing instance.")]
         [SerializeField] bool _canStack;
@@ -20,6 +22,8 @@ namespace M3P
         [SerializeField] BattleEffect[] _onTurnEffects = Array.Empty<BattleEffect>();
 
         public EStatusType StatusType => _statusType;
+
+        public Sprite Icon => _icon;
 
         public int DurationTurns => Mathf.Max(1, _durationTurns);
 

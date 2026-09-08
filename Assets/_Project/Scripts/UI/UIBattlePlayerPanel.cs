@@ -12,6 +12,7 @@ namespace M3P
         [SerializeField] UISimpleIndicator _playerHP;
         [SerializeField] UISimpleIndicator _playerActionPoints;
         [SerializeField] UISimpleIndicator _playerShield;
+        [SerializeField] UICharacterStatusList _statusList;
 
         Coroutine _watchBattleRoutine;
 
@@ -38,6 +39,7 @@ namespace M3P
             }
 
             UnbindIndicators();
+            _statusList?.SetCharacter(null);
         }
 
         void OnValidate()
@@ -47,6 +49,9 @@ namespace M3P
 
             if (_playerSkillsPanel == null)
                 _playerSkillsPanel = GetComponentInChildren<UIPanelSkills>(true);
+
+            if (_statusList == null)
+                _statusList = GetComponentInChildren<UICharacterStatusList>(true);
 
             ResolveShieldIndicator();
         }
@@ -86,6 +91,9 @@ namespace M3P
 
             if (_playerSkillsPanel != null)
                 _playerSkillsPanel.Set(_player);
+
+            if (_statusList != null)
+                _statusList.SetCharacter(_player);
 
             BindIndicators();
         }

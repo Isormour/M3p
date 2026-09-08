@@ -104,6 +104,9 @@ namespace M3P
         /// <summary>Damage the last skill actually landed on its target (health + shield).</summary>
         public int LastOpponentHitDamage { get; private set; }
 
+        /// <summary>True when the last skill hit a target that still had Shield.</summary>
+        public bool LastOpponentHitHadShield { get; private set; }
+
         void Awake()
         {
             if (Instance != null && Instance != this)
@@ -158,6 +161,7 @@ namespace M3P
             SnapshotVitals(target, out int health, out int shield);
             skill.UseSkill(caster, target, choice);
             LastOpponentHitDamage = MeasureDamageTaken(target, health, shield);
+            LastOpponentHitHadShield = shield > 0 && LastOpponentHitDamage > 0;
             NotifySkillAnimation(skill, caster);
             SkillExecuted?.Invoke(skill, caster, target);
             TryResolveBattleOutcome();
@@ -191,10 +195,11 @@ namespace M3P
                 return;
 
             bool died = !character.IsAlive;
+            bool shielded = shieldBefore > 0;
             if (character == _player)
-                _battleWorld.NotifyPlayerHit(died, damage);
+                _battleWorld.NotifyPlayerHit(died, damage, shielded);
             else if (character == _activeEnemy)
-                _battleWorld.NotifyEnemyHit(died, damage);
+                _battleWorld.NotifyEnemyHit(died, damage, shielded);
         }
 
         static int MeasureDamageTaken(BattleCharacter character, int healthBefore, int shieldBefore)
@@ -857,6 +862,7 @@ namespace M3P
             _isPlayerTurn = true;
             _matchWaveIndex = 0;
             LastOpponentHitDamage = 0;
+            LastOpponentHitHadShield = false;
 
             ClearSpawnedEnemy();
         }

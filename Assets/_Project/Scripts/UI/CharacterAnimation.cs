@@ -79,4 +79,8 @@ public class CharacterAnimation : MonoBehaviour
     void FootR()
     {
     }
+    void GuardUp()
+    {
+
+    }
 }

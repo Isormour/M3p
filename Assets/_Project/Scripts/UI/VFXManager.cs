@@ -471,13 +471,14 @@ namespace M3P
             BattleWorld world = _battleManager != null ? _battleManager.BattleWorld : null;
             bool hitPlayer = target != null && target.IsPlayerControlled;
             int damage = _battleManager != null ? _battleManager.LastOpponentHitDamage : 0;
+            bool shielded = _battleManager != null && _battleManager.LastOpponentHitHadShield;
             SpawnAttackProjectile(origin, destination, damage: damage, onArrived: () =>
             {
                 bool died = target != null && !target.IsAlive;
                 if (hitPlayer)
-                    world?.NotifyPlayerHit(died, damage);
+                    world?.NotifyPlayerHit(died, damage, shielded);
                 else
-                    world?.NotifyEnemyHit(died, damage);
+                    world?.NotifyEnemyHit(died, damage, shielded);
             });
         }
 

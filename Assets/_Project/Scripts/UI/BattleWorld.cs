@@ -67,6 +67,8 @@ namespace M3P
 
             RefreshPlayerStatusVfx();
             RefreshEnemyStatusVfx();
+            BindCharacterShield(_playerCharacter, _boundPlayer);
+            BindCharacterShield(_enemyCharacter, _boundEnemy);
         }
 
         public void UnbindStatusVisuals()
@@ -87,7 +89,9 @@ namespace M3P
             _boundEnemy = null;
 
             _playerCharacter?.VFX?.Clear();
+            _playerCharacter?.BindShield(null);
             ResolveEnemyVfx()?.Clear();
+            _enemyCharacter?.BindShield(null);
         }
 
         public void ClearEnemyModel()
@@ -119,15 +123,15 @@ namespace M3P
                 _playerCharacter?.PlayAttack("BasicAttack");
         }
 
-        public void NotifyPlayerHit(bool died, int damage)
+        public void NotifyPlayerHit(bool died, int damage, bool shielded = false)
         {
-            _playerCharacter?.PlayHitReaction(died);
+            _playerCharacter?.PlayHitReaction(died, shielded);
             ShakeFromHit(PlayerVfxPoint, damage);
         }
 
-        public void NotifyEnemyHit(bool died, int damage)
+        public void NotifyEnemyHit(bool died, int damage, bool shielded = false)
         {
-            _enemyCharacter?.PlayHitReaction(died);
+            _enemyCharacter?.PlayHitReaction(died, shielded);
             ShakeFromHit(EnemyVfxPoint, damage);
         }
 
@@ -214,6 +218,11 @@ namespace M3P
 
             CharacterVFX vfx = root.GetComponent<CharacterVFX>();
             return vfx != null ? vfx : root.GetComponentInChildren<CharacterVFX>(true);
+        }
+
+        static void BindCharacterShield(WorldCharacter character, BattleCharacter battleCharacter)
+        {
+            character?.BindShield(battleCharacter != null ? battleCharacter.Stats?.Soft : null);
         }
     }
 }

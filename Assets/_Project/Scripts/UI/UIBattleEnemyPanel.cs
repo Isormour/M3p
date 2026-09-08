@@ -7,6 +7,7 @@ namespace M3P
     {
         [SerializeField] UIEnemyIcon _enemyIcon;
         [SerializeField] UIPanelSkills _enemySkillsPanel;
+        [SerializeField] UICharacterStatusList _statusList;
 
         EnemyBattleCharacter _enemy;
         Coroutine _watchBattleRoutine;
@@ -34,6 +35,8 @@ namespace M3P
                 StopCoroutine(_watchBattleRoutine);
                 _watchBattleRoutine = null;
             }
+
+            _statusList?.SetCharacter(null);
         }
 
         void OnValidate()
@@ -94,6 +97,9 @@ namespace M3P
 
             if (_enemySkillsPanel != null)
                 _enemySkillsPanel.Set(enemy);
+
+            if (_statusList != null)
+                _statusList.SetCharacter(enemy);
         }
 
         void ResolveChildren()
@@ -103,6 +109,9 @@ namespace M3P
 
             if (_enemySkillsPanel == null)
                 _enemySkillsPanel = GetComponentInChildren<UIPanelSkills>(true);
+
+            if (_statusList == null)
+                _statusList = GetComponentInChildren<UICharacterStatusList>(true);
         }
     }
 }
