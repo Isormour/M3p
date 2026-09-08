@@ -28,6 +28,9 @@ namespace M3P
         /// <summary>Raised after the status list is added to, removed from, refreshed or cleared.</summary>
         public event Action StatusesChanged;
 
+        /// <summary>Raised when a status's on-turn effects reduce health or shield.</summary>
+        public event Action<EStatusType> StatusDamageProcessed;
+
         public CombatModifiers Modifiers => _modifiers;
 
         protected void SetCharacterStats(CharacterStats stats)
@@ -64,7 +67,7 @@ namespace M3P
                 if (status.Definition != definition)
                     continue;
 
-                definition.ApplyOnTurnEffects(this, status.Source);
+                ApplyOnTurnEffectsAndNotify(status);
             }
         }
 
@@ -260,7 +263,7 @@ namespace M3P
                     continue;
                 }
 
-                definition.ApplyOnTurnEffects(this, status.Source);
+                ApplyOnTurnEffectsAndNotify(status);
 
                 status.RemainingTurns--;
                 if (status.RemainingTurns <= 0)
@@ -272,6 +275,22 @@ namespace M3P
 
             if (changed)
                 RaiseStatusesChanged();
+        }
+
+        void ApplyOnTurnEffectsAndNotify(StatusInstance status)
+        {
+            StatusEffectDefinition definition = status.Definition;
+            SoftStats soft = _characterStats != null ? _characterStats.Soft : null;
+            int healthBefore = soft != null ? soft.CurrentHealth : 0;
+            int shieldBefore = soft != null ? soft.CurrentShield : 0;
+
+            definition.ApplyOnTurnEffects(this, status.Source);
+
+            if (soft == null)
+                return;
+
+            if (soft.CurrentHealth < healthBefore || soft.CurrentShield < shieldBefore)
+                StatusDamageProcessed?.Invoke(definition.StatusType);
         }
 
         void RaiseStatusesChanged()

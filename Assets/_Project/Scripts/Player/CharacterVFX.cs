@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using M3P;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -14,6 +14,7 @@ public class CharacterVFX : MonoBehaviour
     static readonly int OutlineHighColorId = Shader.PropertyToID("_OutlineHighColor");
 
     [SerializeField] SkinnedMeshRenderer[] renderers;
+    [SerializeField] ParticleSystem flameParticle;
 
     MaterialPropertyBlock _block;
     EStatusType _activeStatus;
@@ -64,6 +65,46 @@ public class CharacterVFX : MonoBehaviour
     public void Clear()
     {
         ApplyStatus(EStatusType.None);
+    }
+
+    /// <summary>Restarts the authored flame burst. No-ops when the particle is unassigned.</summary>
+    public void PlayFlame()
+    {
+        if (flameParticle == null)
+            return;
+
+        BindFlameShape();
+        flameParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        flameParticle.Play();
+    }
+
+    void BindFlameShape()
+    {
+        SkinnedMeshRenderer mesh = ResolveFlameMesh();
+        if (mesh == null)
+            return;
+
+        ParticleSystem.ShapeModule shape = flameParticle.shape;
+        shape.enabled = true;
+        shape.shapeType = ParticleSystemShapeType.SkinnedMeshRenderer;
+        shape.skinnedMeshRenderer = mesh;
+    }
+
+    SkinnedMeshRenderer ResolveFlameMesh()
+    {
+        if (renderers == null || renderers.Length == 0)
+            CollectRenderers();
+
+        if (renderers == null)
+            return null;
+
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            if (renderers[i] != null)
+                return renderers[i];
+        }
+
+        return null;
     }
 
     void ApplyStatus(EStatusType statusType, bool force = false)

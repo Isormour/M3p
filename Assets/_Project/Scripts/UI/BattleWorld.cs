@@ -54,9 +54,16 @@ namespace M3P
             _boundEnemy = enemy;
 
             if (_boundPlayer != null)
+            {
                 _boundPlayer.StatusesChanged += RefreshPlayerStatusVfx;
+                _boundPlayer.StatusDamageProcessed += HandlePlayerStatusDamage;
+            }
+
             if (_boundEnemy != null)
+            {
                 _boundEnemy.StatusesChanged += RefreshEnemyStatusVfx;
+                _boundEnemy.StatusDamageProcessed += HandleEnemyStatusDamage;
+            }
 
             RefreshPlayerStatusVfx();
             RefreshEnemyStatusVfx();
@@ -65,9 +72,16 @@ namespace M3P
         public void UnbindStatusVisuals()
         {
             if (_boundPlayer != null)
+            {
                 _boundPlayer.StatusesChanged -= RefreshPlayerStatusVfx;
+                _boundPlayer.StatusDamageProcessed -= HandlePlayerStatusDamage;
+            }
+
             if (_boundEnemy != null)
+            {
                 _boundEnemy.StatusesChanged -= RefreshEnemyStatusVfx;
+                _boundEnemy.StatusDamageProcessed -= HandleEnemyStatusDamage;
+            }
 
             _boundPlayer = null;
             _boundEnemy = null;
@@ -144,16 +158,32 @@ namespace M3P
 
         void RefreshPlayerStatusVfx()
         {
-            CharacterVFX vfx = _playerCharacter != null ? _playerCharacter.VFX : null;
-            if (vfx == null)
-                vfx = ResolveCharacterVfx(_playerObject);
-            vfx?.Refresh(_boundPlayer != null ? _boundPlayer.Statuses : null);
+            ResolvePlayerVfx()?.Refresh(_boundPlayer != null ? _boundPlayer.Statuses : null);
         }
 
         void RefreshEnemyStatusVfx()
         {
-            CharacterVFX vfx = ResolveEnemyVfx();
-            vfx?.Refresh(_boundEnemy != null ? _boundEnemy.Statuses : null);
+            ResolveEnemyVfx()?.Refresh(_boundEnemy != null ? _boundEnemy.Statuses : null);
+        }
+
+        void HandlePlayerStatusDamage(EStatusType statusType)
+        {
+            if (statusType == EStatusType.Burn)
+                ResolvePlayerVfx()?.PlayFlame();
+        }
+
+        void HandleEnemyStatusDamage(EStatusType statusType)
+        {
+            if (statusType == EStatusType.Burn)
+                ResolveEnemyVfx()?.PlayFlame();
+        }
+
+        CharacterVFX ResolvePlayerVfx()
+        {
+            if (_playerCharacter != null && _playerCharacter.VFX != null)
+                return _playerCharacter.VFX;
+
+            return ResolveCharacterVfx(_playerObject);
         }
 
         CharacterVFX ResolveEnemyVfx()

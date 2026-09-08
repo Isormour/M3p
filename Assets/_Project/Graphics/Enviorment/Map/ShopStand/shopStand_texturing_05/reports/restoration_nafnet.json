@@ -1,0 +1,42 @@
+{
+  "created_at_utc": "2026-09-07T15:11:12.421416+00:00",
+  "input": "D:\\Unity\\3dAIModeling\\shopStand_texturing_02\\textures\\previous_grainy.png",
+  "requested_output": "D:\\Unity\\3dAIModeling\\nafnet-workflow\\output\\shopStand_MaterialDetailBake_smooth_v3.png",
+  "output": "D:\\Unity\\3dAIModeling\\nafnet-workflow\\output\\shopStand_MaterialDetailBake_smooth_v3.png",
+  "source_sha256": "69787f88f270f2f7435c0d6eaca4da4f13d17f306652057f43923421fac908db",
+  "source_size": [
+    4096,
+    4096
+  ],
+  "strength": 1.0,
+  "finish": "nafnet",
+  "uv_mask": "D:\\Unity\\3dAIModeling\\shopStand_texturing_02\\masks\\UV_seam_guard.png",
+  "edge_guard_pixels": 0,
+  "nafnet_output": "D:\\Unity\\3dAIModeling\\nafnet-workflow\\output\\shopStand_MaterialDetailBake_smooth_v3_nafnet_preview.png",
+  "uv_status": "UV-safe replacement",
+  "replacement_written": true,
+  "gpt_image_2": {
+    "status": "skipped",
+    "reason": "No --gpt-preview requested"
+  },
+  "nafnet_raw_output_temporary": true,
+  "nafnet_preview_checks": {
+    "dimensions_exact": true,
+    "alpha_exact": true,
+    "protected_pixels": 7602231,
+    "protected_pixels_changed": 0,
+    "changed_pixels": 9150802,
+    "protected_source_sha256": "71d8439e891cfb07caf9c617ac908da8347c73fa117505003b498d6940c98e6e",
+    "protected_output_sha256": "71d8439e891cfb07caf9c617ac908da8347c73fa117505003b498d6940c98e6e"
+  },
+  "checks": {
+    "dimensions_exact": true,
+    "alpha_exact": true,
+    "protected_pixels": 7602231,
+    "protected_pixels_changed": 0,
+    "changed_pixels": 9150802,
+    "protected_source_sha256": "71d8439e891cfb07caf9c617ac908da8347c73fa117505003b498d6940c98e6e",
+    "protected_output_sha256": "71d8439e891cfb07caf9c617ac908da8347c73fa117505003b498d6940c98e6e"
+  },
+  "uv_scope": "Source pixels are exact outside the eroded supplied UV mask, including borders/padding/holes and all alpha. NAFNet only; no spatial transforms. Interior detail quality needs mesh inspection."
+}
