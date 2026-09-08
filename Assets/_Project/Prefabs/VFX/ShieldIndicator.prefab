@@ -48,6 +48,91 @@ MonoBehaviour:
   spheres:
   - {fileID: 2394063612248543511}
   - {fileID: 5752743619490891470}
+  _visiblePower: 1
+  _hitPower: 6
+  _hitPulseDuration: 0.22
+  _hitPulseCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  _fadeDuration: 0.25
+  _appearScaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 6.2509394
+      outSlope: 6.2509394
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.07755357
+    - serializedVersion: 3
+      time: 0.49049506
+      value: 0.983248
+      inSlope: -1.8112454
+      outSlope: -1.8112454
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.09856361
+      outWeight: 0.08612274
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  _disappearScaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 2.515619
+      outSlope: 2.515619
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.08730872
+    - serializedVersion: 3
+      time: 1
+      value: 2
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1001 &1295231707345119200
 PrefabInstance:
   m_ObjectHideFlags: 0
