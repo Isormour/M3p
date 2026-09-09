@@ -28,6 +28,16 @@ namespace M3P
                 ? _enemyVfxPoint
                 : (_enemyCharacter != null ? _enemyCharacter.transform : _enemyModelParent);
 
+        /// <summary>
+        /// Hand the <paramref name="index"/>-th attack of a flurry launches from, and where match
+        /// energy gathers while the board resolves. Falls back to the chest-height VFX point.
+        /// </summary>
+        public Transform GetPlayerAttackOrigin(int index)
+        {
+            Transform origin = _playerCharacter != null ? _playerCharacter.GetAttackOrigin(index) : null;
+            return origin != null ? origin : PlayerVfxPoint;
+        }
+
         void Awake()
         {
             _playerCharacter = ResolveWorldCharacter(_playerObject);
@@ -117,10 +127,10 @@ namespace M3P
             PlayCharacterAttack(_enemyCharacter, skill);
         }
 
-        public void NotifyMatchWave(int tilesDestroyed)
+        /// <summary>One swing of the flurry the player throws once the board has settled.</summary>
+        public void NotifyBasicAttack()
         {
-            if (tilesDestroyed > 0)
-                _playerCharacter?.PlayAttack("BasicAttack");
+            _playerCharacter?.PlayAttack("BasicAttack");
         }
 
         public void NotifyPlayerHit(bool died, int damage, bool shielded = false)

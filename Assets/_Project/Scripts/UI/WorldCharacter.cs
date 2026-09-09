@@ -1,4 +1,5 @@
 using M3P;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum ECharacterType
@@ -21,7 +22,13 @@ public class WorldCharacter : MonoBehaviour
     [SerializeField] int _attackVariantCount = 5;
     [SerializeField] CharacterVFX _vfx;
     [SerializeField] BattleCharacterShield _shieldIndicator;
+
+    [Tooltip("Hands (or weapon tips) that gather energy and throw attacks. Leave empty to use the hand bones of a humanoid rig.")]
+    [SerializeField] Transform[] _attackOrigins;
+
     [field: SerializeField] public ECharacterType CharacterType { private set; get; } = ECharacterType.Ground;
+
+    Transform[] _resolvedAttackOrigins;
 
     public Animator Anim => _animator;
 
@@ -70,6 +77,59 @@ public class WorldCharacter : MonoBehaviour
     {
         EnsureShield();
         _shieldIndicator?.Bind(stats);
+    }
+
+    /// <summary>
+    /// Where the <paramref name="index"/>-th attack of a flurry comes from. Successive indices cycle
+    /// through the available hands, so a series of swings alternates instead of repeating one arm.
+    /// </summary>
+    public Transform GetAttackOrigin(int index)
+    {
+        Transform[] origins = ResolveAttackOrigins();
+        if (origins.Length == 0)
+            return transform;
+
+        int wrapped = index % origins.Length;
+        if (wrapped < 0)
+            wrapped += origins.Length;
+
+        return origins[wrapped];
+    }
+
+    Transform[] ResolveAttackOrigins()
+    {
+        if (_resolvedAttackOrigins != null)
+            return _resolvedAttackOrigins;
+
+        List<Transform> origins = new List<Transform>(2);
+
+        if (_attackOrigins != null)
+        {
+            for (int i = 0; i < _attackOrigins.Length; i++)
+            {
+                if (_attackOrigins[i] != null)
+                    origins.Add(_attackOrigins[i]);
+            }
+        }
+
+        if (origins.Count == 0 && _animator != null && _animator.isHuman)
+        {
+            AddBoneOrigin(origins, HumanBodyBones.RightHand);
+            AddBoneOrigin(origins, HumanBodyBones.LeftHand);
+        }
+
+        if (origins.Count == 0)
+            origins.Add(transform);
+
+        _resolvedAttackOrigins = origins.ToArray();
+        return _resolvedAttackOrigins;
+    }
+
+    void AddBoneOrigin(List<Transform> origins, HumanBodyBones bone)
+    {
+        Transform resolved = _animator.GetBoneTransform(bone);
+        if (resolved != null)
+            origins.Add(resolved);
     }
 
     public void PlayAttack(string triggerName = "BasicAttack", int variantCount = -1)
@@ -132,9 +192,9 @@ public class WorldCharacter : MonoBehaviour
             return;
         }
 
-        if (shielded || HasShield)
+        if (HasShield)
         {
-            _shieldIndicator?.Pulse();
+            _shieldIndicator.Pulse();
             return;
         }
 

@@ -62,6 +62,7 @@ namespace M3P
             if (game == null)
                 return;
 
+            game.ResetProfileSave();
             game.StartNewGeneratedMap();
         }
 

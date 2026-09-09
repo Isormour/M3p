@@ -191,9 +191,9 @@ namespace M3P
         /// Damage of a single basic attack. One attack fires per match group, and cascade waves
         /// can add more via <see cref="BattleConfig.AdditionalAttackPerCascade"/>.
         /// </summary>
-        public int CalculateBasicAttackDamage(HardStats attacker, int matchSize, TalentBonuses talents = default)
+        public int CalculateBasicAttackDamage(SoftStats attacker, int matchSize)
         {
-            return Battle.CalculateBasicAttackDamage(attacker, matchSize, talents);
+            return Battle.CalculateBasicAttackDamage(attacker, matchSize);
         }
 
         void OnEnable()

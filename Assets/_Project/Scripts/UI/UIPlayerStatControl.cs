@@ -16,6 +16,9 @@ namespace M3P
         [SerializeField] Button _increaseButton;
         [SerializeField] Button _decreaseButton;
 
+        [Tooltip("Perk ladder drawn above the row; optional for rows that only show a number.")]
+        [SerializeField] UIPanelStatsPerkSection _perkSection;
+
         EStatType _stat;
 
         public event Action<EStatType> IncreaseClicked;
@@ -54,6 +57,9 @@ namespace M3P
 
             if (_valueLabel == null)
                 _valueLabel = FindChild<TextMeshProUGUI>("LabelStatValue");
+
+            if (_perkSection == null)
+                _perkSection = GetComponentInChildren<UIPanelStatsPerkSection>(true);
         }
 
         /// <summary>Tells the row which stat it represents. Called by the panel, not authored per row.</summary>
@@ -65,13 +71,20 @@ namespace M3P
                 _nameLabel.text = GetDisplayName(stat);
         }
 
+        /// <param name="progression">Source of the perk ladder and the stat cap it is scaled against.</param>
         /// <param name="value">Committed value plus anything pending, so the row reads as the result.</param>
         /// <param name="pendingPoints">Points spent here but not yet written to the profile.</param>
-        /// <param name="canIncrease">False once the character has no points left to spend.</param>
-        public void Refresh(int value, int pendingPoints, bool canIncrease)
+        /// <param name="canIncrease">False once there are no points left to spend or the cap is reached.</param>
+        public void Refresh(StatProgressionConfig progression, int value, int pendingPoints, bool canIncrease)
         {
             if (_valueLabel != null)
                 _valueLabel.text = value.ToString();
+
+            if (_perkSection != null)
+            {
+                _perkSection.Bind(_stat, progression);
+                _perkSection.Refresh(value);
+            }
 
             if (_increaseButton != null)
                 _increaseButton.interactable = canIncrease;

@@ -76,7 +76,7 @@ public class BattleCharacterShield : MonoBehaviour
 
     public void Pulse()
     {
-        if (!isActiveAndEnabled || spheres == null || spheres.Length == 0)
+        if (!_visible || !isActiveAndEnabled || spheres == null || spheres.Length == 0)
             return;
 
         StopPulse();
@@ -98,7 +98,12 @@ public class BattleCharacterShield : MonoBehaviour
     {
         _visible = visible;
         if (_pulseRoutine != null)
-            return;
+        {
+            if (visible)
+                return;
+
+            StopPulse();
+        }
 
         FadeTo(visible ? _visiblePower : 0f);
     }

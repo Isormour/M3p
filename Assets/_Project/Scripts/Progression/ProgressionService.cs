@@ -14,6 +14,7 @@ namespace M3P
         readonly ProfileManager _profiles;
 
         LevelProgressionConfig _fallbackLevelProgression;
+        StatProgressionConfig _fallbackStatProgression;
 
         public ProgressionService(GameConfig config, ProfileManager profiles)
         {
@@ -26,8 +27,12 @@ namespace M3P
                 ? _config.LevelProgression
                 : _fallbackLevelProgression ??= LevelProgressionConfig.CreateDefault();
 
+        // Caches the fallback, because handing out a fresh instance per call makes callers that compare
+        // configs think the progression changed every frame.
         public StatProgressionConfig StatProgression =>
-            _config != null ? _config.StatProgression : StatProgressionConfig.CreateDefault();
+            _config != null && _config.StatProgression != null
+                ? _config.StatProgression
+                : _fallbackStatProgression ??= StatProgressionConfig.CreateDefault();
 
         public TalentConfig Talents => _config != null ? _config.Talents : null;
 
@@ -166,7 +171,8 @@ namespace M3P
 
         /// <summary>
         /// Spends several points on one stat as a single transaction, so a full allocation writes the
-        /// save once instead of once per point. Spends nothing unless every point is affordable.
+        /// save once instead of once per point. Spends nothing unless every point is affordable and
+        /// fits under the stat cap.
         /// </summary>
         public bool TryAllocateStatPoints(EStatType stat, int points)
         {
@@ -178,6 +184,8 @@ namespace M3P
                 return false;
 
             int valueBefore = profile.HardStats.Get(stat);
+            if (valueBefore + points > StatProgression.MaxStatValue)
+                return false;
 
             for (int i = 0; i < points; i++)
                 profile.TrySpendStatPoint(stat);

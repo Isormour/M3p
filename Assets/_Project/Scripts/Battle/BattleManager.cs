@@ -42,11 +42,24 @@ namespace M3P
         [SerializeField] int _superMatchMinSize = 4;
         [SerializeField] float _hitShakePerDamage = 1f;
 
+        [Header("Attack Flurry")]
+        [Tooltip("Pause between the board settling and the first collected attack.")]
+        [Min(0f), SerializeField] float _attackStartDelay = 0.35f;
+        [Tooltip("How far into the swing animation the hit lands and the projectile leaves the hand.")]
+        [Min(0f), SerializeField] float _attackWindup = 0.18f;
+        [Tooltip("Pause between one attack's hit and the next swing.")]
+        [Min(0f), SerializeField] float _attackInterval = 0.45f;
+        [Tooltip("Pause after the last attack, so its projectile lands before the player acts again or the battle ends.")]
+        [Min(0f), SerializeField] float _attackEndDelay = 0.45f;
+
         readonly BattleSessionRewards _sessionRewards = new BattleSessionRewards();
         readonly ResolveLimits _resolveLimits = new ResolveLimits();
         readonly TurnReport _turnReport = new TurnReport();
+        readonly List<PendingBasicAttack> _collectedAttacks = new List<PendingBasicAttack>();
+        readonly List<PendingBasicAttack> _launchBuffer = new List<PendingBasicAttack>();
 
         int _matchWaveIndex;
+        bool _isPlayingAttacks;
         Match3Board _activeBoard;
         EnemyDefinition _activeEnemyDefinition;
         EnemyRuntimeSpec _activeEnemySpec;
@@ -66,6 +79,15 @@ namespace M3P
 
         /// <summary>True while Recycle or Transmute is waiting on a UI choice.</summary>
         public bool IsAwaitingSkillChoice => _awaitingSkillChoice;
+
+        /// <summary>
+        /// True while the flurry collected by the last Resolve is still being thrown. The player has no
+        /// say over a flurry, so every action is gated on this.
+        /// </summary>
+        public bool IsPlayingAttacks => _isPlayingAttacks;
+
+        /// <summary>Attacks the running Resolve has banked and not thrown yet.</summary>
+        public int CollectedAttackCount => _collectedAttacks.Count;
 
         /// <summary>Human player for the current battle.</summary>
         public PlayerBattleCharacter Player => _player;
@@ -98,6 +120,9 @@ namespace M3P
 
         /// <summary>Raised for every match long enough to drop shards, at the spot it was cleared.</summary>
         public event Action<ShardDrop> ShardsEarned;
+
+        /// <summary>Raised as each attack of the post-resolve flurry is thrown, after its damage lands.</summary>
+        public event Action<PendingBasicAttack> BasicAttackLaunched;
 
         public BattleWorld BattleWorld => _battleWorld;
 
@@ -161,7 +186,9 @@ namespace M3P
             SnapshotVitals(target, out int health, out int shield);
             skill.UseSkill(caster, target, choice);
             LastOpponentHitDamage = MeasureDamageTaken(target, health, shield);
-            LastOpponentHitHadShield = shield > 0 && LastOpponentHitDamage > 0;
+            LastOpponentHitHadShield = LastOpponentHitDamage > 0
+                && target.Stats?.Soft != null
+                && target.Stats.Soft.CurrentShield > 0;
             NotifySkillAnimation(skill, caster);
             SkillExecuted?.Invoke(skill, caster, target);
             TryResolveBattleOutcome();
@@ -195,7 +222,7 @@ namespace M3P
                 return;
 
             bool died = !character.IsAlive;
-            bool shielded = shieldBefore > 0;
+            bool shielded = character.Stats?.Soft != null && character.Stats.Soft.CurrentShield > 0;
             if (character == _player)
                 _battleWorld.NotifyPlayerHit(died, damage, shielded);
             else if (character == _activeEnemy)
@@ -226,7 +253,7 @@ namespace M3P
             if (skill == null || caster == null || target == null || !target.IsAlive)
                 return false;
 
-            if (_awaitingSkillChoice)
+            if (_awaitingSkillChoice || _isPlayingAttacks)
                 return false;
 
             if (!caster.IsSkillReady(skill))
@@ -264,7 +291,7 @@ namespace M3P
         /// <summary>Spends 1 AP to reduce the remaining cooldown of a player skill by 1.</summary>
         public bool TryReduceSkillCooldown(SkillDefinition skill, PlayerBattleCharacter player)
         {
-            if (_battleResolved || !_isPlayerTurn || skill == null || player == null || player != _player)
+            if (_battleResolved || !_isPlayerTurn || _isPlayingAttacks || skill == null || player == null || player != _player)
                 return false;
 
             if (!player.TryReduceSkillCooldownWithActionPoint(skill))
@@ -399,9 +426,10 @@ namespace M3P
         }
 
         /// <summary>
-        /// Resolves one basic attack per match group. Cascade waves also fire
-        /// <see cref="BattleConfig.AdditionalAttackPerCascade"/> extra hits. Shards from the same wave
-        /// are set aside for the win.
+        /// Banks one basic attack per match group. Cascade waves also bank
+        /// <see cref="BattleConfig.AdditionalAttackPerCascade"/> extra hits. Nothing is thrown here: the
+        /// board is still cascading, and <see cref="PlayCollectedAttacksRoutine"/> spends the whole bank
+        /// once it settles. Shards from the same wave are set aside for the win.
         /// </summary>
         void HandleMatchWaveCompleted(IReadOnlyList<MatchGroup> groups)
         {
@@ -418,19 +446,24 @@ namespace M3P
                 return;
 
             MatchRewardRules matchRewards = ResolveMatchRewards(config);
-            HardStats attacker = _player != null ? _player.GetEffectiveHard() : default;
-            TalentBonuses talents = _player?.Stats?.TalentBonuses ?? TalentBonuses.None;
-            SoftStats targetStats = _activeEnemy.Stats?.Soft;
-            int tilesDestroyed = 0;
+            SoftStats attacker = _player?.Stats?.Soft;
             int largest = 0;
+            int largestTypeId = -1;
 
             for (int i = 0; i < groups.Count; i++)
             {
                 MatchGroup group = groups[i];
-                tilesDestroyed += group.Size;
                 if (group.Size > largest)
+                {
                     largest = group.Size;
-                targetStats?.TakeDamage(config.CalculateBasicAttackDamage(attacker, group.Size, talents));
+                    largestTypeId = group.TypeId;
+                }
+
+                _collectedAttacks.Add(new PendingBasicAttack(
+                    group.TypeId,
+                    group.Size,
+                    config.CalculateBasicAttackDamage(attacker, group.Size),
+                    _matchWaveIndex));
 
                 int shards = matchRewards.GetShardsForMatch(group.Size);
                 if (shards <= 0)
@@ -441,11 +474,12 @@ namespace M3P
             }
 
             int extraAttacks = config.Battle.GetExtraAttacksForWave(_matchWaveIndex);
-            for (int i = 0; i < extraAttacks; i++)
-                targetStats?.TakeDamage(config.CalculateBasicAttackDamage(attacker, largest, talents));
+            if (extraAttacks <= 0)
+                return;
 
-            _battleWorld?.NotifyMatchWave(tilesDestroyed);
-            TryResolveBattleOutcome();
+            int extraDamage = config.CalculateBasicAttackDamage(attacker, largest);
+            for (int i = 0; i < extraAttacks; i++)
+                _collectedAttacks.Add(new PendingBasicAttack(largestTypeId, largest, extraDamage, _matchWaveIndex));
         }
 
         void ShakeCameraFromMatches(IReadOnlyList<MatchGroup> groups)
@@ -478,17 +512,6 @@ namespace M3P
             ShakeCamera(source / tilesDestroyed, force);
         }
 
-        public int GetBasicAttackDamage(int matchSize)
-        {
-            GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
-            if (config == null || matchSize <= 0)
-                return 0;
-
-            HardStats attacker = _player != null ? _player.GetEffectiveHard() : default;
-            TalentBonuses talents = _player?.Stats?.TalentBonuses ?? TalentBonuses.None;
-            return config.CalculateBasicAttackDamage(attacker, matchSize, talents);
-        }
-
         public void ShakeCamera(Vector3 sourcePosition, float force)
         {
             if (_camerShake == null || force <= 0f)
@@ -516,7 +539,7 @@ namespace M3P
         /// </summary>
         public void RequestResolve()
         {
-            if (_battleResolved || !_isPlayerTurn || _activeBoard == null || _cardPlay == null)
+            if (_battleResolved || !_isPlayerTurn || _isPlayingAttacks || _activeBoard == null || _cardPlay == null)
                 return;
 
             if (!_cardPlay.CanResolve())
@@ -532,7 +555,7 @@ namespace M3P
         /// </summary>
         public void RequestEndTurn()
         {
-            if (_battleResolved || !_isPlayerTurn || _activeBoard == null || _activeBoard.IsResolving)
+            if (_battleResolved || !_isPlayerTurn || _isPlayingAttacks || _activeBoard == null || _activeBoard.IsResolving)
                 return;
 
             if (_cardPlay != null && _cardPlay.CanResolve())
@@ -547,8 +570,14 @@ namespace M3P
         IEnumerator ResolveSequenceRoutine(bool endTurnAfterwards)
         {
             _resolveLimits.BeginResolve();
+            _collectedAttacks.Clear();
 
             yield return _cardPlay.ResolveSequenceRoutine();
+
+            if (_battleResolved)
+                yield break;
+
+            yield return PlayCollectedAttacksRoutine();
 
             if (_battleResolved)
                 yield break;
@@ -560,6 +589,73 @@ namespace M3P
             }
 
             EndPlayerTurnIfExhausted();
+        }
+
+        /// <summary>
+        /// Throws everything the Resolve banked, one swing at a time, now that the board has stopped
+        /// moving. Damage lands as each attack is thrown rather than when its projectile arrives, so the
+        /// flurry can stop the moment the target is down instead of pummelling a corpse. The outcome is
+        /// held back for <see cref="_attackEndDelay"/> so the killing blow is seen before the end panel.
+        /// </summary>
+        IEnumerator PlayCollectedAttacksRoutine()
+        {
+            _launchBuffer.Clear();
+            _launchBuffer.AddRange(_collectedAttacks);
+            _collectedAttacks.Clear();
+
+            if (_launchBuffer.Count == 0 || _battleResolved || _activeEnemy == null || !_activeEnemy.IsAlive)
+            {
+                _launchBuffer.Clear();
+                yield break;
+            }
+
+            SetPlayingAttacks(true);
+            yield return WaitSeconds(_attackStartDelay);
+
+            for (int i = 0; i < _launchBuffer.Count; i++)
+            {
+                if (_battleResolved || _activeEnemy == null || !_activeEnemy.IsAlive)
+                    break;
+
+                PendingBasicAttack attack = _launchBuffer[i];
+                _battleWorld?.NotifyBasicAttack();
+                yield return WaitSeconds(_attackWindup);
+
+                if (_battleResolved || _activeEnemy == null || !_activeEnemy.IsAlive)
+                    break;
+
+                _activeEnemy.Stats?.Soft?.TakeDamage(attack.Damage);
+
+                bool lethal = !_activeEnemy.IsAlive;
+                BasicAttackLaunched?.Invoke(attack.WithLethal(lethal));
+
+                if (lethal)
+                    break;
+
+                yield return WaitSeconds(_attackInterval);
+            }
+
+            _launchBuffer.Clear();
+            yield return WaitSeconds(_attackEndDelay);
+
+            SetPlayingAttacks(false);
+            TryResolveBattleOutcome();
+        }
+
+        void SetPlayingAttacks(bool playing)
+        {
+            if (_isPlayingAttacks == playing)
+                return;
+
+            _isPlayingAttacks = playing;
+            // The hand panel reads CardPlayController.IsBusy, which folds in the flurry.
+            _cardPlay?.NotifyChanged();
+        }
+
+        static IEnumerator WaitSeconds(float seconds)
+        {
+            if (seconds > 0f)
+                yield return new WaitForSeconds(seconds);
         }
 
         /// <summary>
@@ -732,6 +828,9 @@ namespace M3P
             _battleResolved = true;
             _lastOutcome = outcome;
             StopAllCoroutines();
+            _isPlayingAttacks = false;
+            _collectedAttacks.Clear();
+            _launchBuffer.Clear();
 
             if (_activeBoard != null)
                 _activeBoard.AllowPlayerInput = false;
@@ -861,6 +960,9 @@ namespace M3P
 
             _isPlayerTurn = true;
             _matchWaveIndex = 0;
+            _isPlayingAttacks = false;
+            _collectedAttacks.Clear();
+            _launchBuffer.Clear();
             LastOpponentHitDamage = 0;
             LastOpponentHitHadShield = false;
 

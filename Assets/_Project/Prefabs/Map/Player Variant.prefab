@@ -269,6 +269,14 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9137222576989194757, guid: 6981cdb98b2c67846b381bd1ebea7db6, type: 3}
+      propertyPath: ShapeModule.m_SkinnedMeshRenderer
+      value: 
+      objectReference: {fileID: 3578677688412920820}
+    - target: {fileID: 9137222576989194757, guid: 6981cdb98b2c67846b381bd1ebea7db6, type: 3}
+      propertyPath: InitialModule.startLifetime.scalar
+      value: 0.1
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 8549864065874350994, guid: 6981cdb98b2c67846b381bd1ebea7db6, type: 3}
     m_RemovedGameObjects:
@@ -317,6 +325,7 @@ MonoBehaviour:
   _attackVariantCount: 5
   _vfx: {fileID: 292776405537394644}
   _shieldIndicator: {fileID: 2398644178197678279}
+  _attackOrigins: []
   <CharacterType>k__BackingField: 0
 --- !u!4 &575930996161057274 stripped
 Transform:

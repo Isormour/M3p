@@ -20,6 +20,7 @@ namespace M3P
     [Serializable]
     public class SoftStats
     {
+        public int BasicAttackDamage;
         public int MaxHP;
         public int CurrentHealth;
         public int CurrentShield;
@@ -34,13 +35,15 @@ namespace M3P
         public SoftStats(HardStats hard, StatProgressionConfig progression, TalentBonuses talents = default)
         {
             progression ??= StatProgressionConfig.CreateDefault();
-            MaxHP = progression.CalculateMaxHp(hard, talents);
+            SoftStatValues calculated = progression.CalculateSoftStats(hard, talents);
+            BasicAttackDamage = calculated.BasicAttackDamage;
+            MaxHP = calculated.MaxHP;
             CurrentHealth = MaxHP;
             CurrentShield = 0;
             CurrentSouls = 0;
-            MaxActionPoints = progression.CalculateMaxActionPoints(hard, talents);
+            MaxActionPoints = calculated.MaxActionPoints;
             CurrentActionPoints = MaxActionPoints;
-            MaxHandSize = progression.CalculateMaxHandSize(hard, talents);
+            MaxHandSize = calculated.MaxHandSize;
         }
 
         public int GetManaForTileType(int tileTypeId)
@@ -190,12 +193,15 @@ namespace M3P
         public void RecalculateFromHard(HardStats hard, StatProgressionConfig progression, TalentBonuses talents = default)
         {
             progression ??= StatProgressionConfig.CreateDefault();
-            MaxHP = progression.CalculateMaxHp(hard, talents);
+            SoftStatValues calculated = progression.CalculateSoftStats(hard, talents);
+            BasicAttackDamage = calculated.BasicAttackDamage;
+            MaxHP = calculated.MaxHP;
             CurrentHealth = MaxHP;
             CurrentShield = 0;
             CurrentSouls = 0;
-            MaxHandSize = progression.CalculateMaxHandSize(hard, talents);
-            ResetActionPoints(hard, progression, talents);
+            MaxHandSize = calculated.MaxHandSize;
+            MaxActionPoints = calculated.MaxActionPoints;
+            CurrentActionPoints = MaxActionPoints;
             ResetMana();
         }
 

@@ -174,6 +174,7 @@ namespace M3P.Editor
             using (new EditorGUI.IndentLevelScope())
             using (new EditorGUI.DisabledScope(true))
             {
+                EditorGUILayout.IntField("Basic Attack Damage", battleStats.Soft != null ? battleStats.Soft.BasicAttackDamage : 0);
                 EditorGUILayout.IntField("Max HP", battleStats.MaxHealth);
                 EditorGUILayout.IntField("Max Action Points", battleStats.Soft != null ? battleStats.Soft.MaxActionPoints : 0);
                 EditorGUILayout.IntField("Max Hand Size", battleStats.Soft != null ? battleStats.Soft.MaxHandSize : 0);

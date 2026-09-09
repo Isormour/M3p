@@ -91,10 +91,7 @@ namespace Match3
         }
     }
 
-    /// <summary>
-    /// Slides the row of the picked tile one cell sideways, wrapping around the edge. Parked: whole-row
-    /// and whole-column movement is out of the progression design, so the card cannot be queued.
-    /// </summary>
+    /// <summary>Slides the row of the picked tile one cell sideways, wrapping around the edge.</summary>
     [Serializable]
     public sealed class ShiftRowLogic : BoardActionLogic
     {
@@ -102,10 +99,6 @@ namespace Match3
         [SerializeField] int _direction = 1;
 
         public override CardTargeting Targeting => CardTargeting.SingleTile;
-
-        public override bool IsAvailable => false;
-
-        public override string UnavailableReason => "Przesuwanie rzędów jest poza zakresem designu.";
 
         public override void BuildOps(
             SimBoard board,

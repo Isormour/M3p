@@ -10,6 +10,7 @@ namespace M3P
         const string ColorMultProperty = "_ColorMult";
         const float ColorMultUnselected = 0f;
         const float ColorMultSelected = 8f;
+        const float InsufficientManaBorderBrightness = 0.35f;
 
         [SerializeField] Button _button;
         [SerializeField] Image _artworkImage;
@@ -24,6 +25,8 @@ namespace M3P
         SoftStats _boundSoftStats;
         UICardChoiceOverlay _promptOverlay;
         Material _borderMaterial;
+        Color _borderBaseColor;
+        bool _hasBorderBaseColor;
 
         readonly List<UIPlayerPanelSkillsCostLabel> _costLabels = new List<UIPlayerPanelSkillsCostLabel>();
 
@@ -255,10 +258,25 @@ namespace M3P
         void RefreshBorder()
         {
             EnsureBorderMaterial();
-            if (_borderMaterial == null)
+            if (_borderImage == null)
                 return;
 
-            _borderMaterial.SetFloat(ColorMultProperty, IsSelected() ? ColorMultSelected : ColorMultUnselected);
+            bool hasEnoughMana = _skill == null
+                || _player?.Stats?.Soft == null
+                || _skill.HasEnoughMana(_player.Stats.Soft);
+
+            Color borderColor = _borderBaseColor;
+            if (!hasEnoughMana)
+            {
+                borderColor.r *= InsufficientManaBorderBrightness;
+                borderColor.g *= InsufficientManaBorderBrightness;
+                borderColor.b *= InsufficientManaBorderBrightness;
+            }
+
+            _borderImage.color = borderColor;
+
+            if (_borderMaterial != null)
+                _borderMaterial.SetFloat(ColorMultProperty, IsSelected() ? ColorMultSelected : ColorMultUnselected);
         }
 
         bool IsSelected()
@@ -283,6 +301,12 @@ namespace M3P
 
             if (_borderImage == null || _borderMaterial != null)
                 return;
+
+            if (!_hasBorderBaseColor)
+            {
+                _borderBaseColor = _borderImage.color;
+                _hasBorderBaseColor = true;
+            }
 
             Material source = _borderImage.material;
             if (source == null)

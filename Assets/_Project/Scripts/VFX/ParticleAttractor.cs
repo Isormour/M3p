@@ -32,8 +32,10 @@ namespace M3P
             if (particleCount <= 0)
                 return;
 
-            if (_particles == null || _particles.Length < _particleSystem.main.maxParticles)
-                _particles = new ParticleSystem.Particle[_particleSystem.main.maxParticles];
+            // Sized to what is actually alive: maxParticles runs into the thousands on burst prefabs,
+            // and this component is added to one instance per cleared tile.
+            if (_particles == null || _particles.Length < particleCount)
+                _particles = new ParticleSystem.Particle[particleCount];
 
             particleCount = _particleSystem.GetParticles(_particles);
             if (particleCount <= 0)
@@ -80,6 +82,17 @@ namespace M3P
         {
             _target = target;
             _useTransformTarget = target != null;
+        }
+
+        /// <summary>
+        /// Aims and tunes an attractor added at runtime, for prefabs authored as a plain burst.
+        /// </summary>
+        public void Configure(Transform target, float attractStrength, float maxSpeed, float delayBeforeAttract)
+        {
+            SetTarget(target);
+            _attractStrength = attractStrength;
+            _maxSpeed = maxSpeed;
+            _delayBeforeAttract = delayBeforeAttract;
         }
 
         public void SetTargetPosition(Vector3 worldPosition)

@@ -70,10 +70,25 @@ namespace M3P
 
         protected override void OnValidate()
         {
-            if (_statControls == null || _statControls.Length == 0)
+            // Also re-lists on a hole, because a row lost to a prefab edit would silently stop updating.
+            if (HasUnassignedControl())
                 _statControls = GetComponentsInChildren<UIPlayerStatControl>(true);
 
             base.OnValidate();
+        }
+
+        bool HasUnassignedControl()
+        {
+            if (_statControls == null || _statControls.Length == 0)
+                return true;
+
+            for (int i = 0; i < _statControls.Length; i++)
+            {
+                if (_statControls[i] == null)
+                    return true;
+            }
+
+            return false;
         }
 
         public override void Show()
@@ -154,6 +169,11 @@ namespace M3P
             if (profile == null || profile.UnspentStatPoints - TotalPending <= 0)
                 return;
 
+            StatProgressionConfig progression = Progression?.StatProgression;
+            if (progression != null &&
+                profile.HardStats.Get(stat) + _pendingByStat[(int)stat] >= progression.MaxStatValue)
+                return;
+
             _pendingByStat[(int)stat]++;
             Refresh();
         }
@@ -206,6 +226,9 @@ namespace M3P
             int remainingPoints = Mathf.Max(0, profile.UnspentStatPoints - TotalPending);
             int totalPending = TotalPending;
 
+            StatProgressionConfig progression = Progression?.StatProgression;
+            int maxStatValue = progression != null ? progression.MaxStatValue : int.MaxValue;
+
             if (_levelLabel != null)
                 _levelLabel.text = $"Level {profile.Level}";
 
@@ -222,7 +245,8 @@ namespace M3P
                     continue;
 
                 int pending = _pendingByStat[(int)control.Stat];
-                control.Refresh(profile.HardStats.Get(control.Stat) + pending, pending, remainingPoints > 0);
+                int value = profile.HardStats.Get(control.Stat) + pending;
+                control.Refresh(progression, value, pending, remainingPoints > 0 && value < maxStatValue);
             }
         }
     }

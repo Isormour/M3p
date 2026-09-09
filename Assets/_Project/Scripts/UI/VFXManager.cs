@@ -21,6 +21,18 @@ namespace M3P
         [SerializeField] GameObject _destroyParticlePrefab;
         [SerializeField] float _destroyVfxLifetime = 2f;
 
+        [Header("Match Collect")]
+        [Tooltip("Pulls every tile explosion into the player's hand instead of letting it fade in place, so a Resolve visibly charges the attacks that follow.")]
+        [SerializeField] bool _collectDestroyParticles = true;
+        [Tooltip("Where the explosions gather. Defaults to the player's hand, then the player VFX point.")]
+        [SerializeField] Transform _collectTarget;
+        [Tooltip("How long a burst scatters on its own before it is pulled in.")]
+        [Min(0f), SerializeField] float _collectDelay = 0.05f;
+        [Tooltip("Stretches the burst's particle lifetime so it survives the trip to the hand.")]
+        [Min(0.1f), SerializeField] float _collectLifetimeScale = 1.6f;
+        [Min(0f), SerializeField] float _collectAttractStrength = 120f;
+        [Min(0f), SerializeField] float _collectMaxSpeed = 30f;
+
         [Header("Shards")]
         [Tooltip("Played where a match long enough to drop shards was cleared.")]
         [SerializeField] ShardVFX _shardPrefab;
@@ -47,6 +59,7 @@ namespace M3P
         readonly List<TileGhost> _destroyIndicators = new List<TileGhost>();
         readonly Dictionary<int, Vector2Int> _predictedCellsByTileId = new Dictionary<int, Vector2Int>();
         int _matchWaveIndex;
+        int _attackIndex;
 
         void Awake()
         {
@@ -73,6 +86,7 @@ namespace M3P
                 _battleManager.OnBattleStarted += HandleBattleStarted;
                 _battleManager.ShardsEarned += HandleShardsEarned;
                 _battleManager.SkillExecuted += HandleSkillExecuted;
+                _battleManager.BasicAttackLaunched += HandleBasicAttackLaunched;
             }
 
             if (_battleManager?.ActiveBoard != null)
@@ -89,6 +103,7 @@ namespace M3P
                 _battleManager.OnBattleStarted -= HandleBattleStarted;
                 _battleManager.ShardsEarned -= HandleShardsEarned;
                 _battleManager.SkillExecuted -= HandleSkillExecuted;
+                _battleManager.BasicAttackLaunched -= HandleBasicAttackLaunched;
             }
 
             UnbindCardPlay();
@@ -111,6 +126,7 @@ namespace M3P
 
             _board = board;
             _matchWaveIndex = 0;
+            _attackIndex = 0;
             _board.TileDestroyed += HandleTileDestroyed;
             _board.MatchWaveCompleted += HandleMatchWaveCompleted;
             _board.SequenceResolved += HandleSequenceResolved;
@@ -127,6 +143,7 @@ namespace M3P
 
             _board = null;
             _matchWaveIndex = 0;
+            _attackIndex = 0;
             _cascadeIndicator?.Hide();
             _superMatchIndicator?.Hide();
             HidePlanningIndicators();
@@ -343,51 +360,26 @@ namespace M3P
 
             _matchWaveIndex++;
             UpdateBattleIndicators(groups);
-
-            Transform origin = GetPlayerVfxPoint();
-            Transform destination = GetEnemyVfxPoint();
-            BattleWorld world = _battleManager != null ? _battleManager.BattleWorld : null;
-            int extraAttacks = GetCascadeExtraAttackCount();
-            int largestSize = GetLargestMatchSize(groups);
-            int extraTypeId = GetLargestMatchTypeId(groups);
-
-            for (int i = 0; i < groups.Count; i++)
-            {
-                bool isLast = extraAttacks <= 0 && i == groups.Count - 1;
-                int damage = _battleManager != null
-                    ? _battleManager.GetBasicAttackDamage(groups[i].Size)
-                    : groups[i].Size;
-                SpawnAttackProjectile(origin, destination, groups[i].TypeId, damage, () =>
-                {
-                    bool died = isLast
-                        && _battleManager?.ActiveEnemy != null
-                        && !_battleManager.ActiveEnemy.IsAlive;
-                    world?.NotifyEnemyHit(died, damage);
-                    PulseBattleIndicators();
-                });
-            }
-
-            int extraDamage = _battleManager != null
-                ? _battleManager.GetBasicAttackDamage(largestSize)
-                : largestSize;
-            for (int i = 0; i < extraAttacks; i++)
-            {
-                bool isLast = i == extraAttacks - 1;
-                SpawnAttackProjectile(origin, destination, extraTypeId, extraDamage, () =>
-                {
-                    bool died = isLast
-                        && _battleManager?.ActiveEnemy != null
-                        && !_battleManager.ActiveEnemy.IsAlive;
-                    world?.NotifyEnemyHit(died, extraDamage);
-                    PulseBattleIndicators();
-                });
-            }
         }
 
-        int GetCascadeExtraAttackCount()
+        /// <summary>
+        /// One swing of the flurry the player throws after the board settles: the energy gathered in a
+        /// hand is hurled at the enemy. <see cref="BattleManager"/> has already applied the damage, so
+        /// the projectile only carries the hit reaction.
+        /// </summary>
+        void HandleBasicAttackLaunched(PendingBasicAttack attack)
         {
-            GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
-            return config != null ? config.Battle.GetExtraAttacksForWave(_matchWaveIndex) : 0;
+            BattleWorld world = _battleManager != null ? _battleManager.BattleWorld : null;
+            Transform origin = GetPlayerAttackOrigin(world, _attackIndex);
+            _attackIndex++;
+
+            bool died = attack.IsLethal;
+            int damage = attack.Damage;
+            SpawnAttackProjectile(origin, GetEnemyVfxPoint(), attack.TypeId, damage, () =>
+            {
+                world?.NotifyEnemyHit(died, damage);
+                PulseBattleIndicators();
+            });
         }
 
         void HandleSequenceResolved(ResolveReport report)
@@ -432,22 +424,6 @@ namespace M3P
             }
 
             return size;
-        }
-
-        static int GetLargestMatchTypeId(IReadOnlyList<MatchGroup> groups)
-        {
-            int size = 0;
-            int typeId = -1;
-            for (int i = 0; i < groups.Count; i++)
-            {
-                if (groups[i].Size <= size)
-                    continue;
-
-                size = groups[i].Size;
-                typeId = groups[i].TypeId;
-            }
-
-            return typeId;
         }
 
         void HandleSkillExecuted(SkillDefinition skill, BattleCharacter caster, BattleCharacter target)
@@ -504,7 +480,48 @@ namespace M3P
 
             GameObject instance = Instantiate(_destroyParticlePrefab, worldPosition, Quaternion.identity);
             ApplyTileColor(instance, typeId);
+            CollectIntoPlayerHand(instance);
             Destroy(instance, _destroyVfxLifetime);
+        }
+
+        /// <summary>
+        /// Sucks a tile's explosion into the hand the player will swing with. Every match therefore feeds
+        /// the flurry that fires once the board settles, rather than reading as a hit of its own.
+        /// </summary>
+        void CollectIntoPlayerHand(GameObject instance)
+        {
+            if (!_collectDestroyParticles)
+                return;
+
+            Transform target = GetCollectTarget();
+            if (target == null)
+                return;
+
+            ParticleSystem[] systems = instance.GetComponentsInChildren<ParticleSystem>(true);
+            for (int i = 0; i < systems.Length; i++)
+            {
+                ParticleSystem particles = systems[i];
+                if (particles == null)
+                    continue;
+
+                ParticleSystem.MainModule main = particles.main;
+                main.startLifetimeMultiplier *= _collectLifetimeScale;
+
+                ParticleAttractor attractor = particles.GetComponent<ParticleAttractor>();
+                if (attractor == null)
+                    attractor = particles.gameObject.AddComponent<ParticleAttractor>();
+
+                attractor.Configure(target, _collectAttractStrength, _collectMaxSpeed, _collectDelay);
+            }
+        }
+
+        Transform GetCollectTarget()
+        {
+            if (_collectTarget != null)
+                return _collectTarget;
+
+            BattleWorld world = _battleManager != null ? _battleManager.BattleWorld : null;
+            return GetPlayerAttackOrigin(world, 0);
         }
 
         void SpawnAttackProjectile(
@@ -552,6 +569,12 @@ namespace M3P
 
             ParticleSystem.MainModule main = particles.main;
             main.startColor = _board.GetTileTypeColor(typeId);
+        }
+
+        Transform GetPlayerAttackOrigin(BattleWorld world, int index)
+        {
+            Transform hand = world != null ? world.GetPlayerAttackOrigin(index) : null;
+            return hand != null ? hand : GetPlayerVfxPoint();
         }
 
         Transform GetPlayerVfxPoint()

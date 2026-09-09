@@ -42,8 +42,20 @@ namespace M3P
 
         public int SelectedHandIndex => _selectedHandIndex;
 
-        /// <summary>True while a Resolve is running or a card is waiting on a colour/direction prompt.</summary>
-        public bool IsBusy => _isResolving || _awaitingChoice;
+        /// <summary>
+        /// True while a Resolve is running, a card is waiting on a colour/direction prompt, or the battle
+        /// is still throwing the attacks that Resolve collected.
+        /// </summary>
+        public bool IsBusy => _isResolving || _awaitingChoice || BattleIsThrowingAttacks;
+
+        static bool BattleIsThrowingAttacks
+        {
+            get
+            {
+                BattleManager manager = BattleManager.Instance;
+                return manager != null && manager.IsPlayingAttacks;
+            }
+        }
 
         /// <summary>Cells already picked for the selected card.</summary>
         public IReadOnlyList<Vector2Int> PickedTargets => _pickedTargets;
@@ -123,6 +135,15 @@ namespace M3P
             }
 
             _queue.Reset(_board.CaptureSimBoard());
+        }
+
+        /// <summary>
+        /// Re-raises <see cref="Changed"/> for state this controller only reads, such as the battle's
+        /// attack flurry gating <see cref="IsBusy"/>.
+        /// </summary>
+        public void NotifyChanged()
+        {
+            Changed?.Invoke();
         }
 
         /// <summary>Draws extra cards mid-turn, for reward runes and tile upgrades that grant a draw.</summary>
