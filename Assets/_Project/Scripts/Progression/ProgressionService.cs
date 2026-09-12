@@ -170,27 +170,46 @@ namespace M3P
         public bool TryAllocateStatPoint(EStatType stat) => TryAllocateStatPoints(stat, 1);
 
         /// <summary>
-        /// Spends several points on one stat as a single transaction, so a full allocation writes the
-        /// save once instead of once per point. Spends nothing unless every point is affordable and
-        /// fits under the stat cap.
+        /// Spends several points on the tree that grants <paramref name="stat"/> as a single
+        /// transaction. Spends nothing unless every point is affordable and fits under the cap.
         /// </summary>
         public bool TryAllocateStatPoints(EStatType stat, int points)
         {
-            if (points <= 0)
+            PerkTree tree = StatProgression.GetTreeForStat(stat);
+            return tree != null && TryAllocatePerkTreePoints(tree.Id, points);
+        }
+
+        public bool TryAllocatePerkTreePoint(int treeId) => TryAllocatePerkTreePoints(treeId, 1);
+
+        /// <summary>
+        /// Spends several points on one perk tree as a single transaction, so a full allocation
+        /// writes the save once instead of once per point.
+        /// </summary>
+        public bool TryAllocatePerkTreePoints(int treeId, int points)
+        {
+            if (points <= 0 || treeId == PerkTree.InvalidId)
                 return false;
 
             PlayerProfile profile = _profiles.CurrentProfile;
             if (profile.UnspentStatPoints < points)
                 return false;
 
-            int valueBefore = profile.HardStats.Get(stat);
-            if (valueBefore + points > StatProgression.MaxStatValue)
+            StatProgressionConfig progression = StatProgression;
+            PerkTree tree = progression.GetTree(treeId);
+            if (tree == null)
+                return false;
+
+            int valueBefore = profile.GetPerkTreePoints(treeId);
+            if (valueBefore + points > progression.MaxStatValue)
                 return false;
 
             for (int i = 0; i < points; i++)
-                profile.TrySpendStatPoint(stat);
+                profile.TrySpendPerkTreePoint(treeId);
 
-            UpdatePendingTalentAfterAllocation(profile, stat, valueBefore, profile.HardStats.Get(stat));
+            profile.HardStats = progression.CalculateHardStats(profile.PerkTreePoints);
+
+            if (tree.TryGetGrantedStat(out EStatType stat))
+                UpdatePendingTalentAfterAllocation(profile, stat, valueBefore, profile.GetPerkTreePoints(treeId));
 
             _profiles.Save();
             return true;

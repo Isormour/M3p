@@ -18,6 +18,32 @@ namespace M3P
 
         public bool IsOpen => Root.activeInHierarchy;
 
+        static int _blockedWorldInputFrame = -1;
+
+        /// <summary>
+        /// True when a panel opened or closed this frame, so a UI click cannot also hit a map node.
+        /// </summary>
+        public static bool IsWorldInputBlocked => _blockedWorldInputFrame == Time.frameCount;
+
+        public static void BlockWorldInput()
+        {
+            _blockedWorldInputFrame = Time.frameCount;
+        }
+
+        public static bool IsAnyOpen()
+        {
+            UIPanelClosable[] panels = FindObjectsByType<UIPanelClosable>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+            for (int i = 0; i < panels.Length; i++)
+            {
+                if (panels[i].IsOpen)
+                    return true;
+            }
+
+            return false;
+        }
+
         void Awake()
         {
             Initialize();
@@ -53,11 +79,15 @@ namespace M3P
         public virtual void Show()
         {
             Initialize();
+            BlockWorldInput();
             Root.SetActive(true);
         }
 
         public virtual void Hide()
         {
+            if (Root.activeInHierarchy)
+                BlockWorldInput();
+
             Root.SetActive(false);
         }
 

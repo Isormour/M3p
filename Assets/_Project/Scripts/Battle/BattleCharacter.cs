@@ -12,6 +12,7 @@ namespace M3P
         readonly CombatModifiers _modifiers = new CombatModifiers();
 
         CharacterStats _characterStats;
+        SoftStats _boundSoft;
 
         public abstract bool IsPlayerControlled { get; }
 
@@ -31,11 +32,41 @@ namespace M3P
         /// <summary>Raised when a status's on-turn effects reduce health or shield.</summary>
         public event Action<EStatusType> StatusDamageProcessed;
 
+        /// <summary>Raised after incoming damage reduces health or shield.</summary>
+        public event Action<int> Damaged;
+
         public CombatModifiers Modifiers => _modifiers;
 
         protected void SetCharacterStats(CharacterStats stats)
         {
+            UnbindSoftDamage();
             _characterStats = stats;
+            BindSoftDamage();
+        }
+
+        void BindSoftDamage()
+        {
+            _boundSoft = _characterStats != null ? _characterStats.Soft : null;
+            if (_boundSoft != null)
+                _boundSoft.Damaged += HandleSoftDamaged;
+        }
+
+        void UnbindSoftDamage()
+        {
+            if (_boundSoft != null)
+                _boundSoft.Damaged -= HandleSoftDamaged;
+
+            _boundSoft = null;
+        }
+
+        void HandleSoftDamaged(int amount)
+        {
+            Damaged?.Invoke(amount);
+        }
+
+        void OnDestroy()
+        {
+            UnbindSoftDamage();
         }
 
         public virtual void OnTurnStarted()

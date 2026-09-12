@@ -39,6 +39,7 @@ namespace M3P
         public List<ShardAmount> Shards = new List<ShardAmount>();
         public List<int> UnlockedTalentIds = new List<int>();
         public PendingTalentChoice PendingTalent;
+        public List<PerkTreePoints> PerkTreePoints = new List<PerkTreePoints>();
         public HardStats HardStats;
 
         /// <summary>Current dungeon-map run: floor graph, player node and cleared encounters.</summary>
@@ -46,6 +47,7 @@ namespace M3P
 
         public PlayerProfile()
         {
+            PerkTreePoints = new List<PerkTreePoints>();
             HardStats = new HardStats(1, 1, 1, 1);
         }
 
@@ -55,9 +57,32 @@ namespace M3P
                 ? talentConfig.BuildBonuses(UnlockedTalentIds)
                 : TalentBonuses.None;
 
-            CharacterStats stats = new CharacterStats(HardStats, progression, talentBonuses);
+            if (progression != null)
+                HardStats = progression.CalculateHardStats(PerkTreePoints);
+
+            CharacterStats stats = new CharacterStats(HardStats, progression, talentBonuses, PerkTreePoints);
             stats.RecalculateSoftStatsForBattle();
             return stats;
+        }
+
+        public int GetPerkTreePoints(int treeId)
+        {
+            int index = StatProgressionConfig.IndexOfTreePoints(PerkTreePoints, treeId);
+            return index >= 0 ? Mathf.Max(0, PerkTreePoints[index].Value) : 0;
+        }
+
+        public void SetPerkTreePoints(int treeId, int value)
+        {
+            if (treeId == PerkTree.InvalidId)
+                return;
+
+            PerkTreePoints ??= new List<PerkTreePoints>();
+            value = Math.Max(0, value);
+            int index = StatProgressionConfig.IndexOfTreePoints(PerkTreePoints, treeId);
+            if (index >= 0)
+                PerkTreePoints[index] = new PerkTreePoints(treeId, value);
+            else
+                PerkTreePoints.Add(new PerkTreePoints(treeId, value));
         }
 
         public bool HasTalentForMilestone(EStatType stat, int milestoneTier, TalentConfig talentConfig)
@@ -199,15 +224,22 @@ namespace M3P
                 SkillLoadout.RemoveAt(SkillLoadout.Count - 1);
         }
 
-        /// <summary>Spends one level-up point on a stat. Returns false when there is nothing to spend.</summary>
-        public bool TrySpendStatPoint(EStatType stat)
+        /// <summary>Spends one level-up point on a perk tree. Returns false when there is nothing to spend.</summary>
+        public bool TrySpendPerkTreePoint(int treeId)
         {
-            if (UnspentStatPoints <= 0)
+            if (UnspentStatPoints <= 0 || treeId == PerkTree.InvalidId)
                 return false;
 
-            HardStats = HardStats.WithPointsAdded(stat);
+            SetPerkTreePoints(treeId, GetPerkTreePoints(treeId) + 1);
             UnspentStatPoints--;
             return true;
+        }
+
+        /// <summary>Spends one level-up point on the tree that grants this hard stat.</summary>
+        public bool TrySpendStatPoint(EStatType stat, StatProgressionConfig progression)
+        {
+            PerkTree tree = progression != null ? progression.GetTreeForStat(stat) : null;
+            return tree != null && TrySpendPerkTreePoint(tree.Id);
         }
 
         /// <summary>Shards of one colour currently banked, or zero for a colour never earned.</summary>
@@ -371,6 +403,14 @@ namespace M3P
             DropInvalidTileDeckIndices();
             Shards ??= new List<ShardAmount>();
             UnlockedTalentIds ??= new List<int>();
+            PerkTreePoints ??= new List<PerkTreePoints>();
+            for (int i = PerkTreePoints.Count - 1; i >= 0; i--)
+            {
+                if (PerkTreePoints[i].TreeId == PerkTree.InvalidId)
+                    PerkTreePoints.RemoveAt(i);
+                else if (PerkTreePoints[i].Value < 0)
+                    PerkTreePoints[i] = new PerkTreePoints(PerkTreePoints[i].TreeId, 0);
+            }
         }
 
         public string ToJson(bool prettyPrint = true)
@@ -412,6 +452,9 @@ namespace M3P
                 ? new List<int>(source.UnlockedTalentIds)
                 : new List<int>();
             PendingTalent = source.PendingTalent;
+            PerkTreePoints = source.PerkTreePoints != null
+                ? new List<PerkTreePoints>(source.PerkTreePoints)
+                : new List<PerkTreePoints>();
             HardStats = source.HardStats;
             MapRun = source.MapRun != null ? source.MapRun.Clone() : null;
         }
@@ -431,6 +474,7 @@ namespace M3P
             public ShardAmount[] Shards;
             public int[] UnlockedTalentIds;
             public PendingTalentChoice PendingTalent;
+            public PerkTreePoints[] PerkTreePoints;
             public HardStats HardStats;
             public MapRunSave MapRun;
 
@@ -452,6 +496,9 @@ namespace M3P
                         ? profile.UnlockedTalentIds.ToArray()
                         : Array.Empty<int>(),
                     PendingTalent = profile.PendingTalent,
+                    PerkTreePoints = profile.PerkTreePoints != null
+                        ? profile.PerkTreePoints.ToArray()
+                        : Array.Empty<PerkTreePoints>(),
                     HardStats = profile.HardStats,
                     MapRun = profile.MapRun != null ? profile.MapRun.Clone() : null,
                 };
@@ -479,6 +526,9 @@ namespace M3P
                         ? new List<int>(UnlockedTalentIds)
                         : new List<int>(),
                     PendingTalent = PendingTalent,
+                    PerkTreePoints = PerkTreePoints != null
+                        ? new List<PerkTreePoints>(PerkTreePoints)
+                        : new List<PerkTreePoints>(),
                     HardStats = HardStats,
                     MapRun = MapRun != null ? MapRun.Clone() : null,
                 };

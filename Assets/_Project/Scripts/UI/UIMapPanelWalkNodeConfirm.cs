@@ -82,11 +82,15 @@ namespace M3P
             Initialize();
             _onConfirm = onConfirm;
             _onCancel = onCancel;
+            UIPanelClosable.BlockWorldInput();
             Root.SetActive(true);
         }
 
         public void Hide()
         {
+            if (Root.activeInHierarchy)
+                UIPanelClosable.BlockWorldInput();
+
             _onConfirm = null;
             _onCancel = null;
             Root.SetActive(false);

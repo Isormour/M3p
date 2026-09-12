@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25723ff7ec4d09240a43340a6c620ca8, type: 3}
+  m_Name: PerkTree_Constitution
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkTree
+  Nazwa: Constitution
+  id: 3
+  perks:
+  - StatLevel: 1
+    Perk: {fileID: 11400000, guid: 6e800675d99a7124caf3d6236d0cd04e, type: 2}
+  - StatLevel: 3
+    Perk: {fileID: 11400000, guid: 226fc8b9342e52b4185160557b274282, type: 2}
+  - StatLevel: 5
+    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
+  - StatLevel: 7
+    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
+  - StatLevel: 9
+    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
+  - StatLevel: 11
+    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
+  - StatLevel: 13
+    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
+  - StatLevel: 15
+    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
+  - StatLevel: 17
+    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
+  - StatLevel: 19
+    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
+  - StatLevel: 21
+    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
+  - StatLevel: 23
+    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
+  - StatLevel: 25
+    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
+  - StatLevel: 27
+    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
+  - StatLevel: 29
+    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
+  TreeStatBonusLogic:
+    rid: 816005044332658840
+  _icon: {fileID: 21300000, guid: 203e8f281a830a84cbed9d96beff3e8b, type: 3}
+  references:
+    version: 2
+    RefIds:
+    - rid: 816005044332658840
+      type: {class: AddHardStatBonus, ns: M3P, asm: Assembly-CSharp}
+      data:
+        _stat: 2
+        _amountPerPoint: 1

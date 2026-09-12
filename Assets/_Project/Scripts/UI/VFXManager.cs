@@ -53,8 +53,13 @@ namespace M3P
         [Tooltip("Mark drawn on a tile a queued Destroy card will crack and remove.")]
         [SerializeField] TileGhost _tileDestroyIndicatorPrefab;
 
+        [Header("Damage")]
+        [SerializeField] VFXDamage _damageIndicatorPrefab;
+
         Match3Board _board;
         CardPlayController _cardPlay;
+        BattleCharacter _boundPlayer;
+        BattleCharacter _boundEnemy;
         readonly List<TileMoveIndicator> _moveIndicators = new List<TileMoveIndicator>();
         readonly List<TileGhost> _destroyIndicators = new List<TileGhost>();
         readonly Dictionary<int, Vector2Int> _predictedCellsByTileId = new Dictionary<int, Vector2Int>();
@@ -93,6 +98,7 @@ namespace M3P
                 BindBoard(_battleManager.ActiveBoard);
 
             BindCardPlay();
+            BindDamageListeners();
             RefreshPlanningIndicators();
         }
 
@@ -108,12 +114,14 @@ namespace M3P
 
             UnbindCardPlay();
             UnbindBoard();
+            UnbindDamageListeners();
         }
 
         void HandleBattleStarted(Match3Board board)
         {
             BindBoard(board);
             BindCardPlay();
+            BindDamageListeners();
             RefreshPlanningIndicators();
         }
 
@@ -173,6 +181,54 @@ namespace M3P
         void HandleCardPlayChanged()
         {
             RefreshPlanningIndicators();
+        }
+
+        void BindDamageListeners()
+        {
+            UnbindDamageListeners();
+
+            if (_battleManager == null)
+                return;
+
+            _boundPlayer = _battleManager.Player;
+            _boundEnemy = _battleManager.ActiveEnemy;
+
+            if (_boundPlayer != null)
+                _boundPlayer.Damaged += HandlePlayerDamaged;
+
+            if (_boundEnemy != null)
+                _boundEnemy.Damaged += HandleEnemyDamaged;
+        }
+
+        void UnbindDamageListeners()
+        {
+            if (_boundPlayer != null)
+                _boundPlayer.Damaged -= HandlePlayerDamaged;
+
+            if (_boundEnemy != null)
+                _boundEnemy.Damaged -= HandleEnemyDamaged;
+
+            _boundPlayer = null;
+            _boundEnemy = null;
+        }
+
+        void HandlePlayerDamaged(int damage)
+        {
+            SpawnDamageIndicator(GetPlayerVfxPoint(), damage);
+        }
+
+        void HandleEnemyDamaged(int damage)
+        {
+            SpawnDamageIndicator(GetEnemyVfxPoint(), damage);
+        }
+
+        void SpawnDamageIndicator(Transform origin, int damage)
+        {
+            if (_damageIndicatorPrefab == null || origin == null || damage <= 0)
+                return;
+
+            VFXDamage instance = Instantiate(_damageIndicatorPrefab, origin.position, Quaternion.identity);
+            instance.Present(damage);
         }
 
         void RefreshPlanningIndicators()

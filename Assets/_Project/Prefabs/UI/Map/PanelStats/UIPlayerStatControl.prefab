@@ -34,8 +34,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -129, y: -67}
-  m_SizeDelta: {x: 200, y: 50}
+  m_AnchoredPosition: {x: -142.48, y: -67}
+  m_SizeDelta: {x: 212.4, y: 50}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &2012055058751886829
 CanvasRenderer:
@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Strength
+  m_text: Constitution
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -92,15 +92,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
+  m_fontSize: 32.3
   m_fontSizeBase: 36
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 1
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -131,7 +131,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: 0, z: 16.491669, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -574,7 +574,7 @@ MonoBehaviour:
   m_fontSizeMax: 72
   m_fontStyle: 1
   m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -963,7 +963,8 @@ MonoBehaviour:
   _valueLabel: {fileID: 1038388478745137890}
   _increaseButton: {fileID: 7118031850753709719}
   _decreaseButton: {fileID: 2203727940852728150}
-  _perkSection: {fileID: 8412330679154028871}
+  statIcon: {fileID: 7769083244078838786}
+  _perkSection: {fileID: 6991710218619524717}
 --- !u!1001 &7465718415040512689
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1066,7 +1067,7 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 5229103566183237807, guid: 0deaaee9981d0d44baa9516cbc770314, type: 3}
   m_PrefabInstance: {fileID: 7465718415040512689}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &8412330679154028871 stripped
+--- !u!114 &6991710218619524717 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 476260271658898652, guid: 0deaaee9981d0d44baa9516cbc770314, type: 3}
   m_PrefabInstance: {fileID: 7465718415040512689}

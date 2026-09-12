@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace M3P
@@ -8,17 +9,28 @@ namespace M3P
     {
         StatProgressionConfig _progression;
         TalentBonuses _talentBonuses;
+        IReadOnlyList<PerkTreePoints> _treePoints;
 
         public HardStats Hard;
         public SoftStats Soft;
         public TalentBonuses TalentBonuses => _talentBonuses;
 
         public CharacterStats(HardStats hard, StatProgressionConfig progression, TalentBonuses talentBonuses = default)
+            : this(hard, progression, talentBonuses, null)
+        {
+        }
+
+        public CharacterStats(
+            HardStats hard,
+            StatProgressionConfig progression,
+            TalentBonuses talentBonuses,
+            IReadOnlyList<PerkTreePoints> treePoints)
         {
             Hard = hard;
             _progression = progression ?? StatProgressionConfig.CreateDefault();
             _talentBonuses = talentBonuses;
-            Soft = new SoftStats(hard, _progression, _talentBonuses);
+            _treePoints = treePoints;
+            Soft = new SoftStats(hard, _progression, _talentBonuses, _treePoints);
         }
 
         public int MaxHealth => Soft != null ? Soft.MaxHP : 1;
@@ -27,7 +39,7 @@ namespace M3P
 
         public void RecalculateSoftStatsForBattle()
         {
-            Soft?.RecalculateFromHard(Hard, _progression, _talentBonuses);
+            Soft?.RecalculateFromHard(Hard, _progression, _talentBonuses, _treePoints);
         }
     }
 }

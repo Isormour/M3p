@@ -32,13 +32,26 @@ namespace M3P
 
         public TileDeckDefinition StarterTileDeck => _starterTileDeck;
 
-        public PlayerProfile CreateProfile(SkillConfig skillConfig, CardConfig cardConfig, TileConfig tileConfig)
+        public PlayerProfile CreateProfile(
+            SkillConfig skillConfig,
+            CardConfig cardConfig,
+            TileConfig tileConfig,
+            StatProgressionConfig statProgression = null)
         {
             PlayerProfile profile = new PlayerProfile { HardStats = _hardStats };
+            statProgression?.EnsureDefaultTrees(profile, _hardStats);
             CopyStartingSkills(profile, skillConfig);
             CopyStarterDeck(profile, cardConfig);
             CopyStarterTileDeck(profile, tileConfig);
             return profile;
+        }
+
+        /// <summary>
+        /// Inserts every authored perk tree a save written before trees existed never stored.
+        /// </summary>
+        public void EnsureDefaultPerkTrees(PlayerProfile profile, StatProgressionConfig statProgression)
+        {
+            statProgression?.EnsureDefaultTrees(profile, _hardStats);
         }
 
         /// <summary>

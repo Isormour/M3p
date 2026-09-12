@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Match3;
@@ -141,23 +142,51 @@ namespace M3P.Editor
 
         void DrawHardStats()
         {
-            _showHardStats = EditorGUILayout.Foldout(_showHardStats, "Hard Stats", true);
+            _showHardStats = EditorGUILayout.Foldout(_showHardStats, "Perk Trees / Hard Stats", true);
             if (!_showHardStats)
                 return;
 
-            HardStats stats = _working.HardStats;
+            StatProgressionConfig progression = _config != null ? _config.StatProgression : null;
             using (new EditorGUI.IndentLevelScope())
             {
-                stats.Strength = DrawStat("Strength", stats.Strength);
-                stats.Intelligence = DrawStat("Intelligence", stats.Intelligence);
-                stats.Constitution = DrawStat("Constitution", stats.Constitution);
-                stats.Agility = DrawStat("Agility", stats.Agility);
-            }
+                DrawPerkTreePoints(progression);
 
-            if (!stats.Equals(_working.HardStats))
+                EditorGUILayout.Space(4f);
+                EditorGUILayout.LabelField("Derived Hard Stats", EditorStyles.miniBoldLabel);
+                HardStats stats = progression != null
+                    ? progression.CalculateHardStats(_working.PerkTreePoints)
+                    : _working.HardStats;
+                using (new EditorGUI.DisabledScope(true))
+                {
+                    EditorGUILayout.IntField("Strength", stats.Strength);
+                    EditorGUILayout.IntField("Intelligence", stats.Intelligence);
+                    EditorGUILayout.IntField("Constitution", stats.Constitution);
+                    EditorGUILayout.IntField("Agility", stats.Agility);
+                }
+            }
+        }
+
+        void DrawPerkTreePoints(StatProgressionConfig progression)
+        {
+            EditorGUILayout.LabelField("Perk Tree Points", EditorStyles.miniBoldLabel);
+            _working.PerkTreePoints ??= new List<PerkTreePoints>();
+
+            PerkTree[] trees = progression != null ? progression.PerkTrees : Array.Empty<PerkTree>();
+            for (int i = 0; i < trees.Length; i++)
             {
-                _working.HardStats = stats;
-                MarkDirty();
+                PerkTree tree = trees[i];
+                if (tree == null || tree.Id == PerkTree.InvalidId)
+                    continue;
+
+                int value = _working.GetPerkTreePoints(tree.Id);
+                int next = DrawStat($"{tree.DisplayName} ({tree.Id})", value);
+                if (next != value)
+                {
+                    _working.SetPerkTreePoints(tree.Id, next);
+                    if (progression != null)
+                        _working.HardStats = progression.CalculateHardStats(_working.PerkTreePoints);
+                    MarkDirty();
+                }
             }
         }
 
@@ -1035,6 +1064,7 @@ namespace M3P.Editor
                 PlayerProfile loaded = PlayerProfile.FromJson(File.ReadAllText(ProfileManager.SavePath));
                 _config?.PlayerStart?.EnsureStarterCards(loaded, _config.Cards);
                 _config?.PlayerStart?.EnsureStarterTiles(loaded, _config.Tiles);
+                _config?.PlayerStart?.EnsureDefaultPerkTrees(loaded, _config.StatProgression);
                 return loaded;
             }
 
@@ -1047,7 +1077,7 @@ namespace M3P.Editor
             if (start == null)
                 return new PlayerProfile();
 
-            return start.CreateProfile(_config.Skills, _config.Cards, _config.Tiles);
+            return start.CreateProfile(_config.Skills, _config.Cards, _config.Tiles, _config.StatProgression);
         }
 
         static PlayerProfile CloneProfile(PlayerProfile source)

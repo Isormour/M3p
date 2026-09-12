@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,27 +12,15 @@ namespace M3P
     /// </summary>
     public sealed class UIPanelPlayerStats : UIPanelClosable
     {
-        static readonly int StatTypeCount = Enum.GetValues(typeof(EStatType)).Length;
-
         [SerializeField] TextMeshProUGUI _levelLabel;
         [SerializeField] TextMeshProUGUI _unspentPointsLabel;
 
         [SerializeField] Button _confirmButton;
 
-        [Tooltip("One row per stat, top to bottom.")]
+        [Tooltip("One row per perk tree, top to bottom. Extra trees are ignored until more rows exist.")]
         [SerializeField] UIPlayerStatControl[] _statControls = Array.Empty<UIPlayerStatControl>();
 
-        [Tooltip("Which stat each row above represents.")]
-        [SerializeField]
-        EStatType[] _statOrder =
-        {
-            EStatType.Strength,
-            EStatType.Constitution,
-            EStatType.Intelligence,
-            EStatType.Agility
-        };
-
-        readonly int[] _pendingByStat = new int[StatTypeCount];
+        readonly Dictionary<int, int> _pendingByTree = new Dictionary<int, int>();
 
         protected override void OnInitialize()
         {
@@ -107,7 +96,7 @@ namespace M3P
         /// <summary>Drops the allocation without spending anything, for a cancel button.</summary>
         public void DiscardPendingAllocation()
         {
-            Array.Clear(_pendingByStat, 0, _pendingByStat.Length);
+            _pendingByTree.Clear();
             Refresh();
         }
 
@@ -134,11 +123,16 @@ namespace M3P
             get
             {
                 int total = 0;
-                for (int i = 0; i < _pendingByStat.Length; i++)
-                    total += _pendingByStat[i];
+                foreach (KeyValuePair<int, int> entry in _pendingByTree)
+                    total += entry.Value;
 
                 return total;
             }
+        }
+
+        int GetPending(int treeId)
+        {
+            return _pendingByTree.TryGetValue(treeId, out int pending) ? pending : 0;
         }
 
         void BindControls()
@@ -149,41 +143,37 @@ namespace M3P
                 if (control == null)
                     continue;
 
-                if (_statOrder == null || i >= _statOrder.Length)
-                {
-                    Debug.LogError(
-                        $"{nameof(UIPanelPlayerStats)}: row {i} has no entry in {nameof(_statOrder)}, so it cannot know which stat it edits.",
-                        this);
-                    continue;
-                }
-
-                control.Bind(_statOrder[i]);
                 control.IncreaseClicked += HandleIncreaseClicked;
                 control.DecreaseClicked += HandleDecreaseClicked;
             }
         }
 
-        void HandleIncreaseClicked(EStatType stat)
+        void HandleIncreaseClicked(int treeId)
         {
             PlayerProfile profile = Profiles?.CurrentProfile;
-            if (profile == null || profile.UnspentStatPoints - TotalPending <= 0)
+            if (profile == null || treeId == PerkTree.InvalidId || profile.UnspentStatPoints - TotalPending <= 0)
                 return;
 
             StatProgressionConfig progression = Progression?.StatProgression;
-            if (progression != null &&
-                profile.HardStats.Get(stat) + _pendingByStat[(int)stat] >= progression.MaxStatValue)
+            int value = profile.GetPerkTreePoints(treeId) + GetPending(treeId);
+            if (progression != null && value >= progression.MaxStatValue)
                 return;
 
-            _pendingByStat[(int)stat]++;
+            _pendingByTree[treeId] = GetPending(treeId) + 1;
             Refresh();
         }
 
-        void HandleDecreaseClicked(EStatType stat)
+        void HandleDecreaseClicked(int treeId)
         {
-            if (_pendingByStat[(int)stat] <= 0)
+            int pending = GetPending(treeId);
+            if (pending <= 0)
                 return;
 
-            _pendingByStat[(int)stat]--;
+            if (pending == 1)
+                _pendingByTree.Remove(treeId);
+            else
+                _pendingByTree[treeId] = pending - 1;
+
             Refresh();
         }
 
@@ -204,17 +194,17 @@ namespace M3P
                 Debug.LogError(
                     $"{nameof(UIPanelPlayerStats)}: no {nameof(GameManager)} in the scene, so the allocation cannot be saved.",
                     this);
-                Array.Clear(_pendingByStat, 0, _pendingByStat.Length);
+                _pendingByTree.Clear();
                 return;
             }
 
-            for (int i = 0; i < _pendingByStat.Length; i++)
+            foreach (KeyValuePair<int, int> entry in _pendingByTree)
             {
-                if (_pendingByStat[i] > 0)
-                    progression.TryAllocateStatPoints((EStatType)i, _pendingByStat[i]);
+                if (entry.Value > 0)
+                    progression.TryAllocatePerkTreePoints(entry.Key, entry.Value);
             }
 
-            Array.Clear(_pendingByStat, 0, _pendingByStat.Length);
+            _pendingByTree.Clear();
         }
 
         void Refresh()
@@ -227,6 +217,7 @@ namespace M3P
             int totalPending = TotalPending;
 
             StatProgressionConfig progression = Progression?.StatProgression;
+            PerkTree[] trees = progression != null ? progression.PerkTrees : Array.Empty<PerkTree>();
             int maxStatValue = progression != null ? progression.MaxStatValue : int.MaxValue;
 
             if (_levelLabel != null)
@@ -244,8 +235,17 @@ namespace M3P
                 if (control == null)
                     continue;
 
-                int pending = _pendingByStat[(int)control.Stat];
-                int value = profile.HardStats.Get(control.Stat) + pending;
+                PerkTree tree = i < trees.Length ? trees[i] : null;
+                control.Bind(tree);
+
+                if (tree == null)
+                {
+                    control.Refresh(progression, 0, 0, false);
+                    continue;
+                }
+
+                int pending = GetPending(tree.Id);
+                int value = profile.GetPerkTreePoints(tree.Id) + pending;
                 control.Refresh(progression, value, pending, remainingPoints > 0 && value < maxStatValue);
             }
         }

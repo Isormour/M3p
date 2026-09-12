@@ -19,75 +19,8 @@ MonoBehaviour:
   _talentMilestoneInterval: 5
   _maxStatValue: 30
   _perkConfig: {fileID: 11400000, guid: d058500a236da97448d5f19de4d5b60b, type: 2}
-  _strengthProgression:
-  - StatLevel: 1
-    Perk: {fileID: 11400000, guid: e8290c3266f94474397a69a9d98467ec, type: 2}
-  - StatLevel: 5
-    Perk: {fileID: 11400000, guid: 40a920d36fb22dc418a6d2603af906bc, type: 2}
-  - StatLevel: 10
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  - StatLevel: 15
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  - StatLevel: 20
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  - StatLevel: 25
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  - StatLevel: 30
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  - StatLevel: 35
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  - StatLevel: 40
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  _intelligenceProgression:
-  - StatLevel: 5
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 10
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 15
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 20
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 25
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 30
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 35
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 40
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  _constitutionProgression:
-  - StatLevel: 1
-    Perk: {fileID: 11400000, guid: 6e800675d99a7124caf3d6236d0cd04e, type: 2}
-  - StatLevel: 5
-    Perk: {fileID: 11400000, guid: 226fc8b9342e52b4185160557b274282, type: 2}
-  - StatLevel: 10
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  - StatLevel: 15
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  - StatLevel: 20
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  - StatLevel: 25
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  - StatLevel: 30
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  - StatLevel: 35
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  - StatLevel: 40
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  _agilityProgression:
-  - StatLevel: 5
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 10
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 15
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 20
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 25
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 30
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 35
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 40
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
+  _perkTrees:
+  - {fileID: 11400000, guid: 47e7f69e311ee19458f375d426a2759b, type: 2}
+  - {fileID: 11400000, guid: 0aa10ed752ee7c344abbab58d1fd1862, type: 2}
+  - {fileID: 11400000, guid: 6615e719c5e91e04db5c8e04d3b212f8, type: 2}
+  - {fileID: 11400000, guid: 9099412e9ebb60d44bf4d388f11a6254, type: 2}

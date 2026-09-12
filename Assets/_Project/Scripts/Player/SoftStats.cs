@@ -32,10 +32,19 @@ namespace M3P
 
         public event Action Changed;
 
-        public SoftStats(HardStats hard, StatProgressionConfig progression, TalentBonuses talents = default)
+        /// <summary>Health plus shield actually lost by the last <see cref="TakeDamage"/>.</summary>
+        public event Action<int> Damaged;
+
+        public SoftStats(
+            HardStats hard,
+            StatProgressionConfig progression,
+            TalentBonuses talents = default,
+            IReadOnlyList<PerkTreePoints> treePoints = null)
         {
             progression ??= StatProgressionConfig.CreateDefault();
-            SoftStatValues calculated = progression.CalculateSoftStats(hard, talents);
+            SoftStatValues calculated = treePoints != null
+                ? progression.CalculateSoftStats(treePoints, talents)
+                : progression.CalculateSoftStats(hard, talents);
             BasicAttackDamage = calculated.BasicAttackDamage;
             MaxHP = calculated.MaxHP;
             CurrentHealth = MaxHP;
@@ -90,6 +99,9 @@ namespace M3P
             if (amount <= 0)
                 return;
 
+            int healthBefore = CurrentHealth;
+            int shieldBefore = CurrentShield;
+
             if (CurrentShield > 0)
             {
                 int absorbed = Math.Min(CurrentShield, amount);
@@ -101,6 +113,10 @@ namespace M3P
                 CurrentHealth = Math.Max(0, CurrentHealth - amount);
 
             NotifyChanged();
+
+            int dealt = (shieldBefore - CurrentShield) + (healthBefore - CurrentHealth);
+            if (dealt > 0)
+                Damaged?.Invoke(dealt);
         }
 
         public void Heal(int amount)
@@ -190,10 +206,16 @@ namespace M3P
             NotifyChanged();
         }
 
-        public void RecalculateFromHard(HardStats hard, StatProgressionConfig progression, TalentBonuses talents = default)
+        public void RecalculateFromHard(
+            HardStats hard,
+            StatProgressionConfig progression,
+            TalentBonuses talents = default,
+            IReadOnlyList<PerkTreePoints> treePoints = null)
         {
             progression ??= StatProgressionConfig.CreateDefault();
-            SoftStatValues calculated = progression.CalculateSoftStats(hard, talents);
+            SoftStatValues calculated = treePoints != null
+                ? progression.CalculateSoftStats(treePoints, talents)
+                : progression.CalculateSoftStats(hard, talents);
             BasicAttackDamage = calculated.BasicAttackDamage;
             MaxHP = calculated.MaxHP;
             CurrentHealth = MaxHP;

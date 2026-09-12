@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace M3P
 {
     /// <summary>
-    /// One row of the stat panel: which stat it shows, its current value and the two spend buttons.
+    /// One row of the stat panel: which perk tree it shows, its current value and the two spend buttons.
     /// The row reports clicks and displays what it is told; the panel owns all the rules.
     /// </summary>
     public sealed class UIPlayerStatControl : MonoBehaviour
@@ -15,16 +15,18 @@ namespace M3P
         [SerializeField] TextMeshProUGUI _valueLabel;
         [SerializeField] Button _increaseButton;
         [SerializeField] Button _decreaseButton;
+        [SerializeField] Image statIcon;
 
         [Tooltip("Perk ladder drawn above the row; optional for rows that only show a number.")]
         [SerializeField] UIPanelStatsPerkSection _perkSection;
 
-        EStatType _stat;
+        PerkTree _tree;
 
-        public event Action<EStatType> IncreaseClicked;
-        public event Action<EStatType> DecreaseClicked;
+        public event Action<int> IncreaseClicked;
+        public event Action<int> DecreaseClicked;
 
-        public EStatType Stat => _stat;
+        public PerkTree Tree => _tree;
+        public int TreeId => _tree != null ? _tree.Id : PerkTree.InvalidId;
 
         void Awake()
         {
@@ -60,18 +62,21 @@ namespace M3P
 
             if (_perkSection == null)
                 _perkSection = GetComponentInChildren<UIPanelStatsPerkSection>(true);
+
+            if (statIcon == null)
+                statIcon = FindChild<Image>("StatImage");
         }
 
-        /// <summary>Tells the row which stat it represents. Called by the panel, not authored per row.</summary>
-        public void Bind(EStatType stat)
+        /// <summary>Tells the row which perk tree it represents. Called by the panel, not authored per row.</summary>
+        public void Bind(PerkTree tree)
         {
-            _stat = stat;
+            _tree = tree;
 
             if (_nameLabel != null)
-                _nameLabel.text = GetDisplayName(stat);
+                _nameLabel.text = tree != null ? tree.DisplayName : string.Empty;
         }
 
-        /// <param name="progression">Source of the perk ladder and the stat cap it is scaled against.</param>
+        /// <param name="progression">Source of the cap the ladder is scaled against.</param>
         /// <param name="value">Committed value plus anything pending, so the row reads as the result.</param>
         /// <param name="pendingPoints">Points spent here but not yet written to the profile.</param>
         /// <param name="canIncrease">False once there are no points left to spend or the cap is reached.</param>
@@ -80,9 +85,11 @@ namespace M3P
             if (_valueLabel != null)
                 _valueLabel.text = value.ToString();
 
+            ApplyStatIcon();
+
             if (_perkSection != null)
             {
-                _perkSection.Bind(_stat, progression);
+                _perkSection.Bind(_tree, progression);
                 _perkSection.Refresh(value);
             }
 
@@ -93,31 +100,32 @@ namespace M3P
                 _decreaseButton.interactable = pendingPoints > 0;
         }
 
-        void HandleIncreaseClicked() => IncreaseClicked?.Invoke(_stat);
+        void ApplyStatIcon()
+        {
+            if (statIcon == null)
+                return;
 
-        void HandleDecreaseClicked() => DecreaseClicked?.Invoke(_stat);
+            Sprite icon = _tree != null ? _tree.Icon : null;
+            statIcon.sprite = icon;
+            statIcon.enabled = icon != null;
+        }
+
+        void HandleIncreaseClicked()
+        {
+            if (TreeId != PerkTree.InvalidId)
+                IncreaseClicked?.Invoke(TreeId);
+        }
+
+        void HandleDecreaseClicked()
+        {
+            if (TreeId != PerkTree.InvalidId)
+                DecreaseClicked?.Invoke(TreeId);
+        }
 
         T FindChild<T>(string childName) where T : Component
         {
             Transform child = transform.Find(childName);
             return child != null ? child.GetComponent<T>() : null;
-        }
-
-        static string GetDisplayName(EStatType stat)
-        {
-            switch (stat)
-            {
-                case EStatType.Strength:
-                    return "Strength";
-                case EStatType.Intelligence:
-                    return "Intelligence";
-                case EStatType.Constitution:
-                    return "Constitution";
-                case EStatType.Agility:
-                    return "Agility";
-                default:
-                    return stat.ToString();
-            }
         }
     }
 }

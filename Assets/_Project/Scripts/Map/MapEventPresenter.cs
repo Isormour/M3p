@@ -26,13 +26,19 @@ namespace M3P
             _title.text = title;
             _body.text = body;
             _confirmButton.GetComponentInChildren<TextMeshProUGUI>().text = confirmLabel;
+            UIPanelClosable.BlockWorldInput();
             _panel.SetActive(true);
         }
 
         public void Hide()
         {
             if (_panel != null)
+            {
+                if (_panel.activeSelf)
+                    UIPanelClosable.BlockWorldInput();
+
                 _panel.SetActive(false);
+            }
 
             _onConfirm = null;
         }

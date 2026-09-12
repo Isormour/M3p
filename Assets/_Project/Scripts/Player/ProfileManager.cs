@@ -53,13 +53,16 @@ namespace M3P
             profile.NormalizeAfterLoad();
             int cardsBeforeSeed = profile.Cards.Count;
             int tilesBeforeSeed = profile.Tiles.Count;
+            int treesBeforeSeed = profile.PerkTreePoints != null ? profile.PerkTreePoints.Count : 0;
             _config?.PlayerStart?.EnsureStarterCards(profile, _config.Cards);
             _config?.PlayerStart?.EnsureStarterTiles(profile, _config.Tiles);
+            _config?.PlayerStart?.EnsureDefaultPerkTrees(profile, _config.StatProgression);
             SetCurrentProfile(profile);
 
             bool seededCards = profile.Cards.Count > cardsBeforeSeed;
             bool seededTiles = profile.Tiles.Count > tilesBeforeSeed;
-            if (!hadSave || seededCards || seededTiles)
+            bool seededTrees = (profile.PerkTreePoints != null ? profile.PerkTreePoints.Count : 0) > treesBeforeSeed;
+            if (!hadSave || seededCards || seededTiles || seededTrees)
                 Save();
 
             return profile;
@@ -98,7 +101,7 @@ namespace M3P
                 return new PlayerProfile();
             }
 
-            return start.CreateProfile(_config.Skills, _config.Cards, _config.Tiles);
+            return start.CreateProfile(_config.Skills, _config.Cards, _config.Tiles, _config.StatProgression);
         }
 
         void SetCurrentProfile(PlayerProfile profile)

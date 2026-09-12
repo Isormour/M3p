@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace M3P
 {
@@ -113,13 +114,15 @@ namespace M3P
             if (_inputLocked ||
                 _token != null && _token.IsMoving ||
                 _events != null && _events.IsOpen ||
-                _walkNodeConfirmPanel != null && _walkNodeConfirmPanel.IsOpen ||
-                _cardShopPanel != null && _cardShopPanel.IsOpen ||
-                _forgePanel != null && _forgePanel.IsOpen ||
-                _gainSkillPanel != null && _gainSkillPanel.IsOpen)
+                _walkNodeConfirmPanel != null && _walkNodeConfirmPanel.IsOpen)
                 return;
 
             if (!Input.GetMouseButtonDown(0))
+                return;
+
+            if (UIPanelClosable.IsWorldInputBlocked ||
+                UIPanelClosable.IsAnyOpen() ||
+                IsPointerOverUi())
                 return;
 
             Camera cameraRef = Camera.main;
@@ -135,6 +138,21 @@ namespace M3P
                 return;
 
             HandleNodeClicked(node.NodeId, node);
+        }
+
+        static bool IsPointerOverUi()
+        {
+            EventSystem eventSystem = EventSystem.current;
+            if (eventSystem == null)
+                return false;
+
+            if (eventSystem.IsPointerOverGameObject())
+                return true;
+
+            if (Input.touchCount > 0)
+                return eventSystem.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+
+            return false;
         }
 
         void OnDestroy()
