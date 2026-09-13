@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace M3P
 {
@@ -13,11 +11,11 @@ namespace M3P
     {
         [SerializeField] Transform _ownedCardsGroup;
         [SerializeField] Transform _cardsInDeckGroup;
-        [SerializeField] Button _cardInDeckPrefab;
+        [SerializeField] UIDeckCardButton _cardInDeckPrefab;
         [SerializeField] UIBoardActionCard _cardPrefab;
 
         readonly List<UIBoardActionCard> _ownedViews = new List<UIBoardActionCard>();
-        readonly List<Button> _deckViews = new List<Button>();
+        readonly List<UIDeckCardButton> _deckViews = new List<UIDeckCardButton>();
 
         void OnEnable()
         {
@@ -112,6 +110,7 @@ namespace M3P
                 view.Configure(card, () => HandleOwnedCardClicked(ownedIndex));
                 view.SetInteractable(!inDeck);
                 view.SetFrameMaskEnabled(inDeck);
+                view.SetSelectedHighlight(inDeck);
                 _ownedViews.Add(view);
             }
         }
@@ -141,26 +140,11 @@ namespace M3P
                     continue;
 
                 int deckIndex = i;
-                Button view = Instantiate(_cardInDeckPrefab, _cardsInDeckGroup);
+                UIDeckCardButton view = Instantiate(_cardInDeckPrefab, _cardsInDeckGroup);
                 view.name = $"Deck_{card.name}_{deckIndex + 1}";
-                ConfigureDeckButton(view, card);
-                view.onClick.AddListener(() => HandleDeckCardClicked(deckIndex));
+                view.Configure(card, () => HandleDeckCardClicked(deckIndex));
                 _deckViews.Add(view);
             }
-        }
-
-        static void ConfigureDeckButton(Button button, BoardActionCardDefinition card)
-        {
-            UICardVisuals visuals = button.GetComponentInChildren<UICardVisuals>(true);
-            if (visuals != null)
-            {
-                visuals.SetCardData(card);
-                return;
-            }
-
-            TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (label != null)
-                label.text = card != null ? card.DisplayName : string.Empty;
         }
 
         void HandleOwnedCardClicked(int ownedIndex)

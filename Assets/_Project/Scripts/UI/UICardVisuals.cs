@@ -7,13 +7,19 @@ namespace M3P
 {
     public sealed class UICardVisuals : MonoBehaviour
     {
+        const string ColorMultProperty = "_ColorMult";
+        const float ColorMultUnselected = 0f;
+        const float ColorMultSelected = 1f;
+
         [SerializeField] TextMeshProUGUI descriptionLabel;
         [SerializeField] Image cardImage;
         [SerializeField] Transform _costContainer;
         [SerializeField] GameObject _costIndicatorPrefab;
         [SerializeField] GameObject _frameMask;
+        [SerializeField] Image _frameImage;
 
         readonly List<GameObject> _costIndicators = new List<GameObject>();
+        Material _frameMaterial;
 
         public void SetCardData(BoardActionCardDefinition card)
         {
@@ -38,9 +44,17 @@ namespace M3P
                 _frameMask.SetActive(enabled);
         }
 
+        public void SetSelectedHighlight(bool selected)
+        {
+            EnsureFrameMaterial();
+            if (_frameMaterial != null)
+                _frameMaterial.SetFloat(ColorMultProperty, selected ? ColorMultSelected : ColorMultUnselected);
+        }
+
         void Awake()
         {
             ResolveFrameMask();
+            SetSelectedHighlight(false);
         }
 
         void OnValidate()
@@ -56,6 +70,26 @@ namespace M3P
             Transform child = transform.Find("FrameMask");
             if (child != null)
                 _frameMask = child.gameObject;
+        }
+
+        void EnsureFrameMaterial()
+        {
+            if (_frameImage == null)
+            {
+                Transform frame = transform.Find("Frame");
+                if (frame != null)
+                    _frameImage = frame.GetComponent<Image>();
+            }
+
+            if (_frameImage == null || _frameMaterial != null)
+                return;
+
+            Material source = _frameImage.material;
+            if (source == null || !source.HasProperty(ColorMultProperty))
+                return;
+
+            _frameMaterial = new Material(source);
+            _frameImage.material = _frameMaterial;
         }
 
         void BuildCostIndicators(int cost)
@@ -99,6 +133,9 @@ namespace M3P
         void OnDestroy()
         {
             ClearCostIndicators();
+
+            if (_frameMaterial != null)
+                Destroy(_frameMaterial);
         }
     }
 }

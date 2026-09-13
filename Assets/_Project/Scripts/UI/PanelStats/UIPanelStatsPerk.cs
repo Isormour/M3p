@@ -16,6 +16,9 @@ namespace M3P
         [SerializeField] Color _unlockedTint = Color.white;
         [SerializeField] Color _lockedTint = new Color(0.22f, 0.22f, 0.26f, 1f);
 
+        PerkDefinition _perk;
+        bool _unlocked;
+
         /// <summary>Stat value this perk needs, so the ladder can re-light itself without the config.</summary>
         public int StatLevel { get; private set; }
 
@@ -25,12 +28,21 @@ namespace M3P
         /// <param name="heightRatio">Threshold over the stat cap: where the marker sits on the bar.</param>
         public void Bind(PerkDefinition perk, int statLevel, float heightRatio)
         {
+            _perk = perk;
             StatLevel = statLevel;
             HeightRatio = Mathf.Clamp01(heightRatio);
 
             // An unauthored artwork keeps the prefab's placeholder rather than blanking the marker.
             if (_perkIcon != null && perk != null && perk.Artwork != null)
                 _perkIcon.sprite = perk.Artwork;
+
+            // Border sits above the icon and would steal hover if it kept raycasts.
+            if (_perkIcon != null)
+                _perkIcon.raycastTarget = false;
+            if (_frame != null)
+                _frame.raycastTarget = false;
+
+            UITooltipTrigger.Ensure(gameObject, () => TooltipBuilder.FromPerk(_perk, StatLevel, _unlocked));
         }
 
         /// <summary>Pins the icon beside the fill bar at this perk's threshold height.</summary>
@@ -45,6 +57,7 @@ namespace M3P
 
         public void SetUnlocked(bool unlocked)
         {
+            _unlocked = unlocked;
             Color tint = unlocked ? _unlockedTint : _lockedTint;
 
             if (_perkIcon != null)

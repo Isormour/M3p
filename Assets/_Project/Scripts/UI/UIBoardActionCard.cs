@@ -85,6 +85,16 @@ namespace M3P
         public void SetSelected(bool selected)
         {
             transform.localScale = Vector3.one * (selected ? SelectedScale : 1f);
+            SetSelectedHighlight(selected);
+        }
+
+        public void SetSelectedHighlight(bool selected)
+        {
+            if (_visuals == null)
+                _visuals = GetComponentInChildren<UICardVisuals>(true);
+
+            if (_visuals != null)
+                _visuals.SetSelectedHighlight(selected);
         }
 
         void HandleClick()

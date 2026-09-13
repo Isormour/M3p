@@ -1622,7 +1622,7 @@ PrefabInstance:
     - target: {fileID: 5123489012345678901, guid: 4ce3e17e966f49d448474e645706ace9, type: 3}
       propertyPath: _cardsPanel
       value: 
-      objectReference: {fileID: 8297835222153635691}
+      objectReference: {fileID: 0}
     - target: {fileID: 5123489012345678901, guid: 4ce3e17e966f49d448474e645706ace9, type: 3}
       propertyPath: _statsPanel
       value: 
@@ -2406,6 +2406,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5230195688542249370, guid: eeb98c5d8ee9aec439d0630250159fa3, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2416,17 +2420,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 3231520402290303496, guid: eeb98c5d8ee9aec439d0630250159fa3, type: 3}
   m_PrefabInstance: {fileID: 8297835222153635689}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &8297835222153635691 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6115189611317060338, guid: eeb98c5d8ee9aec439d0630250159fa3, type: 3}
-  m_PrefabInstance: {fileID: 8297835222153635689}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db174adac58ea3544aadadd76883362d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::M3P.UIPanelPlayerCards
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

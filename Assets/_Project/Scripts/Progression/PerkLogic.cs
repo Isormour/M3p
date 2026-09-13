@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace M3P
@@ -15,6 +16,8 @@ namespace M3P
     public abstract class PerkLogic
     {
         public abstract void Apply(ref SoftStatValues stats);
+
+        public virtual void AppendTooltipLines(List<TooltipLine> lines) { }
     }
 
     [Serializable]
@@ -28,6 +31,15 @@ namespace M3P
         public override void Apply(ref SoftStatValues stats)
         {
             stats.BasicAttackDamage += Mathf.Max(0, _amount);
+        }
+
+        public override void AppendTooltipLines(List<TooltipLine> lines)
+        {
+            int amount = Mathf.Max(0, _amount);
+            if (amount <= 0)
+                return;
+
+            lines.Add(new TooltipLine(TooltipLineKind.Damage, $"+{amount} obrażeń podstawowych"));
         }
     }
 
@@ -43,6 +55,15 @@ namespace M3P
         {
             stats.MaxActionPoints += Mathf.Max(0, _amount);
         }
+
+        public override void AppendTooltipLines(List<TooltipLine> lines)
+        {
+            int amount = Mathf.Max(0, _amount);
+            if (amount <= 0)
+                return;
+
+            lines.Add(new TooltipLine(TooltipLineKind.Other, $"+{amount} AP"));
+        }
     }
 
     [Serializable]
@@ -57,6 +78,15 @@ namespace M3P
         {
             stats.MaxHP += Mathf.Max(0, _amount);
         }
+
+        public override void AppendTooltipLines(List<TooltipLine> lines)
+        {
+            int amount = Mathf.Max(0, _amount);
+            if (amount <= 0)
+                return;
+
+            lines.Add(new TooltipLine(TooltipLineKind.Heal, $"+{amount} maks. HP"));
+        }
     }
 
     [Serializable]
@@ -70,6 +100,15 @@ namespace M3P
         public override void Apply(ref SoftStatValues stats)
         {
             stats.MaxHandSize += Mathf.Max(0, _amount);
+        }
+
+        public override void AppendTooltipLines(List<TooltipLine> lines)
+        {
+            int amount = Mathf.Max(0, _amount);
+            if (amount <= 0)
+                return;
+
+            lines.Add(new TooltipLine(TooltipLineKind.Draw, $"+{amount} kart w ręce"));
         }
     }
 }

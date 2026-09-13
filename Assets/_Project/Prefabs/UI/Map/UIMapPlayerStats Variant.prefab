@@ -30,7 +30,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 819246628187123946}
-  - {fileID: 1188193715285787199}
+  - {fileID: 3257623441661392953}
   - {fileID: 7373685481035455058}
   - {fileID: 8678849323434485106}
   - {fileID: 5666021160866820522}
@@ -170,12 +170,12 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
---- !u!224 &1188193715285787199 stripped
+--- !u!224 &3257623441661392953 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 4415824107526978055, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
   m_PrefabInstance: {fileID: 1188193715285787198}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1188193715285787200 stripped
+--- !u!114 &8104810516726836580 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6919602546829717338, guid: cfbec3db20367a24db6b80ad4f46cf96, type: 3}
   m_PrefabInstance: {fileID: 1188193715285787198}
@@ -204,7 +204,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6798302305238021843, guid: be91303a738ae5f47a01d776462527b1, type: 3}
       propertyPath: m_Pivot.y
-      value: 0.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6798302305238021843, guid: be91303a738ae5f47a01d776462527b1, type: 3}
       propertyPath: m_AnchorMax.x
@@ -228,7 +228,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6798302305238021843, guid: be91303a738ae5f47a01d776462527b1, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 500
+      value: 308.5
       objectReference: {fileID: 0}
     - target: {fileID: 6798302305238021843, guid: be91303a738ae5f47a01d776462527b1, type: 3}
       propertyPath: m_LocalPosition.x
@@ -240,7 +240,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6798302305238021843, guid: be91303a738ae5f47a01d776462527b1, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 3.6294866
+      value: 3.629517
       objectReference: {fileID: 0}
     - target: {fileID: 6798302305238021843, guid: be91303a738ae5f47a01d776462527b1, type: 3}
       propertyPath: m_LocalRotation.w
@@ -264,7 +264,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6798302305238021843, guid: be91303a738ae5f47a01d776462527b1, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 540
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 6798302305238021843, guid: be91303a738ae5f47a01d776462527b1, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -312,7 +312,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::M3P.UIMapPlayerStats
   _togglePanelStatsButton: {fileID: 6202011992772552119}
   _statsPanel: {fileID: 0}
-  _togglePanelCardsButton: {fileID: 1188193715285787200}
+  _togglePanelCardsButton: {fileID: 8104810516726836580}
   _cardsPanel: {fileID: 0}
   _togglePanelCraftingButton: {fileID: 4259247029567278863}
   _craftingPanel: {fileID: 0}

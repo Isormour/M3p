@@ -66,6 +66,26 @@ namespace M3P
             return content;
         }
 
+        public static TooltipContent FromPerk(PerkDefinition perk, int statLevel = 0, bool unlocked = false)
+        {
+            var content = new TooltipContent();
+            if (perk == null)
+                return content;
+
+            content.Title = perk.Name;
+            content.Description = perk.Description;
+            content.Icon = perk.Artwork;
+
+            var parts = new List<string>(2);
+            if (statLevel > 0)
+                parts.Add($"Wymaga {statLevel}");
+            parts.Add(unlocked ? "Odblokowany" : "Zablokowany");
+            content.Meta = string.Join("  ·  ", parts);
+
+            perk.Logic?.AppendTooltipLines(content.Lines);
+            return content;
+        }
+
         static void AppendEffects(
             BattleEffect[] effects,
             BattleEffectContext context,
