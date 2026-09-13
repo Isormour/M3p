@@ -15,7 +15,7 @@ namespace M3P
 
         public override void Apply(BattleEffectContext context, EEffectTarget target)
         {
-            SkillCombat.DealScaledDamage(context, target, _amount, _physical);
+            SkillCombat.DealScaledDamage(context, target, _amount * context.StatusStacks, _physical);
         }
     }
 }

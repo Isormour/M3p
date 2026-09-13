@@ -84,7 +84,7 @@ namespace M3P
         }
 
         /// <summary>
-        /// Fires on-turn effects for every instance of <paramref name="definition"/> without
+        /// Fires on-turn effects for the matching status once, using its stacked amount, without
         /// shortening remaining duration or removing the status.
         /// </summary>
         public void TriggerStatusTick(StatusEffectDefinition definition)
@@ -95,7 +95,7 @@ namespace M3P
             for (int i = 0; i < _statuses.Count; i++)
             {
                 StatusInstance status = _statuses[i];
-                if (status.Definition != definition)
+                if (!definition.Matches(status.Definition))
                     continue;
 
                 ApplyOnTurnEffectsAndNotify(status);
@@ -186,14 +186,15 @@ namespace M3P
             int count = 0;
             for (int i = 0; i < _statuses.Count; i++)
             {
-                if (_statuses[i].Definition == definition)
-                    count++;
+                StatusInstance status = _statuses[i];
+                if (definition.Matches(status.Definition))
+                    count += status.Stacks;
             }
 
             return count;
         }
 
-        /// <summary>Removes every instance of <paramref name="definition"/> and returns how many were consumed.</summary>
+        /// <summary>Removes every matching status and returns how many stacks were consumed.</summary>
         public int ConsumeStatus(StatusEffectDefinition definition)
         {
             if (definition == null)
@@ -202,11 +203,12 @@ namespace M3P
             int consumed = 0;
             for (int i = _statuses.Count - 1; i >= 0; i--)
             {
-                if (_statuses[i].Definition != definition)
+                StatusInstance status = _statuses[i];
+                if (!definition.Matches(status.Definition))
                     continue;
 
+                consumed += status.Stacks;
                 _statuses.RemoveAt(i);
-                consumed++;
             }
 
             if (consumed > 0)
@@ -216,8 +218,8 @@ namespace M3P
         }
 
         /// <summary>
-        /// Adds a status. Stacking definitions create a new instance; non-stacking ones refresh
-        /// remaining turns (and source) on the existing instance.
+        /// Adds a status. Stacking definitions pile onto the existing instance; non-stacking ones
+        /// refresh remaining turns (and source) on that instance.
         /// </summary>
         public void ApplyStatus(StatusEffectDefinition definition, BattleCharacter source)
         {
@@ -226,19 +228,19 @@ namespace M3P
 
             int duration = definition.DurationTurns;
 
-            if (!definition.CanStack)
+            for (int i = 0; i < _statuses.Count; i++)
             {
-                for (int i = 0; i < _statuses.Count; i++)
-                {
-                    StatusInstance existing = _statuses[i];
-                    if (existing.Definition != definition)
-                        continue;
+                StatusInstance existing = _statuses[i];
+                if (!definition.Matches(existing.Definition))
+                    continue;
 
-                    existing.RemainingTurns = duration;
-                    existing.Source = source;
-                    RaiseStatusesChanged();
-                    return;
-                }
+                if (definition.CanStack)
+                    existing.Stacks++;
+
+                existing.RemainingTurns = duration;
+                existing.Source = source;
+                RaiseStatusesChanged();
+                return;
             }
 
             _statuses.Add(new StatusInstance(definition, source, duration));
@@ -266,7 +268,7 @@ namespace M3P
                     if (modifier.Amount == 0 || modifier.Stat == EStatType.Constitution)
                         continue;
 
-                    hard = hard.WithPointsAdded(modifier.Stat, modifier.Amount);
+                    hard = hard.WithPointsAdded(modifier.Stat, modifier.Amount * _statuses[i].Stacks);
                 }
             }
 
@@ -315,7 +317,7 @@ namespace M3P
             int healthBefore = soft != null ? soft.CurrentHealth : 0;
             int shieldBefore = soft != null ? soft.CurrentShield : 0;
 
-            definition.ApplyOnTurnEffects(this, status.Source);
+            definition.ApplyOnTurnEffects(this, status.Source, status.Stacks);
 
             if (soft == null)
                 return;

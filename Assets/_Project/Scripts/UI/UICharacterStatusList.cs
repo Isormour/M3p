@@ -73,6 +73,7 @@ namespace M3P
 
             RectTransform parent = _container != null ? _container : transform as RectTransform;
             IReadOnlyList<StatusInstance> statuses = _character.Statuses;
+            var groups = new List<(StatusInstance Status, int Count)>();
 
             for (int i = 0; i < statuses.Count; i++)
             {
@@ -80,11 +81,45 @@ namespace M3P
                 if (status?.Definition == null)
                     continue;
 
+                int groupIndex = IndexOfGroup(groups, status);
+                if (groupIndex >= 0)
+                {
+                    var group = groups[groupIndex];
+                    groups[groupIndex] = (group.Status, group.Count + status.Stacks);
+                    continue;
+                }
+
+                groups.Add((status, status.Stacks));
+            }
+
+            for (int i = 0; i < groups.Count; i++)
+            {
+                StatusInstance status = groups[i].Status;
                 UICharacterStatusIndicator indicator = Instantiate(_indicatorPrefab, parent);
                 indicator.name = $"Status_{status.Definition.name}";
-                indicator.Configure(status);
+                indicator.Configure(status, groups[i].Count);
                 _spawned.Add(indicator);
             }
+        }
+
+        static int IndexOfGroup(List<(StatusInstance Status, int Count)> groups, StatusInstance status)
+        {
+            for (int i = 0; i < groups.Count; i++)
+            {
+                if (IsSameStatus(groups[i].Status, status))
+                    return i;
+            }
+
+            return -1;
+        }
+
+        static bool IsSameStatus(StatusInstance left, StatusInstance right)
+        {
+            if (left.Definition == right.Definition)
+                return true;
+
+            return left.Definition.StatusType != EStatusType.None
+                && left.Definition.StatusType == right.Definition.StatusType;
         }
 
         void ClearIndicators()

@@ -30,13 +30,17 @@ namespace M3P
         public int ChoicePrimary { get; }
         public int ChoiceSecondary { get; }
 
+        /// <summary>How many stacked copies a status tick represents. Skills leave this at 1.</summary>
+        public int StatusStacks { get; }
+
         public BattleEffectContext(
             BattleCharacter caster,
             BattleCharacter target,
             bool directHit = false,
             float skillDamageMultiplier = 1f,
             int choicePrimary = 0,
-            int choiceSecondary = 0)
+            int choiceSecondary = 0,
+            int statusStacks = 1)
         {
             Caster = caster;
             Target = target;
@@ -45,6 +49,7 @@ namespace M3P
             SkillDamageMultiplier = skillDamageMultiplier > 0f ? skillDamageMultiplier : 1f;
             ChoicePrimary = choicePrimary;
             ChoiceSecondary = choiceSecondary;
+            StatusStacks = Mathf.Max(1, statusStacks);
         }
 
         public BattleCharacter Resolve(EEffectTarget effectTarget)

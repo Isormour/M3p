@@ -33,15 +33,26 @@ namespace M3P
 
         public BattleEffect[] OnTurnEffects => _onTurnEffects ?? Array.Empty<BattleEffect>();
 
+        public bool Matches(StatusEffectDefinition other)
+        {
+            if (other == null)
+                return false;
+
+            if (this == other)
+                return true;
+
+            return _statusType != EStatusType.None && _statusType == other.StatusType;
+        }
+
         /// <summary>Runs on-turn effects against the bearer. <paramref name="source"/> scales magic effects when present.</summary>
-        public void ApplyOnTurnEffects(BattleCharacter bearer, BattleCharacter source)
+        public void ApplyOnTurnEffects(BattleCharacter bearer, BattleCharacter source, int stacks = 1)
         {
             BattleEffect[] effects = OnTurnEffects;
             if (bearer == null || effects.Length == 0)
                 return;
 
             BattleCharacter caster = source != null ? source : bearer;
-            var context = new BattleEffectContext(caster, bearer);
+            var context = new BattleEffectContext(caster, bearer, statusStacks: stacks);
 
             for (int i = 0; i < effects.Length; i++)
             {
