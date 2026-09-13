@@ -97,7 +97,7 @@ namespace M3P
                 StatusInstance status = groups[i].Status;
                 UICharacterStatusIndicator indicator = Instantiate(_indicatorPrefab, parent);
                 indicator.name = $"Status_{status.Definition.name}";
-                indicator.Configure(status, groups[i].Count);
+                indicator.Configure(status, groups[i].Count, _character);
                 _spawned.Add(indicator);
             }
         }

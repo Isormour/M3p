@@ -63,6 +63,8 @@ namespace M3P
                 _visuals.SetCardData(card);
             else
                 Debug.LogError($"{nameof(UIBoardActionCard)}: assign {nameof(_visuals)} on the prefab.", this);
+
+            UITooltipTrigger.Ensure(gameObject, () => TooltipBuilder.FromCard(_card));
         }
 
         public void SetInteractable(bool interactable)

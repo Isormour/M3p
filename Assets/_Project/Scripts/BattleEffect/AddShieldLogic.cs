@@ -1,10 +1,11 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace M3P
 {
     [Serializable]
-    public class AddShieldLogic : BattleEffectLogic
+    public class AddShieldLogic : BattleEffectLogic, ITooltipPreview
     {
         [SerializeField] int _amount;
 
@@ -22,6 +23,15 @@ namespace M3P
 
             int amount = ResolveAmount(context);
             softStats.AddShield(amount);
+        }
+
+        public void AppendTooltipLines(BattleEffectContext preview, EEffectTarget target, List<TooltipLine> lines)
+        {
+            int amount = SkillCombat.ScaleHealOrShield(preview, _amount);
+            if (amount <= 0)
+                return;
+
+            lines.Add(new TooltipLine(TooltipLineKind.Shield, $"Daje {amount} tarczy"));
         }
 
         int ResolveAmount(BattleEffectContext context)

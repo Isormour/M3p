@@ -1,5 +1,6 @@
 using Match3;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace M3P
@@ -23,7 +24,7 @@ namespace M3P
     }
 
     [Serializable]
-    public class ResolveScaledDamageLogic : BattleEffectLogic
+    public class ResolveScaledDamageLogic : BattleEffectLogic, ITooltipPreview
     {
         [SerializeField] ResolveDamageFormula _formula;
         [SerializeField] int _amount;
@@ -53,6 +54,62 @@ namespace M3P
             }
 
             SkillCombat.DealScaledDamage(context, target, ResolveAmount(context, target), _physical);
+        }
+
+        public void AppendTooltipLines(BattleEffectContext preview, EEffectTarget target, List<TooltipLine> lines)
+        {
+            switch (_formula)
+            {
+                case ResolveDamageFormula.HitsPerGroup:
+                    int hits = Mathf.Min(Mathf.Max(1, _max), Mathf.Max(1, SkillCombat.LastResolveGroupCount()));
+                    int perHit = SkillCombat.ScaleAmount(preview, _amount, _physical);
+                    if (perHit > 0)
+                        lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {perHit} obrażeń × {hits}"));
+                    return;
+                case ResolveDamageFormula.CardsInSequence:
+                case ResolveDamageFormula.CardsInSequencePrecision:
+                    int cards = SkillCombat.LastResolveCardsInSequence();
+                    int fromCards = Mathf.Min(_max > 0 ? _max : int.MaxValue, cards * Mathf.Max(0, _perStep));
+                    if (_formula == ResolveDamageFormula.CardsInSequencePrecision
+                        && SkillCombat.LastResolveIsSingleMatchWithoutCascade())
+                        fromCards += Mathf.Max(0, _bonus);
+                    int sequenceDamage = SkillCombat.ScaleAmount(preview, fromCards, _physical);
+                    if (sequenceDamage > 0)
+                        lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {sequenceDamage} obrażeń"));
+                    return;
+            }
+
+            int baseAmount = SkillCombat.ScaleAmount(preview, _amount, _physical);
+            if (baseAmount > 0)
+                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {baseAmount} obrażeń"));
+
+            if (_formula == ResolveDamageFormula.ExecuteBelowHealth && _bonus > 0 && _bonus != _amount)
+            {
+                int execute = SkillCombat.ScaleAmount(preview, _bonus, _physical);
+                if (execute > 0)
+                    lines.Add(new TooltipLine(TooltipLineKind.Damage, $"{execute} gdy wróg poniżej {_threshold}% HP"));
+                return;
+            }
+
+            if (_formula == ResolveDamageFormula.PrecisionBonus && _bonus > 0)
+            {
+                int precision = SkillCombat.ScaleAmount(preview, _amount + _bonus, _physical);
+                if (precision > 0)
+                    lines.Add(new TooltipLine(TooltipLineKind.Damage, $"{precision} gdy jeden match bez kaskady"));
+                return;
+            }
+
+            if (_formula == ResolveDamageFormula.IntentConditional && _bonus > 0 && _bonus != _amount)
+            {
+                int bonus = SkillCombat.ScaleAmount(preview, _bonus, _physical);
+                if (bonus > 0)
+                    lines.Add(new TooltipLine(TooltipLineKind.Damage, $"{bonus} gdy wróg zapowiada atak"));
+                return;
+            }
+
+            int resolved = SkillCombat.ScaleAmount(preview, ResolveAmount(preview, target), _physical);
+            if (resolved > 0 && resolved != baseAmount)
+                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Teraz: {resolved}"));
         }
 
         int ResolveAmount(BattleEffectContext context, EEffectTarget target)
@@ -96,7 +153,7 @@ namespace M3P
     }
 
     [Serializable]
-    public class ConsumeShieldDamageLogic : BattleEffectLogic
+    public class ConsumeShieldDamageLogic : BattleEffectLogic, ITooltipPreview
     {
         [SerializeField] int _maxDamage = 20;
         [SerializeField] bool _physical = true;
@@ -113,6 +170,25 @@ namespace M3P
 
             casterSoft.ClearShield();
             SkillCombat.DealScaledDamage(context, target, damage, _physical);
+        }
+
+        public void AppendTooltipLines(BattleEffectContext preview, EEffectTarget target, List<TooltipLine> lines)
+        {
+            int damage = preview.Caster?.Stats?.Soft != null
+                ? preview.Caster.Stats.Soft.CurrentShield
+                : 0;
+            if (_maxDamage > 0 && damage > 0)
+                damage = Mathf.Min(_maxDamage, damage);
+
+            if (damage > 0)
+            {
+                int scaled = SkillCombat.ScaleAmount(preview, damage, _physical);
+                if (scaled > 0)
+                    lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {scaled} obrażeń (tarcza)"));
+                return;
+            }
+
+            lines.Add(new TooltipLine(TooltipLineKind.Other, "Zadaje obrażenia równe aktualnej tarczy"));
         }
     }
 
@@ -235,7 +311,7 @@ namespace M3P
     }
 
     [Serializable]
-    public class MultiHitDamageLogic : BattleEffectLogic
+    public class MultiHitDamageLogic : BattleEffectLogic, ITooltipPreview
     {
         [SerializeField] int _hits = 2;
         [SerializeField] int _damagePerHit = 4;
@@ -245,10 +321,20 @@ namespace M3P
         {
             SkillCombat.DealScaledHits(context, target, _hits, _damagePerHit, _physical);
         }
+
+        public void AppendTooltipLines(BattleEffectContext preview, EEffectTarget target, List<TooltipLine> lines)
+        {
+            int perHit = SkillCombat.ScaleAmount(preview, _damagePerHit, _physical);
+            int hits = Mathf.Max(1, _hits);
+            if (perHit <= 0)
+                return;
+
+            lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {perHit} obrażeń × {hits}"));
+        }
     }
 
     [Serializable]
-    public class DrawCardLogic : BattleEffectLogic
+    public class DrawCardLogic : BattleEffectLogic, ITooltipPreview
     {
         [SerializeField] int _cards = 1;
         [SerializeField] int _bonusCards;
@@ -265,6 +351,23 @@ namespace M3P
                 draw += Mathf.Max(0, _bonusCards);
 
             cards.DrawCards(draw);
+        }
+
+        public void AppendTooltipLines(BattleEffectContext preview, EEffectTarget target, List<TooltipLine> lines)
+        {
+            int draw = Mathf.Max(0, _cards);
+            if (_bonusIfGroupsAtLeast > 0 && SkillCombat.LastResolveGroupCount() >= _bonusIfGroupsAtLeast)
+                draw += Mathf.Max(0, _bonusCards);
+
+            if (draw <= 0 && _cards <= 0)
+                return;
+
+            string text = $"Dobiera {Mathf.Max(1, draw)} kart";
+            if (_bonusCards > 0 && _bonusIfGroupsAtLeast > 0
+                && SkillCombat.LastResolveGroupCount() < _bonusIfGroupsAtLeast)
+                text += $" (+{_bonusCards} gdy resolve ma co najmniej {_bonusIfGroupsAtLeast} grup)";
+
+            lines.Add(new TooltipLine(TooltipLineKind.Draw, text));
         }
     }
 

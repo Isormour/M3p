@@ -11,6 +11,8 @@ namespace M3P
     public class StatusEffectDefinition : ScriptableObject
     {
         [SerializeField] EStatusType _statusType;
+        [SerializeField] string _displayName;
+        [TextArea, SerializeField] string _description;
         [Tooltip("Sprite shown as the status icon in battle UI.")]
         [SerializeField] Sprite _icon;
         [Min(1), SerializeField] int _durationTurns = 1;
@@ -22,6 +24,10 @@ namespace M3P
         [SerializeField] BattleEffect[] _onTurnEffects = Array.Empty<BattleEffect>();
 
         public EStatusType StatusType => _statusType;
+
+        public string DisplayName => string.IsNullOrEmpty(_displayName) ? name : _displayName;
+
+        public string Description => _description ?? string.Empty;
 
         public Sprite Icon => _icon;
 

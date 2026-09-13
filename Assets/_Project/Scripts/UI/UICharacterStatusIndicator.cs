@@ -9,6 +9,10 @@ namespace M3P
         [SerializeField] Image _icon;
         [SerializeField] TextMeshProUGUI _stackCount;
 
+        StatusInstance _status;
+        BattleCharacter _bearer;
+        int _stacks = 1;
+
         void Awake()
         {
             EnsureLayoutElement();
@@ -28,13 +32,19 @@ namespace M3P
             }
         }
 
-        public void Configure(StatusInstance status, int stacks = 1)
+        public void Configure(StatusInstance status, int stacks = 1, BattleCharacter bearer = null)
         {
+            _status = status;
+            _bearer = bearer;
+            _stacks = Mathf.Max(1, stacks);
+
             Sprite icon = status != null && status.Definition != null
                 ? status.Definition.Icon
                 : null;
             SetIcon(icon);
-            SetStacks(stacks);
+            SetStacks(_stacks);
+            EnsureHoverTarget();
+            UITooltipTrigger.Ensure(gameObject, () => TooltipBuilder.FromStatus(_status, _bearer, _stacks));
         }
 
         public void SetIcon(Sprite icon)
@@ -87,6 +97,19 @@ namespace M3P
             _stackCount.fontStyle = FontStyles.Bold;
             _stackCount.fontSize = 28f;
             _stackCount.raycastTarget = false;
+        }
+
+        void EnsureHoverTarget()
+        {
+            if (_icon != null)
+                _icon.raycastTarget = true;
+
+            Image root = GetComponent<Image>();
+            if (root == null)
+                root = gameObject.AddComponent<Image>();
+
+            root.color = Color.clear;
+            root.raycastTarget = true;
         }
 
         void EnsureLayoutElement()

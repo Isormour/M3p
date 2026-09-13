@@ -1,10 +1,11 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace M3P
 {
     [Serializable]
-    public class ApplyStatusLogic : BattleEffectLogic
+    public class ApplyStatusLogic : BattleEffectLogic, ITooltipPreview
     {
         [SerializeField] StatusEffectDefinition _status;
         [Min(1), SerializeField] int _stacks = 1;
@@ -24,6 +25,20 @@ namespace M3P
             int stacks = Stacks;
             for (int i = 0; i < stacks; i++)
                 character.ApplyStatus(_status, context.Caster);
+        }
+
+        public void AppendTooltipLines(BattleEffectContext preview, EEffectTarget target, List<TooltipLine> lines)
+        {
+            if (_status == null)
+                return;
+
+            string name = _status.DisplayName;
+            int duration = _status.DurationTurns;
+            int stacks = Stacks;
+            string text = stacks > 1
+                ? $"Nakłada {stacks} stacki: {name} ({duration} tury)"
+                : $"Nakłada {name} ({duration} tury)";
+            lines.Add(new TooltipLine(TooltipLineKind.Status, text));
         }
     }
 }

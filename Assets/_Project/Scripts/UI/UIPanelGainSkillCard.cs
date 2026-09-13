@@ -32,6 +32,7 @@ namespace M3P
             _onConfirm = onConfirm;
             ApplyVisuals();
             WireButton();
+            UITooltipTrigger.Ensure(gameObject, () => TooltipBuilder.FromSkill(_skill, null, null));
         }
 
         void ApplyVisuals()

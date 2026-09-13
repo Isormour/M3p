@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace M3P
@@ -8,7 +9,7 @@ namespace M3P
     /// Zapłon is the authored example: all Burn stacks, 4 magic damage per stack.
     /// </summary>
     [Serializable]
-    public class ConsumeStatusDamageLogic : BattleEffectLogic
+    public class ConsumeStatusDamageLogic : BattleEffectLogic, ITooltipPreview
     {
         [SerializeField] StatusEffectDefinition _status;
         [Min(1), SerializeField] int _damagePerStack = 4;
@@ -26,6 +27,26 @@ namespace M3P
 
             int stacks = character.ConsumeStatus(_status);
             SkillCombat.DealScaledDamage(context, target, stacks * DamagePerStack, _physical);
+        }
+
+        public void AppendTooltipLines(BattleEffectContext preview, EEffectTarget target, List<TooltipLine> lines)
+        {
+            if (_status == null)
+                return;
+
+            string statusName = _status.DisplayName;
+            int stacks = preview.Resolve(target)?.CountStatus(_status) ?? 0;
+            if (stacks > 0)
+            {
+                int damage = SkillCombat.ScaleAmount(preview, stacks * DamagePerStack, _physical);
+                if (damage > 0)
+                    lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {damage} obrażeń ({stacks} × {statusName})"));
+                return;
+            }
+
+            int perStack = SkillCombat.ScaleAmount(preview, DamagePerStack, _physical);
+            if (perStack > 0)
+                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {perStack} obrażeń za każdy stack: {statusName}"));
         }
     }
 }

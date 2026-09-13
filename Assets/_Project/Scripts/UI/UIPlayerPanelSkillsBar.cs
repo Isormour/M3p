@@ -58,6 +58,7 @@ namespace M3P
                 if (skill != null && _costLabelPrefab == null)
                     Debug.LogError($"{nameof(UIPlayerPanelSkillsBar)}: assign {nameof(_costLabelPrefab)}.", this);
 
+                BindTooltip();
                 RefreshInteractable();
                 return;
             }
@@ -83,7 +84,23 @@ namespace M3P
             }
 
             WireButton();
+            BindTooltip();
             RefreshInteractable();
+        }
+
+        void BindTooltip()
+        {
+            UITooltipTrigger.Ensure(gameObject, BuildSkillTooltip);
+        }
+
+        TooltipContent BuildSkillTooltip()
+        {
+            BattleManager battle = BattleManager.Instance;
+            BattleCharacter target = null;
+            if (battle != null)
+                target = _owner is PlayerBattleCharacter ? battle.ActiveEnemy : battle.Player;
+
+            return TooltipBuilder.FromSkill(_skill, _owner, target);
         }
 
         void WireButton()
