@@ -36,6 +36,7 @@ Transform:
   - {fileID: 2465509039484929600}
   - {fileID: 9217297711355170626}
   - {fileID: 791517209372304333}
+  - {fileID: 4260375511495264828}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &3334003410193672422
@@ -4932,6 +4933,56 @@ ParticleSystem:
         m_PostInfinity: 2
         m_RotationOrder: 4
     vectorLabel1_3: W
+--- !u!1001 &709512857545204283
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 5393355372502565080}
+    m_Modifications:
+    - target: {fileID: 3658988724114368519, guid: a85dba665f076434191279e9768ad90b, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 3658988724114368519, guid: a85dba665f076434191279e9768ad90b, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 3658988724114368519, guid: a85dba665f076434191279e9768ad90b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3658988724114368519, guid: a85dba665f076434191279e9768ad90b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 3658988724114368519, guid: a85dba665f076434191279e9768ad90b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3658988724114368519, guid: a85dba665f076434191279e9768ad90b, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8165630293434749311, guid: a85dba665f076434191279e9768ad90b, type: 3}
+      propertyPath: m_Color.a
+      value: 0.9137255
+      objectReference: {fileID: 0}
+    - target: {fileID: 8717006158058498813, guid: a85dba665f076434191279e9768ad90b, type: 3}
+      propertyPath: m_Name
+      value: CharacterShadow
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a85dba665f076434191279e9768ad90b, type: 3}
+--- !u!4 &4260375511495264828 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3658988724114368519, guid: a85dba665f076434191279e9768ad90b, type: 3}
+  m_PrefabInstance: {fileID: 709512857545204283}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2719477178642129323
 PrefabInstance:
   m_ObjectHideFlags: 0
