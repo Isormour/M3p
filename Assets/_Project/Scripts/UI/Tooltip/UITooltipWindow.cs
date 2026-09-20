@@ -17,6 +17,7 @@ namespace M3P
         [SerializeField] TextMeshProUGUI _meta;
         [SerializeField] TextMeshProUGUI _description;
         [SerializeField] RectTransform _linesRoot;
+        [SerializeField] TMP_FontAsset _font;
 
         readonly List<TextMeshProUGUI> _lineLabels = new List<TextMeshProUGUI>();
         Canvas _canvas;
@@ -328,6 +329,7 @@ namespace M3P
             TextMeshProUGUI label = child.gameObject.AddComponent<TextMeshProUGUI>();
             label.fontSize = size;
             label.fontStyle = style;
+            label.font = _font;
             label.color = color;
             label.alignment = TextAlignmentOptions.TopLeft;
             label.enableWordWrapping = true;

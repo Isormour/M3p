@@ -3,10 +3,17 @@ using UnityEngine;
 [ExecuteAlways]
 public class Rotator : MonoBehaviour
 {
+    public enum RotationSpace
+    {
+        Local = 0,
+        World = 1
+    }
+
     float currentTime = 990;
     [SerializeField] float duration = 1;
     [SerializeField] float amplitude = 1;
     [SerializeField] float rotationMult = 1;
+    [SerializeField] RotationSpace space = RotationSpace.Local;
 
     Vector2 startTime;
 
@@ -17,29 +24,36 @@ public class Rotator : MonoBehaviour
         currentTime = 0;
         startTime = new Vector2(Random.Range(-2.0f, 2.0f), Random.Range(-2.0f, 2.0f));
     }
-    // Update is called once per frame
+
     void Update()
     {
-        if (currentTime < duration)
-        {
-            currentTime += Time.deltaTime;
-            Vector3 fwd = new Vector3(0, 0, 1);
+        if (currentTime >= duration)
+            return;
 
-            Vector2 dir = new Vector2(
-                 Mathf.Sin(startTime.x + (currentTime * amplitude)) * rotationMult,
-                 Mathf.Cos(startTime.y + (currentTime * amplitude)) * rotationMult
-                );
-            float timeNormalized = currentTime / duration;
+        currentTime += Time.deltaTime;
+        Vector3 fwd = Vector3.forward;
 
-            fwd.x += curve.Evaluate(timeNormalized) * dir.x;
-            fwd.y += curve.Evaluate(timeNormalized) * dir.y;
+        Vector2 dir = new Vector2(
+            Mathf.Sin(startTime.x + (currentTime * amplitude)) * rotationMult,
+            Mathf.Cos(startTime.y + (currentTime * amplitude)) * rotationMult
+        );
+        float timeNormalized = currentTime / duration;
+        float curveValue = curve.Evaluate(timeNormalized);
 
-            this.transform.forward = fwd;
-            if (currentTime > duration)
-            {
-                fwd = new Vector3(0, 0, 1);
-            }
-            this.transform.forward = fwd;
-        }
+        fwd.x += curveValue * dir.x;
+        fwd.y += curveValue * dir.y;
+
+        if (currentTime > duration)
+            fwd = Vector3.forward;
+
+        ApplyForward(fwd);
+    }
+
+    void ApplyForward(Vector3 fwd)
+    {
+        if (space == RotationSpace.Local)
+            transform.localRotation = Quaternion.LookRotation(fwd);
+        else
+            transform.forward = fwd;
     }
 }

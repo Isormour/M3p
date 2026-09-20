@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace M3P
@@ -12,13 +11,13 @@ namespace M3P
     public sealed class UIPanelChooseSkill : UIPanelClosable
     {
         [SerializeField] GridLayoutGroup skillsGrid;
-        [SerializeField] Button skillButtonPrefab;
+        [SerializeField] UISkillButton skillButtonPrefab;
         [SerializeField] UISkillVisuals chosenSkillVisuals;
-        [SerializeField] Button[] chosenSkills;
+        [SerializeField] UISkillButton[] chosenSkills;
         [SerializeField] GameObject manaPrefab;
         [SerializeField] HorizontalLayoutGroup manaLayout;
 
-        readonly List<Button> _ownedViews = new List<Button>();
+        readonly List<UISkillButton> _ownedViews = new List<UISkillButton>();
         readonly List<UIPanelPlayerManaBar> _manaViews = new List<UIPanelPlayerManaBar>();
 
         void OnEnable()
@@ -72,7 +71,7 @@ namespace M3P
             {
                 Transform slots = FindDescendant("ChosenSkills") ?? FindDescendant("chosenSkills");
                 if (slots != null)
-                    chosenSkills = slots.GetComponentsInChildren<Button>(true);
+                    chosenSkills = slots.GetComponentsInChildren<UISkillButton>(true);
             }
 
             if (manaLayout == null)
@@ -129,13 +128,11 @@ namespace M3P
                     continue;
 
                 bool equipped = IsInLoadout(profile, skillId);
-                Button view = Instantiate(skillButtonPrefab, skillsGrid.transform);
+                UISkillButton view = Instantiate(skillButtonPrefab, skillsGrid.transform);
                 view.gameObject.SetActive(true);
                 view.name = $"OwnedSkill_{skill.name}";
-                ApplySkillIcon(view, skill);
-                ApplyEquippedVisual(view, equipped);
-                BindSkillTarget(view, skill, HandleOwnedSkillClicked, HandleSkillHovered, ClearPreview);
-                view.interactable = equipped || !loadoutFull;
+                view.Configure(skill, equipped, HandleOwnedSkillClicked, HandleSkillHovered, ClearPreview);
+                view.SetInteractable(equipped || !loadoutFull);
                 _ownedViews.Add(view);
             }
         }
@@ -151,7 +148,7 @@ namespace M3P
             IReadOnlyList<int> loadout = profile.SkillLoadout;
             for (int i = 0; i < chosenSkills.Length; i++)
             {
-                Button slot = chosenSkills[i];
+                UISkillButton slot = chosenSkills[i];
                 if (slot == null)
                     continue;
 
@@ -160,10 +157,8 @@ namespace M3P
                 if (loadout != null && i < loadout.Count)
                     skillConfig.TryGetSkill(loadout[i], out skill);
 
-                ApplySkillIcon(slot, skill);
-                ApplyEquippedVisual(slot, skill != null);
-                BindSkillTarget(slot, skill, _ => HandleChosenSkillClicked(slotIndex), HandleSkillHovered, ClearPreview);
-                slot.interactable = skill != null;
+                slot.Configure(skill, skill != null, _ => HandleChosenSkillClicked(slotIndex), HandleSkillHovered, ClearPreview);
+                slot.SetInteractable(skill != null);
             }
         }
 
@@ -277,68 +272,10 @@ namespace M3P
             _manaViews.Add(view);
         }
 
-        static void ApplySkillIcon(Button button, SkillDefinition skill)
-        {
-            Image icon = FindIconImage(button);
-            if (icon == null)
-                return;
-
-            Sprite artwork = skill != null ? skill.Artwork : null;
-            icon.sprite = artwork;
-            icon.enabled = artwork != null;
-            icon.gameObject.SetActive(artwork != null);
-        }
-
-        static void ApplyEquippedVisual(Button button, bool equipped)
-        {
-            Image icon = FindIconImage(button);
-            if (icon == null)
-                return;
-
-            icon.color = equipped ? Color.white : new Color(1f, 1f, 1f, 0.45f);
-        }
-
         static bool IsLoadoutFull(PlayerProfile profile)
         {
             return profile.SkillLoadout != null
                 && profile.SkillLoadout.Count >= SkillConfig.MaxLoadoutSize;
-        }
-
-        static Image FindIconImage(Button button)
-        {
-            if (button == null)
-                return null;
-
-            Transform icon = button.transform.Find("icon") ?? button.transform.Find("Icon");
-            if (icon != null)
-            {
-                Image image = icon.GetComponent<Image>();
-                if (image != null)
-                    return image;
-            }
-
-            Image[] images = button.GetComponentsInChildren<Image>(true);
-            for (int i = 0; i < images.Length; i++)
-            {
-                if (images[i] != null && images[i].gameObject != button.gameObject)
-                    return images[i];
-            }
-
-            return button.GetComponent<Image>();
-        }
-
-        static void BindSkillTarget(
-            Button button,
-            SkillDefinition skill,
-            System.Action<SkillDefinition> clicked,
-            System.Action<SkillDefinition> hovered,
-            System.Action unhovered)
-        {
-            UISkillPointerTarget target = button.GetComponent<UISkillPointerTarget>();
-            if (target == null)
-                target = button.gameObject.AddComponent<UISkillPointerTarget>();
-
-            target.Bind(skill, clicked, hovered, unhovered);
         }
 
         static bool IsInLoadout(PlayerProfile profile, int skillId)
@@ -369,72 +306,6 @@ namespace M3P
             }
 
             _manaViews.Clear();
-        }
-    }
-
-    public sealed class UISkillPointerTarget : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
-    {
-        SkillDefinition _skill;
-        System.Action<SkillDefinition> _clicked;
-        System.Action<SkillDefinition> _hovered;
-        System.Action _unhovered;
-        Button _button;
-
-        public void Bind(
-            SkillDefinition skill,
-            System.Action<SkillDefinition> clicked,
-            System.Action<SkillDefinition> hovered,
-            System.Action unhovered)
-        {
-            _skill = skill;
-            _clicked = clicked;
-            _hovered = hovered;
-            _unhovered = unhovered;
-            WireButton();
-        }
-
-        void Awake()
-        {
-            WireButton();
-        }
-
-        void WireButton()
-        {
-            if (_button == null)
-                _button = GetComponent<Button>();
-
-            if (_button == null)
-                return;
-
-            _button.onClick.RemoveListener(HandleClick);
-            _button.onClick.AddListener(HandleClick);
-        }
-
-        void HandleClick()
-        {
-            if (_skill == null)
-                return;
-
-            _clicked?.Invoke(_skill);
-        }
-
-        public void OnPointerEnter(PointerEventData eventData)
-        {
-            if (_skill == null)
-                return;
-
-            _hovered?.Invoke(_skill);
-        }
-
-        public void OnPointerExit(PointerEventData eventData)
-        {
-            _unhovered?.Invoke();
-        }
-
-        void OnDestroy()
-        {
-            if (_button != null)
-                _button.onClick.RemoveListener(HandleClick);
         }
     }
 }

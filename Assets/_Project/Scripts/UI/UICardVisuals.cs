@@ -10,7 +10,7 @@ namespace M3P
         const string ColorMultProperty = "_ColorMult";
         const float ColorMultUnselected = 0f;
         const float ColorMultSelected = 1f;
-
+        [SerializeField] TextMeshProUGUI nameLabel;
         [SerializeField] TextMeshProUGUI descriptionLabel;
         [SerializeField] Image cardImage;
         [SerializeField] Transform _costContainer;
@@ -25,6 +25,8 @@ namespace M3P
         {
             if (descriptionLabel != null)
                 descriptionLabel.text = card != null ? card.Description : string.Empty;
+            if (nameLabel != null)
+                nameLabel.text = card != null ? card.DisplayName : string.Empty;
 
             if (cardImage != null)
             {

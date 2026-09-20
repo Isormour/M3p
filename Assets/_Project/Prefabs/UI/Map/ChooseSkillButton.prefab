@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 306347740558370793}
   - component: {fileID: 6815791562959187188}
   - component: {fileID: 4743821625011178305}
+  - component: {fileID: 1977131410965777162}
   m_Layer: 5
   m_Name: ChooseSkillButton
   m_TagString: Untagged
@@ -31,8 +32,8 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 6602540156622295750}
   - {fileID: 2778703215135434457}
+  - {fileID: 6602540156622295750}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -122,6 +123,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &1977131410965777162
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1332067303100406613}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46f26ae87eac6f64a8a569bbaea56fb7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.UISkillButton
+  icon: {fileID: 8766009070754519905}
+  frame: {fileID: 5987473965395534003}
+  _button: {fileID: 306347740558370793}
 --- !u!1 &2669021564074000491
 GameObject:
   m_ObjectHideFlags: 0
@@ -134,7 +150,7 @@ GameObject:
   - component: {fileID: 1539012184593002329}
   - component: {fileID: 5987473965395534003}
   m_Layer: 5
-  m_Name: Background
+  m_Name: Frame
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -180,7 +196,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.26415092, g: 0.26415092, b: 0.26415092, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -196,7 +212,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 11.18
 --- !u!1 &8128667386906241077
 GameObject:
   m_ObjectHideFlags: 0
