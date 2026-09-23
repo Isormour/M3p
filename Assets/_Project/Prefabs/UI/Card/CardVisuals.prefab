@@ -142,10 +142,10 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 924950944991174444}
-  - {fileID: 4763911223582399351}
-  - {fileID: 5898511921889640873}
-  - {fileID: 8951720809686143544}
   - {fileID: 4524396288460758914}
+  - {fileID: 4763911223582399351}
+  - {fileID: 8951720809686143544}
+  - {fileID: 5898511921889640873}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -165,6 +165,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef46e83ee3d79534a86b151f09545df9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::M3P.UICardVisuals
+  nameLabel: {fileID: 0}
   descriptionLabel: {fileID: 3184419894189342015}
   cardImage: {fileID: 635792965748698845}
   _costContainer: {fileID: 5898511921889640873}
@@ -490,7 +491,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &8951720809686143544
 RectTransform:
   m_ObjectHideFlags: 0
@@ -538,7 +539,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 5a79de614167ab44ead1e51f6379af4d, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 9e7c2b53ec59440ca19909c5a00977b4, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -613,7 +614,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: debug text
+  m_text: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -640,7 +641,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 38.6
+  m_fontSize: 18
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1

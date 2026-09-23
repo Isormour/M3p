@@ -1,0 +1,1422 @@
+{
+  "version": 1,
+  "referenceResolution": [
+    1920,
+    1080
+  ],
+  "mode": "art-assets-only",
+  "notes": [
+    "Black is the existing project name for the purple tile and shard.",
+    "Sprite rectangles trim transparent padding in import metadata; source PNGs are unchanged.",
+    "Use child sprite for textures in Multiple mode; each contains one named sprite.",
+    "Runtime labels, costs, ownership, button letters and effect descriptions remain dynamic.",
+    "Use the five workpiece sprites as overlay on the empty anvil. Forge is a static 2D sprite, not an animated 3D model."
+  ],
+  "assets": [
+    {
+      "path": "Backgrounds/left-scrim.png",
+      "guid": "4a8c05dbcd4a3a54fbb8b5bc5d0b1ca9",
+      "fileID": 21300000,
+      "width": 1024,
+      "height": 1024,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 219,
+        "transparentPixels": 1024,
+        "partialPixels": 1047552
+      },
+      "origin": "new-vector-art",
+      "source": null,
+      "sha256": "7adf0b35a5ae1b325b399e507f5fdb091bc649521712815eeb282b95fd82e1df"
+    },
+    {
+      "path": "Backgrounds/resource-bar.png",
+      "guid": "31abe56f51b41524fb6a43d321ce0244",
+      "fileID": 21300000,
+      "width": 1920,
+      "height": 112,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        1920,
+        112
+      ],
+      "spriteBorderLTRB": [
+        0,
+        4,
+        0,
+        4
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Sliced",
+      "alpha": {
+        "min": 200,
+        "max": 247,
+        "transparentPixels": 0,
+        "partialPixels": 215040
+      },
+      "origin": "new-vector-art",
+      "source": null,
+      "sha256": "aed03f158648da323160b7fce20d1757d576ab0bba10c7660763a08d51968c6d"
+    },
+    {
+      "path": "Backgrounds/workshop-background.png",
+      "guid": "44fa7e405c3337643bd997ffc4eb1e79",
+      "fileID": 21300000,
+      "width": 1672,
+      "height": 941,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        1672,
+        941
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": null,
+      "origin": "image_gen",
+      "source": null,
+      "sha256": "a8f992ebf9a530ec9a8b14d231a5c005683473796b62153f15c3c098b7164830"
+    },
+    {
+      "path": "Buttons/apply-normal.png",
+      "guid": "2cfd96db3f2053940840a3bd631a0e16",
+      "fileID": 21300000,
+      "width": 1774,
+      "height": 887,
+      "spriteRectTopLeft": [
+        35,
+        310,
+        1705,
+        266
+      ],
+      "spriteBorderLTRB": [
+        93,
+        43,
+        93,
+        43
+      ],
+      "pixelsPerUnit": 400,
+      "imageType": "Sliced",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 1146695,
+        "partialPixels": 425305
+      },
+      "origin": "image_gen",
+      "source": null,
+      "sha256": "8fe7304f64e983bbafaa54a8f849ad3c59f8a88763847d7125b855817c4c6678"
+    },
+    {
+      "path": "Buttons/effect-normal.png",
+      "guid": "22bc84a429a9a3a4f92c1bea4c7639a3",
+      "fileID": 21300000,
+      "width": 1983,
+      "height": 793,
+      "spriteRectTopLeft": [
+        83,
+        209,
+        1817,
+        375
+      ],
+      "spriteBorderLTRB": [
+        131,
+        60,
+        131,
+        60
+      ],
+      "pixelsPerUnit": 400,
+      "imageType": "Sliced",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 927622,
+        "partialPixels": 641743
+      },
+      "origin": "image_gen",
+      "source": null,
+      "sha256": "d133753ca844c245150df222ddb9e6f2ec0b7c900ada31f8a21866c8c2b69114"
+    },
+    {
+      "path": "Buttons/effect-selected.png",
+      "guid": "628599655cb79894ba47854e0224633a",
+      "fileID": 21300000,
+      "width": 2172,
+      "height": 724,
+      "spriteRectTopLeft": [
+        61,
+        122,
+        2052,
+        478
+      ],
+      "spriteBorderLTRB": [
+        150,
+        76,
+        150,
+        76
+      ],
+      "pixelsPerUnit": 400,
+      "imageType": "Sliced",
+      "alpha": {
+        "min": 0,
+        "max": 254,
+        "transparentPixels": 598477,
+        "partialPixels": 974051
+      },
+      "origin": "image_gen",
+      "source": null,
+      "sha256": "1d0e39be61aff90b815994e088c52f6748c7b91d5e0850e0148bbab9cc82e5aa"
+    },
+    {
+      "path": "Decor/arrow-right.png",
+      "guid": "1313b27d5092e6a4280852a84358e3e4",
+      "fileID": 21300000,
+      "width": 128,
+      "height": 64,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        128,
+        64
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 6988,
+        "partialPixels": 166
+      },
+      "origin": "new-vector-art",
+      "source": null,
+      "sha256": "6aeaef366fbda881329c43086c8fec54bd94091a97a1c384dc0e3f7aea7c0f2e"
+    },
+    {
+      "path": "Decor/check.png",
+      "guid": "432aa046ffc582b45b0515686c212902",
+      "fileID": 21300000,
+      "width": 64,
+      "height": 64,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        64,
+        64
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 3691,
+        "partialPixels": 178
+      },
+      "origin": "new-vector-art",
+      "source": null,
+      "sha256": "2d7c58302df8034426efb37605ceab7c04c661f1d02c54519b5395f2cee35405"
+    },
+    {
+      "path": "Decor/close.png",
+      "guid": "a6a28dcfca516c340994238e9590a9d5",
+      "fileID": 21300000,
+      "width": 64,
+      "height": 64,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        64,
+        64
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 3640,
+        "partialPixels": 260
+      },
+      "origin": "new-vector-art",
+      "source": null,
+      "sha256": "7490f0b80341d2ac171f2bf6fb13442bed5cac95dd3f7b44835272d2334a7b62"
+    },
+    {
+      "path": "Decor/divider.png",
+      "guid": "cd5a0f046181bcd4cacd7e128e958006",
+      "fileID": 21300000,
+      "width": 1024,
+      "height": 32,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        1024,
+        32
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 32628,
+        "partialPixels": 112
+      },
+      "origin": "new-vector-art",
+      "source": null,
+      "sha256": "e5d220eee56eef4da74fb898733128c4bed2cf6fd1bd6c4588a5c309a3955976"
+    },
+    {
+      "path": "Decor/help-menu.png",
+      "guid": "fd8a83dfabfa6574297d379e91ae32e3",
+      "fileID": 21300000,
+      "width": 128,
+      "height": 128,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        128,
+        128
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 13888,
+        "partialPixels": 1064
+      },
+      "origin": "new-vector-art",
+      "source": null,
+      "sha256": "4fda9e7cd21ca18085ae3a9f8f71d1ae91348ed78f402a385d58544186bcff32"
+    },
+    {
+      "path": "Decor/input-ring.png",
+      "guid": "97d37feafe7bd9446a5463941cd710c8",
+      "fileID": 21300000,
+      "width": 128,
+      "height": 128,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        128,
+        128
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 7382,
+        "partialPixels": 8103
+      },
+      "origin": "new-vector-art",
+      "source": null,
+      "sha256": "b7178acbfe79d40f0ef85d25077525eae84fbcbbb8820cfe0df81312d31a58c1"
+    },
+    {
+      "path": "Decor/line.png",
+      "guid": "0d7617fb5b9f63944acf2a0b08898219",
+      "fileID": 21300000,
+      "width": 16,
+      "height": 16,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        16,
+        16
+      ],
+      "spriteBorderLTRB": [
+        0,
+        7,
+        0,
+        7
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Sliced",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 224,
+        "partialPixels": 0
+      },
+      "origin": "new-vector-art",
+      "source": null,
+      "sha256": "6f9d7a8daa8e964f1d4902454388a8984e0217cb1a16f7934db360f14ef9a4fe"
+    },
+    {
+      "path": "Decor/selection-pointer.png",
+      "guid": "947fc6ebe31a8644c933938194feeb87",
+      "fileID": 21300000,
+      "width": 64,
+      "height": 32,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        64,
+        32
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 1628,
+        "partialPixels": 40
+      },
+      "origin": "new-vector-art",
+      "source": null,
+      "sha256": "c7f2f1e71f7743395a788f99fc885a049ff8d17bf5eb6923cca09bc44c222812"
+    },
+    {
+      "path": "Forge/forge-empty.png",
+      "guid": "caecc2920790a8341825f35352d97974",
+      "fileID": 21300000,
+      "width": 1161,
+      "height": 1354,
+      "spriteRectTopLeft": [
+        7,
+        8,
+        1152,
+        1326
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 459579,
+        "partialPixels": 1111342
+      },
+      "origin": "image_gen",
+      "source": null,
+      "sha256": "162b1a9e211800af73eb83059ee849f55c77035803e3e0f258ac9649ebf67d78"
+    },
+    {
+      "path": "Forge/workpiece-black.png",
+      "guid": "c199897c39f8b3842aa7bf6ccd6a4ecb",
+      "fileID": 21300000,
+      "width": 1536,
+      "height": 1024,
+      "spriteRectTopLeft": [
+        150,
+        148,
+        1271,
+        813
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 254,
+        "transparentPixels": 883415,
+        "partialPixels": 689449
+      },
+      "origin": "image_gen",
+      "source": null,
+      "sha256": "3c5f2eae0d7c4d0ee2c646ca31cb99f3713ff9b705164c076f6dd3651f3efe84"
+    },
+    {
+      "path": "Forge/workpiece-blue.png",
+      "guid": "519ea2a4b50ddd04cb6bc1443fc4c19c",
+      "fileID": 21300000,
+      "width": 1536,
+      "height": 1024,
+      "spriteRectTopLeft": [
+        208,
+        138,
+        1102,
+        815
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 254,
+        "transparentPixels": 982406,
+        "partialPixels": 590458
+      },
+      "origin": "image_gen",
+      "source": null,
+      "sha256": "42c66bdbb4a40b123f01d58b34df5c541f0d7e053acf0b95cb62a94b8312b9c5"
+    },
+    {
+      "path": "Forge/workpiece-green.png",
+      "guid": "bc54ff063c98de64cb568c62a1a977fd",
+      "fileID": 21300000,
+      "width": 1536,
+      "height": 1024,
+      "spriteRectTopLeft": [
+        133,
+        104,
+        1315,
+        860
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 254,
+        "transparentPixels": 805666,
+        "partialPixels": 767198
+      },
+      "origin": "image_gen",
+      "source": null,
+      "sha256": "ee571cb404042db28aaaf8dd9a49e48cb4f4d24116448b1a6010bbe7991a741f"
+    },
+    {
+      "path": "Forge/workpiece-red.png",
+      "guid": "1c3802c3a032c8b4faf5158619b025d7",
+      "fileID": 21300000,
+      "width": 1536,
+      "height": 1024,
+      "spriteRectTopLeft": [
+        139,
+        111,
+        1270,
+        845
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 254,
+        "transparentPixels": 827394,
+        "partialPixels": 745470
+      },
+      "origin": "image_gen",
+      "source": null,
+      "sha256": "824181fe78c54c210984650ef43dbc9f25eb2532ea1012ec143e7e632c847b63"
+    },
+    {
+      "path": "Forge/workpiece-yellow.png",
+      "guid": "31c6b9d8d1a569e489d1c974b223abb5",
+      "fileID": 21300000,
+      "width": 1536,
+      "height": 1024,
+      "spriteRectTopLeft": [
+        185,
+        163,
+        1176,
+        771
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 254,
+        "transparentPixels": 982558,
+        "partialPixels": 590306
+      },
+      "origin": "image_gen",
+      "source": null,
+      "sha256": "bcd6b33739a3ea719b5785892fec4da69bf01bdaef5dc3b3054dce437946f1a2"
+    },
+    {
+      "path": "Frames/enchantment-panel.png",
+      "guid": "1ebf29475cd94e04380dbbaec7475b55",
+      "fileID": 21300000,
+      "width": 941,
+      "height": 1672,
+      "spriteRectTopLeft": [
+        27,
+        18,
+        887,
+        1635
+      ],
+      "spriteBorderLTRB": [
+        64,
+        64,
+        64,
+        64
+      ],
+      "pixelsPerUnit": 400,
+      "imageType": "Sliced",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 151988,
+        "partialPixels": 1419316
+      },
+      "origin": "image_gen",
+      "source": null,
+      "sha256": "a626ffb7d19fbaf431a761aa2542207962e85c3ea4fcc247e91672712a043c80"
+    },
+    {
+      "path": "Frames/tile-normal.png",
+      "guid": "b8cf88297f6758549bad2a495ead6de6",
+      "fileID": 21300000,
+      "width": 1110,
+      "height": 1417,
+      "spriteRectTopLeft": [
+        101,
+        98,
+        908,
+        1221
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 506867,
+        "partialPixels": 1064750
+      },
+      "origin": "image_gen",
+      "source": null,
+      "sha256": "8225dcbc56efacfec6941af1d9b97f2ed59252e4dd30b86977e27fa3ce307c9c"
+    },
+    {
+      "path": "Frames/tile-selected.png",
+      "guid": "2a18953319cea164daace4cda6e9b3ab",
+      "fileID": 21300000,
+      "width": 1106,
+      "height": 1422,
+      "spriteRectTopLeft": [
+        97,
+        90,
+        913,
+        1239
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 412683,
+        "partialPixels": 1160016
+      },
+      "origin": "image_gen",
+      "source": null,
+      "sha256": "ca478e00fb2c0192073bcaf0f287fb32a371999418fabf59ea6c52c883e0ae81"
+    },
+    {
+      "path": "Icons/Colored/bonus-ap.png",
+      "guid": "4cc7855e6d6a4709b6f08d3b5644d056",
+      "fileID": 21300000,
+      "width": 1254,
+      "height": 1254,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 949896,
+        "partialPixels": 622428
+      },
+      "origin": "existing-project-copy",
+      "source": "Assets/_Project/Graphics/UI/Common/TileBonuses/bonus-ap.png",
+      "sha256": "4e90cf9939da60df3bf600f6e0b40ca52808ea08a79e13d0f99730c644e2264e"
+    },
+    {
+      "path": "Icons/Colored/bonus-hp.png",
+      "guid": "aee61c2a4ea74406871e94fe90b5716f",
+      "fileID": 21300000,
+      "width": 1254,
+      "height": 1254,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 874150,
+        "partialPixels": 697873
+      },
+      "origin": "existing-project-copy",
+      "source": "Assets/_Project/Graphics/UI/Common/TileBonuses/bonus-hp.png",
+      "sha256": "c2035c48311eb1a8f2064d5ba5558acdb975dd6cbf9d231d8367257345b468df"
+    },
+    {
+      "path": "Icons/Colored/bonus-mana.png",
+      "guid": "6c0f8bb700ff40a1b114e281d0152269",
+      "fileID": 21300000,
+      "width": 1254,
+      "height": 1254,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 1065965,
+        "partialPixels": 506164
+      },
+      "origin": "existing-project-copy",
+      "source": "Assets/_Project/Graphics/UI/Common/TileBonuses/bonus-mana.png",
+      "sha256": "8c00fcc5242ab4df511952bfbff1f985d9031d931f48f277187ae2a45489a27b"
+    },
+    {
+      "path": "Icons/Colored/bonus-match-neighbor.png",
+      "guid": "45c682a884894be2be8d210f603fff5b",
+      "fileID": 21300000,
+      "width": 1254,
+      "height": 1254,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 942237,
+        "partialPixels": 628973
+      },
+      "origin": "existing-project-copy",
+      "source": "Assets/_Project/Graphics/UI/Common/TileBonuses/bonus-match-neighbor.png",
+      "sha256": "290cfb10910edc56ccd25d0ff8cf4b220c3c25f569f2159048b997d255a5cab9"
+    },
+    {
+      "path": "Icons/Colored/bonus-shield.png",
+      "guid": "cf849520802543a9b947e4203200c813",
+      "fileID": 21300000,
+      "width": 1254,
+      "height": 1254,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 855663,
+        "partialPixels": 716405
+      },
+      "origin": "existing-project-copy",
+      "source": "Assets/_Project/Graphics/UI/Common/TileBonuses/bonus-shield.png",
+      "sha256": "60af70bddb63c664fc846e24b471cfa4e7364ed730de3c4a1a6cd68faddbb8d2"
+    },
+    {
+      "path": "Icons/Colored/bonus-stack-burn.png",
+      "guid": "9ad417f9d2b14d0ca302cdd7ec9cd2ce",
+      "fileID": 21300000,
+      "width": 1254,
+      "height": 1254,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 1094610,
+        "partialPixels": 477547
+      },
+      "origin": "existing-project-copy",
+      "source": "Assets/_Project/Graphics/UI/Common/TileBonuses/bonus-stack-burn.png",
+      "sha256": "a8b6ff025b321a26a1669b76ffcad371a02ab6ed092b52f26f06264cfc76fc16"
+    },
+    {
+      "path": "Icons/Monochrome/effect-ap.png",
+      "guid": "8450448c545f97d4f80db1d22e36213d",
+      "fileID": 21300000,
+      "width": 128,
+      "height": 128,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        128,
+        128
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 13332,
+        "partialPixels": 1000
+      },
+      "origin": "new-vector-art",
+      "source": null,
+      "sha256": "2f6e205552e4e105ebcc98f6bc35fb2f9e457e56f5a73c8b3b63641e2fef898a"
+    },
+    {
+      "path": "Icons/Monochrome/effect-burn.png",
+      "guid": "cc5436c6a8df3594d92a6b3ef7ada661",
+      "fileID": 21300000,
+      "width": 128,
+      "height": 128,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        128,
+        128
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 12275,
+        "partialPixels": 1221
+      },
+      "origin": "new-vector-art",
+      "source": null,
+      "sha256": "e2a181467e1bd6b36bf877d584cd63664f63974003612d62a6441dd8ee386fdc"
+    },
+    {
+      "path": "Icons/Monochrome/effect-hp.png",
+      "guid": "c2a8a618a48b5374b88c0b580419860a",
+      "fileID": 21300000,
+      "width": 128,
+      "height": 128,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        128,
+        128
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 12118,
+        "partialPixels": 1017
+      },
+      "origin": "new-vector-art",
+      "source": null,
+      "sha256": "12d411496e1221bd171d6eab1e1d691354341ab0f2fc6bef1ff1e0d43fb68159"
+    },
+    {
+      "path": "Icons/Monochrome/effect-mana.png",
+      "guid": "6ce9fc6d7b54ce14c911246828ae7a4d",
+      "fileID": 21300000,
+      "width": 128,
+      "height": 128,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        128,
+        128
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 12549,
+        "partialPixels": 1383
+      },
+      "origin": "new-vector-art",
+      "source": null,
+      "sha256": "9251ac76694491d30f62f6b67d7432a965feceff729b4590c211927f42055d4e"
+    },
+    {
+      "path": "Icons/Monochrome/effect-neighbor.png",
+      "guid": "e4899f25ff9f0934b96bb6d07ad8cf1a",
+      "fileID": 21300000,
+      "width": 128,
+      "height": 128,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        128,
+        128
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 13562,
+        "partialPixels": 1059
+      },
+      "origin": "new-vector-art",
+      "source": null,
+      "sha256": "09923a9124ce336ffaaaf616d0f14fc7f322c92d7aaa5862a21611062e060380"
+    },
+    {
+      "path": "Icons/Monochrome/effect-shield.png",
+      "guid": "ca2905e726e33c945946051c32e95de9",
+      "fileID": 21300000,
+      "width": 128,
+      "height": 128,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        128,
+        128
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 13784,
+        "partialPixels": 1434
+      },
+      "origin": "new-vector-art",
+      "source": null,
+      "sha256": "62f1d7fd5e8efde4e032d7e4ae6084f25b8e9e08fabc511f6e1ca26a59f11db8"
+    },
+    {
+      "path": "Shards/shard-black.png",
+      "guid": "528cad3523ba45fa9161d42624891aea",
+      "fileID": 21300000,
+      "width": 512,
+      "height": 512,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 207765,
+        "partialPixels": 1957
+      },
+      "origin": "existing-project-copy",
+      "source": "Assets/_Project/Graphics/Shards/shard_black.png",
+      "sha256": "494c6731a98b02a9d3b84f9d390d41d62ababd3909d95a26d078545ad44849a1"
+    },
+    {
+      "path": "Shards/shard-blue.png",
+      "guid": "f5ab0ae4b1324fdb9357704bde8b3ef7",
+      "fileID": 21300000,
+      "width": 512,
+      "height": 512,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 207691,
+        "partialPixels": 1872
+      },
+      "origin": "existing-project-copy",
+      "source": "Assets/_Project/Graphics/Shards/shard_blue.png",
+      "sha256": "cc31b8f0fe935ed96d4e885d3608ef60ebc918362e15de87084a209c448a1654"
+    },
+    {
+      "path": "Shards/shard-green.png",
+      "guid": "e67ad5e7051d4847b8e0ba7e414d00f4",
+      "fileID": 21300000,
+      "width": 512,
+      "height": 512,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 207606,
+        "partialPixels": 1914
+      },
+      "origin": "existing-project-copy",
+      "source": "Assets/_Project/Graphics/Shards/shard_green.png",
+      "sha256": "524f1520e88eeee209ae888f8c7cb81e422e3ea69b9b5c8c0c6f8d7dfe477e6d"
+    },
+    {
+      "path": "Shards/shard-red.png",
+      "guid": "6602dc22f4624dcea052d31b90adb0ab",
+      "fileID": 21300000,
+      "width": 512,
+      "height": 512,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 207803,
+        "partialPixels": 1899
+      },
+      "origin": "existing-project-copy",
+      "source": "Assets/_Project/Graphics/Shards/shard_red.png",
+      "sha256": "10b189b7bbe2e73984c8a669fcd3c4c0e60feafd221981d37246db56db3d3ab2"
+    },
+    {
+      "path": "Shards/shard-yellow.png",
+      "guid": "17c237fefc4345f7bae89dbf1767b989",
+      "fileID": 21300000,
+      "width": 512,
+      "height": 512,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 207667,
+        "partialPixels": 1892
+      },
+      "origin": "existing-project-copy",
+      "source": "Assets/_Project/Graphics/Shards/shard_yellow.png",
+      "sha256": "1eedc5c01677dd35991365b435527037c8273f8c155dd6b6969fa85b60c6ebfb"
+    },
+    {
+      "path": "Slots/slot-empty.png",
+      "guid": "42cbf4ea55581f141ab58b19fafaff49",
+      "fileID": 21300000,
+      "width": 1254,
+      "height": 1254,
+      "spriteRectTopLeft": [
+        105,
+        104,
+        1041,
+        1026
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 765052,
+        "partialPixels": 806770
+      },
+      "origin": "image_gen",
+      "source": null,
+      "sha256": "b1dcb75504678e26ba25e7d2a08b1db38e98992e4562e3bd9c906b36225cea52"
+    },
+    {
+      "path": "Slots/slot-selected.png",
+      "guid": "ddd8575b3c2e4ce46a748db856abeae4",
+      "fileID": 21300000,
+      "width": 1254,
+      "height": 1254,
+      "spriteRectTopLeft": [
+        111,
+        101,
+        1033,
+        1032
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 1112754,
+        "partialPixels": 459632
+      },
+      "origin": "image_gen",
+      "source": null,
+      "sha256": "02fe143cfe5d52dbd5d4cddf6656995b3d00a9d72f6091f5aa2ca3c30ce7dba8"
+    },
+    {
+      "path": "Tiles/tile-black.png",
+      "guid": "794d14ee7333400a83c669208df3c1b4",
+      "fileID": 21300000,
+      "width": 1254,
+      "height": 1254,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 326562,
+        "partialPixels": 1244799
+      },
+      "origin": "existing-project-copy",
+      "source": "Assets/_Project/Graphics/UI/Common/Tiles/tile-black.png",
+      "sha256": "6dc64766919947954a8f86eb7469b3eceead63fcfdc040961892d73d80c9cb9a"
+    },
+    {
+      "path": "Tiles/tile-blue.png",
+      "guid": "994776e68d19492fa8d850e9e5f7c35e",
+      "fileID": 21300000,
+      "width": 1254,
+      "height": 1254,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 360405,
+        "partialPixels": 1210429
+      },
+      "origin": "existing-project-copy",
+      "source": "Assets/_Project/Graphics/UI/Common/Tiles/tile-blue.png",
+      "sha256": "82bb7ee8597a984e6a77b14fbfb9d714fa00cd4f7283bb842f308276348f3cdf"
+    },
+    {
+      "path": "Tiles/tile-green.png",
+      "guid": "2627cf3f1d424f3da67fac8e7e494dfd",
+      "fileID": 21300000,
+      "width": 1254,
+      "height": 1254,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 304006,
+        "partialPixels": 1266470
+      },
+      "origin": "existing-project-copy",
+      "source": "Assets/_Project/Graphics/UI/Common/Tiles/tile-green.png",
+      "sha256": "69bdf8dd2c4680dd665a7e6a015725ad7113d9503c8a7b60ff9f55e76d6fa8ad"
+    },
+    {
+      "path": "Tiles/tile-red.png",
+      "guid": "5fdb683ba0794eccadf4c7bf6d3fd611",
+      "fileID": 21300000,
+      "width": 1254,
+      "height": 1254,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 407894,
+        "partialPixels": 1162056
+      },
+      "origin": "existing-project-copy",
+      "source": "Assets/_Project/Graphics/UI/Common/Tiles/tile-red.png",
+      "sha256": "c146bc63af56141c0acfe63e3a62da4a3487c4ca95b47ae9289c3c6c5066f1e0"
+    },
+    {
+      "path": "Tiles/tile-yellow.png",
+      "guid": "a620daa725ed490a94605ebef65d1f13",
+      "fileID": 21300000,
+      "width": 1254,
+      "height": 1254,
+      "spriteRectTopLeft": [
+        0,
+        0,
+        1254,
+        1254
+      ],
+      "spriteBorderLTRB": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "pixelsPerUnit": 100,
+      "imageType": "Simple",
+      "alpha": {
+        "min": 0,
+        "max": 255,
+        "transparentPixels": 272830,
+        "partialPixels": 1297970
+      },
+      "origin": "existing-project-copy",
+      "source": "Assets/_Project/Graphics/UI/Common/Tiles/tile-yellow.png",
+      "sha256": "c75c2ad1dad74e3b94489480285a888057a7469ef3ec801a30e91e14c0c58591"
+    }
+  ]
+}

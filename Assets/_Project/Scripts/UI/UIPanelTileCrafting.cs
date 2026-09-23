@@ -15,7 +15,7 @@ namespace M3P
     {
         [SerializeField] Transform TileTypesParent;
         [SerializeField] Transform UpgradeTypesParent;
-        [SerializeField] Button TileTypePrefab;
+        [SerializeField] UIPanelCraftTilesTileTypeButton TileTypePrefab;
         [SerializeField] Button UpgradeTypePrefab;
         [SerializeField] Transform CostParent;
         [SerializeField] UIPanelPlayerManaBar CostPrefab;
@@ -24,8 +24,15 @@ namespace M3P
 
         [SerializeField] Transform ShardsParent;
         [SerializeField] UISimpleIndicator ShardsIndicatorPrefab;
+        [SerializeField] Sprite TileFrameNormal;
+        [SerializeField] Sprite TileFrameSelected;
+        [SerializeField] Sprite EffectFrameNormal;
+        [SerializeField] Sprite EffectFrameSelected;
+        [SerializeField] Sprite[] CatalogueTileSprites;
+        [SerializeField] Sprite[] CatalogueEffectSprites;
+        [SerializeField] Sprite[] ShardSprites;
 
-        readonly List<Button> _typeViews = new List<Button>();
+        readonly List<UIPanelCraftTilesTileTypeButton> _typeViews = new List<UIPanelCraftTilesTileTypeButton>();
         readonly List<Match3TileTypeDefinition> _typeTiles = new List<Match3TileTypeDefinition>();
         readonly List<Button> _upgradeViews = new List<Button>();
         readonly List<TileUpgradeDefinition> _upgradeTypes = new List<TileUpgradeDefinition>();
@@ -162,7 +169,7 @@ namespace M3P
                 if (tile == null || entries[i].Id == TileConfig.InvalidTileId)
                     continue;
 
-                Button view = Instantiate(TileTypePrefab, TileTypesParent);
+                UIPanelCraftTilesTileTypeButton view = Instantiate(TileTypePrefab, TileTypesParent);
                 view.gameObject.SetActive(true);
                 view.name = $"CraftType_{tile.name}";
 
@@ -325,12 +332,13 @@ namespace M3P
         {
             for (int i = 0; i < _typeViews.Count; i++)
             {
-                Button view = _typeViews[i];
+                UIPanelCraftTilesTileTypeButton view = _typeViews[i];
                 if (view == null)
                     continue;
 
+                view.transform.localScale = Vector3.one;
                 bool selected = i < _typeTiles.Count && _typeTiles[i] == _selectedTile;
-                view.transform.localScale = selected ? Vector3.one * 1.2f : Vector3.one;
+                ApplyFrameSprite(view.background, selected, TileFrameNormal, TileFrameSelected);
             }
         }
 
@@ -342,9 +350,58 @@ namespace M3P
                 if (view == null)
                     continue;
 
-                bool selected = i < _upgradeTypes.Count && SlotIndexOf(_upgradeTypes[i]) >= 0;
-                view.transform.localScale = selected ? Vector3.one * 1.2f : Vector3.one;
+                int stacked = i < _upgradeTypes.Count ? CountSlots(_upgradeTypes[i]) : 0;
+                ApplyFrameSelection(view, stacked > 0, EffectFrameNormal, EffectFrameSelected);
+                ApplyStackCount(view, stacked);
             }
+        }
+
+        static void ApplyStackCount(Button view, int count)
+        {
+            if (view == null)
+                return;
+
+            TextMeshProUGUI label = FindCountLabel(view.transform);
+            if (label == null)
+                return;
+
+            bool show = count > 1;
+            label.text = show ? count.ToString() : string.Empty;
+            label.gameObject.SetActive(show);
+
+            Transform name = view.transform.Find("Name");
+            if (name is RectTransform nameRect)
+            {
+                Vector2 offsetMax = nameRect.offsetMax;
+                offsetMax.x = show ? -36f : -12f;
+                nameRect.offsetMax = offsetMax;
+            }
+        }
+
+        static TextMeshProUGUI FindCountLabel(Transform button)
+        {
+            Transform count = button.Find("Count");
+            return count != null ? count.GetComponent<TextMeshProUGUI>() : null;
+        }
+
+        static void ApplyFrameSelection(Button view, bool selected, Sprite normal, Sprite selectedSprite)
+        {
+            if (view == null)
+                return;
+
+            view.transform.localScale = Vector3.one;
+            Image frame = view.targetGraphic as Image ?? view.GetComponent<Image>();
+            ApplyFrameSprite(frame, selected, normal, selectedSprite);
+        }
+
+        static void ApplyFrameSprite(Image frame, bool selected, Sprite normal, Sprite selectedSprite)
+        {
+            if (frame == null)
+                return;
+
+            Sprite sprite = selected && selectedSprite != null ? selectedSprite : normal;
+            if (sprite != null)
+                frame.sprite = sprite;
         }
 
         bool CanCraftSelected()
@@ -385,18 +442,19 @@ namespace M3P
             return -1;
         }
 
-        int SlotIndexOf(TileUpgradeDefinition upgrade)
+        int CountSlots(TileUpgradeDefinition upgrade)
         {
             if (upgrade == null)
-                return -1;
+                return 0;
 
+            int count = 0;
             for (int i = 0; i < _slotUpgrades.Length; i++)
             {
                 if (_slotUpgrades[i] == upgrade)
-                    return i;
+                    count++;
             }
 
-            return -1;
+            return count;
         }
 
         int[] CollectSelectedUpgradeIds()
@@ -488,25 +546,101 @@ namespace M3P
             return -1;
         }
 
-        static void ConfigureTileTypeButton(Button button, Match3TileTypeDefinition tile, Action onClicked)
+        void ConfigureTileTypeButton(UIPanelCraftTilesTileTypeButton button, Match3TileTypeDefinition tile, Action onClicked)
         {
             TileTypeGraphics graphics = tile != null ? tile.TileGraphics : null;
-            ConfigureCatalogueButton(
+            Sprite icon = ResolveNamedSprite(CatalogueTileSprites, tile != null ? tile.name : null)
+                ?? (graphics != null ? graphics.MainSprite : null);
+            ApplyTileIcon(
                 button,
-                tile != null ? tile.name : string.Empty,
-                graphics != null ? graphics.MainSprite : null,
-                tile != null ? tile.UIMaterial : null,
-                onClicked);
+                icon,
+                CatalogueTileSprites == null || CatalogueTileSprites.Length == 0
+                    ? (tile != null ? tile.UIMaterial : null)
+                    : null);
+            BindTileClick(button, onClicked);
         }
 
-        static void ConfigureUpgradeTypeButton(Button button, TileUpgradeDefinition upgrade, Action onClicked)
+        void ConfigureUpgradeTypeButton(Button button, TileUpgradeDefinition upgrade, Action onClicked)
         {
+            Sprite icon = ResolveNamedSprite(CatalogueEffectSprites, upgrade != null ? upgrade.DisplayName : null)
+                ?? ResolveNamedSprite(CatalogueEffectSprites, upgrade != null ? upgrade.name : null)
+                ?? (upgrade != null ? upgrade.Icon : null);
             ConfigureCatalogueButton(
                 button,
                 upgrade != null ? upgrade.DisplayName : string.Empty,
-                upgrade != null ? upgrade.Icon : null,
+                icon,
                 null,
                 onClicked);
+            EnsureStackCountLabel(button);
+        }
+
+        static void EnsureStackCountLabel(Button button)
+        {
+            if (button == null || button.transform.Find("Count") != null)
+                return;
+
+            TextMeshProUGUI name = null;
+            TextMeshProUGUI[] labels = button.GetComponentsInChildren<TextMeshProUGUI>(true);
+            for (int i = 0; i < labels.Length; i++)
+            {
+                if (labels[i] != null && labels[i].gameObject.name == "Name")
+                {
+                    name = labels[i];
+                    break;
+                }
+            }
+
+            var countObject = new GameObject("Count", typeof(RectTransform));
+            countObject.transform.SetParent(button.transform, false);
+            TextMeshProUGUI count = countObject.AddComponent<TextMeshProUGUI>();
+            if (name != null)
+            {
+                count.font = name.font;
+                count.fontSharedMaterial = name.fontSharedMaterial;
+                count.color = name.color;
+                count.fontSize = name.fontSize;
+            }
+
+            count.alignment = TextAlignmentOptions.MidlineRight;
+            count.raycastTarget = false;
+            count.text = string.Empty;
+            count.textWrappingMode = TextWrappingModes.NoWrap;
+            count.overflowMode = TextOverflowModes.Overflow;
+
+            RectTransform rect = count.rectTransform;
+            rect.anchorMin = new Vector2(1f, 0f);
+            rect.anchorMax = new Vector2(1f, 1f);
+            rect.pivot = new Vector2(1f, 0.5f);
+            rect.anchoredPosition = new Vector2(-8f, 0f);
+            rect.sizeDelta = new Vector2(28f, -8f);
+            countObject.SetActive(false);
+        }
+
+        static void ApplyTileIcon(UIPanelCraftTilesTileTypeButton button, Sprite icon, Material material)
+        {
+            if (button == null || button.icon == null)
+                return;
+
+            Image image = button.icon;
+            image.sprite = icon;
+            image.material = material;
+            image.enabled = icon != null;
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+        }
+
+        static void BindTileClick(UIPanelCraftTilesTileTypeButton button, Action onClicked)
+        {
+            if (button == null || button.button == null)
+                return;
+
+            if (button.button.targetGraphic == null && button.background != null)
+                button.button.targetGraphic = button.background;
+
+            if (button.background != null)
+                button.background.raycastTarget = true;
+
+            button.button.onClick.AddListener(() => onClicked?.Invoke());
         }
 
         static void ConfigureCatalogueButton(Button button, string label, Sprite icon, Material iconMaterial, Action onClicked)
@@ -514,17 +648,25 @@ namespace M3P
             TextMeshProUGUI text = button.GetComponentInChildren<TextMeshProUGUI>(true);
             if (text != null)
                 text.text = label ?? string.Empty;
-            else
-                ApplyIcon(button, icon, iconMaterial);
 
+            ApplyIcon(button, icon, iconMaterial);
             button.onClick.AddListener(() => onClicked?.Invoke());
         }
 
         static void ApplyIcon(Button button, Sprite icon, Material material)
         {
-            Image image = button.targetGraphic as Image ?? button.GetComponent<Image>();
-            if (image == null)
-                image = button.GetComponentInChildren<Image>(true);
+            Transform iconTransform = FindNamedChild(button.transform, "Icon");
+            Image image = iconTransform != null
+                ? iconTransform.GetComponent<Image>()
+                : button.GetComponentInChildren<Image>(true);
+
+            if (image == null || image == button.targetGraphic)
+            {
+                if (iconTransform == null)
+                    return;
+                image = iconTransform.GetComponent<Image>();
+            }
+
             if (image == null)
                 return;
 
@@ -532,8 +674,57 @@ namespace M3P
             image.material = material;
             image.enabled = icon != null;
             image.preserveAspect = true;
-            if (button.targetGraphic == null)
-                button.targetGraphic = image;
+            image.raycastTarget = false;
+        }
+
+        static Sprite ResolveNamedSprite(Sprite[] sprites, string key)
+        {
+            if (sprites == null || string.IsNullOrEmpty(key))
+                return null;
+
+            Sprite fallback = null;
+            for (int i = 0; i < sprites.Length; i++)
+            {
+                Sprite sprite = sprites[i];
+                if (sprite == null || string.IsNullOrEmpty(sprite.name))
+                    continue;
+
+                if (sprite.name.Equals(key, StringComparison.OrdinalIgnoreCase)
+                    || sprite.name.IndexOf(key, StringComparison.OrdinalIgnoreCase) >= 0)
+                    return sprite;
+
+                string token = SpriteToken(sprite.name);
+                if (token.Length == 0)
+                    continue;
+
+                if (key.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0)
+                    fallback = sprite;
+            }
+
+            return fallback;
+        }
+
+        static string SpriteToken(string spriteName)
+        {
+            int dash = spriteName.LastIndexOf('-');
+            return dash >= 0 && dash < spriteName.Length - 1
+                ? spriteName.Substring(dash + 1)
+                : spriteName;
+        }
+
+        static Transform FindNamedChild(Transform root, string childName)
+        {
+            if (root.name == childName)
+                return root;
+
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform found = FindNamedChild(root.GetChild(i), childName);
+                if (found != null)
+                    return found;
+            }
+
+            return null;
         }
 
         void ClearTypeViews()
@@ -602,7 +793,8 @@ namespace M3P
                 UISimpleIndicator indicator = Instantiate(ShardsIndicatorPrefab, ShardsParent);
                 indicator.gameObject.SetActive(true);
                 indicator.name = $"Shard_{tileType.name}";
-                indicator.SetIcon(tileType.ResolveShardIcon());
+                Sprite shardIcon = ResolveNamedSprite(ShardSprites, tileType.name) ?? tileType.ResolveShardIcon();
+                indicator.SetIcon(shardIcon);
 
                 string tileKey = tileType.name;
                 indicator.Bind(

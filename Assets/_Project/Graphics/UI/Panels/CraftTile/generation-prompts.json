@@ -1,0 +1,113 @@
+[
+  {
+    "name": "Backgrounds/workshop-background",
+    "refs": [
+      "C:/Users/Filip/AppData/Local/Temp/codex-clipboard-f4d53274-58c6-4982-a67c-140857f5c8d5.png"
+    ],
+    "prompt": "Use case: precise-object-edit. Create a production game background plate from the attached Tile Forge screenshot. Output a full 16:9 landscape 1920x1080 or larger PNG. REMOVE ALL UI: all words, letters, numbers, icons, glyphs, jewels used as UI, frames, buttons, panels and bottom bar. Also REMOVE THE ENTIRE CENTRAL FORGE MACHINE with its roof, wooden pillars, press, tile piles and output chute. Inpaint a coherent EMPTY WORKSHOP behind it: dark stylized hand-painted fantasy timber and stone workshop, stone/cobble work surface, candlelight on left and background, deep cool-blue tall windows, barrels and shelves in soft focus. Match screenshot camera and warm/cool palette. Central and right area should remain quiet, dark and open for later overlaying a separate forge sprite and readable UI. Keep perspective floor at bottom, no machine, no jewel anywhere, no people. This is a usable opaque clean background, not a mockup. No text, no UI. Detail mostly around edges; restrained blur behind where controls will go."
+  },
+  {
+    "name": "Forge/forge-empty",
+    "refs": [
+      "D:/Unity/projs/M3p/Assets/_Project/Graphics/Enviorment/LocationConcepts/tile-forge-press-colorful-v5.png",
+      "C:/Users/Filip/AppData/Local/Temp/codex-clipboard-f4d53274-58c6-4982-a67c-140857f5c8d5.png"
+    ],
+    "prompt": "Use case: background-extraction / precise-object-edit. Create ONE production transparent RGBA sprite of the forge machine from image 1, using image 2 only as context. Preserve exact stylized high-quality hand-painted 3D design: blue slate split gable roof, oak pillars, dark iron braces, brass diamond studs, screw press with raised large square stamp, right cogwheel and crank, stone feet, front output chute. Render front three-quarter view as original asset. IMPORTANT remove ALL colored tiles from the machine, anvil, chute, sides and stack; leave working anvil surface completely empty and visible below raised stamp so a separate tile sprite can be added at runtime. Leave a spacious clear gap between underside of press stamp and anvil. Maintain complete silhouette with no cropping and 4% transparent margin. Entire backdrop must be TRUE TRANSPARENCY alpha=0, including holes between machine parts; no black background, no white background, no checkerboard baked into image, no floor or workshop outside machine's own stone foundation. Warm restrained inner light. No letters, UI, signs, icons, colored magic, or separate objects. High resolution portrait 1536x1792 or similar; machine occupies most of canvas. This is an isolated game sprite, not a screenshot."
+  },
+  {
+    "name": "Frames/enchantment-panel",
+    "refs": [
+      "C:/Users/Filip/AppData/Local/Temp/codex-clipboard-f4d53274-58c6-4982-a67c-140857f5c8d5.png"
+    ],
+    "prompt": "Use case: ui-mockup production sprite extraction. Recreate ONLY the empty tall rectangular Enchantment panel backing from right side of reference. Single isolated front-facing 2D UI background sprite, portrait aspect approximately 0.56 wide to 1 tall. Nearly black blue-charcoal lightly textured interior, subtle thin aged-gray metallic rim, small 45-degree clipped corners, discreet edge highlights. Thin rim not ornamental. Interior must be COMPLETELY EMPTY, dark, flat and uniform enough for arbitrary runtime text; remove ALL text, tiles, icons, dividers, button and images. Panel fills canvas with just 2% margin. TRUE transparent RGBA outside panel, opaque dark fill inside. No shadow rectangle outside, no background, no baked checkerboard. Suitable for Unity nine-slice resizing: edge middle portions simple straight lines, detail only on corners, no perspective. One single blank panel, no montage. No text."
+  },
+  {
+    "name": "Buttons/apply-normal",
+    "refs": [
+      "C:/Users/Filip/AppData/Local/Temp/codex-clipboard-f4d53274-58c6-4982-a67c-140857f5c8d5.png"
+    ],
+    "prompt": "Use case: ui-mockup production sprite. Recreate ONLY the blank blue Apply Effect button background from the bottom right of reference screenshot. Single very wide short horizontal front-facing 2D button. Target proportions 5:1, e.g. 1280x256. Deep midnight-blue fill with very subtle scratched metal texture, thin double cyan edge, gently clipped 45-degree corners, restrained pale cyan highlight on top edge. Flat readable center, no intense center glow. NO WORDS, NO LETTER A, NO controller symbol, NO icons, NO text whatsoever. True RGBA transparent outside the button and 3% safe margin. This is a single neutral/enabled button sprite for Unity nine-slice with quiet stretchable center and edges; not a screenshot or collection. Preserve screenshot aesthetic but keep border thin and center simple. No baked checkerboard, no white or black rectangle background."
+  },
+  {
+    "name": "Buttons/effect-normal",
+    "refs": [
+      "C:/Users/Filip/AppData/Local/Temp/codex-clipboard-f4d53274-58c6-4982-a67c-140857f5c8d5.png"
+    ],
+    "prompt": "Use case: ui-mockup production sprite. Extract/recreate ONLY one EMPTY effect-row button background corresponding to Extra Mana row bottom left of reference screenshot. Single 2D front-on wide short button 4:1 aspect ratio, 1024x256 suggested. Charcoal black subtly textured metal fill, very thin muted silver rim, small clipped 45 degree corners, understated slight top edge lighting. Completely empty uninterrupted center: no icon circle, no mana icon, no text, no letters. Normal unselected state, no colored glow. True transparent RGBA outside button, 3% safe margin. Nine-slice-friendly simple straight edges and uniform quiet center. NO checkerboard image, no backdrop. One single button only."
+  },
+  {
+    "name": "Buttons/effect-selected",
+    "refs": [
+      "C:/Users/Filip/AppData/Local/Temp/codex-clipboard-f4d53274-58c6-4982-a67c-140857f5c8d5.png"
+    ],
+    "prompt": "Use case: ui-mockup production sprite. Extract/recreate ONLY one EMPTY selected effect-row button background corresponding to cyan Extra Shield row bottom left of reference. Single front-on wide short 2D button 4:1 aspect, 1024x256 suggested. Very dark charcoal/deep navy fill, fine bright cyan metallic outline on small clipped 45-degree corners, subtle contained blue outer glow, restrained blue illumination just inside edges. Keep center flat, dark and empty. No shield, no icon circles, no words, no letters. True RGBA transparent outside with full soft glow represented by alpha, 5% safe margin, no black opaque rectangle behind glow, no checkerboard. Nine-slice-friendly straight edges. One single selection button sprite only."
+  },
+  {
+    "name": "Frames/tile-normal",
+    "refs": [
+      "C:/Users/Filip/AppData/Local/Temp/codex-clipboard-f4d53274-58c6-4982-a67c-140857f5c8d5.png"
+    ],
+    "prompt": "Use case: ui-mockup production sprite. Recreate just one EMPTY vertical tile-selection button backing from the upper left row of reference. Single front-facing compact portrait rectangle width:height=0.78, small clipped corners, extremely thin aged dark-silver metal edge, almost black blue-charcoal lightly textured fill. Center entirely blank and filled dark: NO tile, jewel, symbol, glow, icon, letters or text. Unselected normal state. Whole rectangle visible with 3% true RGBA transparent margin. No backdrop, no fake checkerboard. Frame center and edges appropriate for Unity nine-slice. One sprite only, not collection."
+  },
+  {
+    "name": "Frames/tile-selected",
+    "refs": [
+      "C:/Users/Filip/AppData/Local/Temp/codex-clipboard-f4d53274-58c6-4982-a67c-140857f5c8d5.png"
+    ],
+    "prompt": "Use case: ui-mockup production sprite. Recreate just one EMPTY SELECTED tile-selection button backing from upper left of reference, the amber glowing frame around selected red tile. Single front-facing compact portrait rectangle width:height=0.78, clipped corners, thin warm amber-gold edge and contained amber bloom. Inside is near-black charcoal flat quiet fill, entirely EMPTY: no jewel, no red tile, no letters, no text, no selection triangle above frame (triangle will be separate). Preserve soft glow using real RGBA alpha outside the frame, with 5% safe margin. No opaque backdrop, no checkerboard. Whole single sprite visible. Unity nine-slice-friendly straight uniform edge sections and center."
+  },
+  {
+    "name": "Slots/slot-empty",
+    "refs": [
+      "C:/Users/Filip/AppData/Local/Temp/codex-clipboard-f4d53274-58c6-4982-a67c-140857f5c8d5.png"
+    ],
+    "prompt": "Use case: ui-mockup production sprite. Recreate ONLY one empty circular effect slot from right panel of reference: elegant thin dark iron circular socket rim, tiny discreet brass joints at cardinal points, charcoal-black inset center. Circle perfectly front-facing and round, no perspective. Diameter occupies 88% of square 512x512 or 1024x1024 image. Hollow unoccupied look, no icon, no shield, no text. True transparent alpha outside circle, solid near-black center inside. Thin practical rim, not thick ornamental gold frame. One isolated ring socket, no panel, no background, no baked checkerboard."
+  },
+  {
+    "name": "Slots/slot-selected",
+    "refs": [
+      "C:/Users/Filip/AppData/Local/Temp/codex-clipboard-f4d53274-58c6-4982-a67c-140857f5c8d5.png"
+    ],
+    "prompt": "Use case: ui-mockup production sprite. Recreate ONLY the active cyan circular effect-slot rim from reference right panel. One thin round dark metal socket with luminous cyan-blue edge, subtle small breaks and sparks along circle, perfectly front-facing. Center is completely EMPTY and TRANSPARENT (alpha=0), suitable as an overlay over ANY effect icon. No shield, no icon, no text. True RGBA transparent outside and inside ring; preserve restrained glow in alpha. Outer glow fits safely with 7% margins. Square image, single isolated ring only, no backdrop, no baked checkerboard. Match screenshot's delicate practical circular active slot, not ornate fantasy medallion."
+  },
+  {
+    "name": "Forge/workpiece-green",
+    "refs": [
+      "D:/Unity/projs/M3p/Assets/_Project/Graphics/Enviorment/LocationConcepts/tile-forge-press-colorful-v5.png",
+      "D:/Unity/projs/M3p/Assets/_Project/Graphics/UI/Common/Tiles/tile-green.png"
+    ],
+    "prompt": "Use case: product-mockup / game sprite. Create ONE small thick rectangular enchanted TILE SLAB sprite to place on the empty anvil of the forge in reference image 1. Image 1 defines exact painterly 3D style and camera (upper surface visible, front edge horizontal-ish angled very slightly down toward right, right side recedes upwards to right); image 2 defines tile color and rune. Isolate ONLY one emerald green tile slab with glowing green leaf rune engraved on its top. Match physical slab shape seen on reference forge's working bed, NOT a standing upright gemstone. Low three-quarter view from above at around 28 degrees elevation, broad top surface a foreshortened square with chamfered corners, substantial thin block sides about 1/7 width. Top diamond/parallelogram is wider than tall on screen, front edge angles 12 degrees down-right, right edge 26 degrees up-right. Hand-painted stone/crystal slab with vivid emerald green cracks, restrained rune glow. No platform, ground, forge, other tiles, particle clouds, text, badges, shields or backdrop. TRUE RGBA transparency including background and margins, no fake checkerboard. Center one tile, width about 80% of a landscape 3:2 canvas, transparent margins. Full silhouette and bottom edges visible. Sprite for a layered Unity UI; correct upper surface perspective and crisp clean alpha edges are essential."
+  },
+  {
+    "name": "Forge/workpiece-red",
+    "refs": [
+      "D:/Unity/projs/M3p/Assets/_Project/Graphics/Enviorment/LocationConcepts/tile-forge-press-colorful-v5.png",
+      "D:/Unity/projs/M3p/Assets/_Project/Graphics/UI/Common/Tiles/tile-red.png"
+    ],
+    "prompt": "Use case: product-mockup / game sprite. Create ONE small thick rectangular enchanted TILE SLAB sprite to place on the empty anvil of the forge in reference image 1. Image 1 defines exact painterly 3D style and camera (upper surface visible, front edge horizontal-ish angled very slightly down toward right, right side recedes upwards to right); image 2 defines tile color and rune. Isolate ONLY one ruby red tile slab with glowing three angular lightning/claw slashes engraved on its top. Match physical slab shape seen on reference forge's working bed, NOT a standing upright gemstone. Low three-quarter view from above at around 28 degrees elevation, broad top surface a foreshortened square with chamfered corners, substantial thin block sides about 1/7 width. Top diamond/parallelogram is wider than tall on screen, front edge angles 12 degrees down-right, right edge 26 degrees up-right. Hand-painted stone/crystal slab with vivid ruby red cracks, restrained rune glow. No platform, ground, forge, other tiles, particle clouds, text, badges, shields or backdrop. TRUE RGBA transparency including background and margins, no fake checkerboard. Center one tile, width about 80% of a landscape 3:2 canvas, transparent margins. Full silhouette and bottom edges visible. Sprite for a layered Unity UI; correct upper surface perspective and crisp clean alpha edges are essential."
+  },
+  {
+    "name": "Forge/workpiece-yellow",
+    "refs": [
+      "D:/Unity/projs/M3p/Assets/_Project/Graphics/Enviorment/LocationConcepts/tile-forge-press-colorful-v5.png",
+      "D:/Unity/projs/M3p/Assets/_Project/Graphics/UI/Common/Tiles/tile-yellow.png"
+    ],
+    "prompt": "Use case: product-mockup / game sprite. Create ONE small thick rectangular enchanted TILE SLAB sprite to place on the empty anvil of the forge in reference image 1. Image 1 defines exact painterly 3D style and camera (upper surface visible, front edge horizontal-ish angled very slightly down toward right, right side recedes upwards to right); image 2 defines tile color and rune. Isolate ONLY one golden yellow tile slab with glowing eight-point sun rune engraved on its top. Match physical slab shape seen on reference forge's working bed, NOT a standing upright gemstone. Low three-quarter view from above at around 28 degrees elevation, broad top surface a foreshortened square with chamfered corners, substantial thin block sides about 1/7 width. Top diamond/parallelogram is wider than tall on screen, front edge angles 12 degrees down-right, right edge 26 degrees up-right. Hand-painted stone/crystal slab with vivid golden yellow cracks, restrained rune glow. No platform, ground, forge, other tiles, particle clouds, text, badges, shields or backdrop. TRUE RGBA transparency including background and margins, no fake checkerboard. Center one tile, width about 80% of a landscape 3:2 canvas, transparent margins. Full silhouette and bottom edges visible. Sprite for a layered Unity UI; correct upper surface perspective and crisp clean alpha edges are essential."
+  },
+  {
+    "name": "Forge/workpiece-black",
+    "refs": [
+      "D:/Unity/projs/M3p/Assets/_Project/Graphics/Enviorment/LocationConcepts/tile-forge-press-colorful-v5.png",
+      "D:/Unity/projs/M3p/Assets/_Project/Graphics/UI/Common/Tiles/tile-black.png"
+    ],
+    "prompt": "Use case: product-mockup / game sprite. Create ONE small thick rectangular enchanted TILE SLAB sprite to place on the empty anvil of the forge in reference image 1. Image 1 defines exact painterly 3D style and camera (upper surface visible, front edge horizontal-ish angled very slightly down toward right, right side recedes upwards to right); image 2 defines tile color and rune. Isolate ONLY one amethyst purple tile slab with glowing crescent moon rune engraved on its top. Match physical slab shape seen on reference forge's working bed, NOT a standing upright gemstone. Low three-quarter view from above at around 28 degrees elevation, broad top surface a foreshortened square with chamfered corners, substantial thin block sides about 1/7 width. Top diamond/parallelogram is wider than tall on screen, front edge angles 12 degrees down-right, right edge 26 degrees up-right. Hand-painted stone/crystal slab with vivid amethyst purple cracks, restrained rune glow. No platform, ground, forge, other tiles, particle clouds, text, badges, shields or backdrop. TRUE RGBA transparency including background and margins, no fake checkerboard. Center one tile, width about 80% of a landscape 3:2 canvas, transparent margins. Full silhouette and bottom edges visible. Sprite for a layered Unity UI; correct upper surface perspective and crisp clean alpha edges are essential."
+  },
+  {
+    "name": "Forge/workpiece-blue",
+    "refs": [
+      "D:/Unity/projs/M3p/Assets/_Project/Graphics/Enviorment/LocationConcepts/tile-forge-press-colorful-v5.png",
+      "D:/Unity/projs/M3p/Assets/_Project/Graphics/UI/Common/Tiles/tile-blue.png"
+    ],
+    "prompt": "Use case: product-mockup / game sprite. Create ONE small thick rectangular enchanted TILE SLAB sprite to place on the empty anvil of the forge in reference image 1. Image 1 defines exact painterly 3D style and camera (upper surface visible, front edge horizontal-ish angled very slightly down toward right, right side recedes upwards to right); image 2 defines tile color and rune. Isolate ONLY one sapphire blue tile slab with glowing curling water swirl rune engraved on its top. Match physical slab shape seen on reference forge's working bed, NOT a standing upright gemstone. Low three-quarter view from above at around 28 degrees elevation, broad top surface a foreshortened square with chamfered corners, substantial thin block sides about 1/7 width. Top diamond/parallelogram is wider than tall on screen, front edge angles 12 degrees down-right, right edge 26 degrees up-right. Hand-painted stone/crystal slab with vivid sapphire blue cracks, restrained rune glow. No platform, ground, forge, other tiles, particle clouds, text, badges, shields or backdrop. TRUE RGBA transparency including background and margins, no fake checkerboard. Center one tile, width about 80% of a landscape 3:2 canvas, transparent margins. Full silhouette and bottom edges visible. Sprite for a layered Unity UI; correct upper surface perspective and crisp clean alpha edges are essential."
+  }
+]

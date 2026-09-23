@@ -18,8 +18,13 @@ namespace M3P
         [SerializeField] Transform CostParent;
         [SerializeField] UIPanelPlayerManaBar CostPrefab;
         [SerializeField] Button ConfirmCraftButton;
+        [SerializeField] TextMeshProUGUI _selectedTitle;
+        [SerializeField] TextMeshProUGUI _selectedDescription;
+        [SerializeField] Sprite _recipeNormalSprite;
+        [SerializeField] Sprite _recipeSelectedSprite;
 
         readonly List<Button> _typeViews = new List<Button>();
+        readonly List<BoardActionCardDefinition> _typeCards = new List<BoardActionCardDefinition>();
         readonly List<UIPanelPlayerManaBar> _costViews = new List<UIPanelPlayerManaBar>();
 
         BoardActionCardDefinition _selectedCard;
@@ -89,6 +94,28 @@ namespace M3P
 
             if (ConfirmCraftButton == null)
                 ConfirmCraftButton = FindDescendantButton("ConfirmCraftButton");
+
+            if (_selectedTitle == null)
+                _selectedTitle = FindDescendantComponent<TextMeshProUGUI>("SelectedTitle");
+
+            if (_selectedDescription == null)
+                _selectedDescription = FindDescendantComponent<TextMeshProUGUI>("SelectedDescription");
+
+            if (_recipeNormalSprite == null)
+                _recipeNormalSprite = SpriteOn("RecipeSpriteNormal");
+
+            if (_recipeSelectedSprite == null)
+                _recipeSelectedSprite = SpriteOn("RecipeSpriteSelected");
+        }
+
+        Sprite SpriteOn(string childName)
+        {
+            Transform child = FindDescendant(childName);
+            if (child == null)
+                return null;
+
+            Image image = child.GetComponent<Image>();
+            return image != null ? image.sprite : null;
         }
 
         void HandleProfileChanged()
@@ -123,11 +150,15 @@ namespace M3P
                 return;
 
             CardConfig.Entry[] entries = cardConfig.Entries;
+            BoardActionCardDefinition first = null;
             for (int i = 0; i < entries.Length; i++)
             {
                 BoardActionCardDefinition card = entries[i].Card;
                 if (card == null || entries[i].Id == CardConfig.InvalidCardId)
                     continue;
+
+                if (first == null)
+                    first = card;
 
                 Button view = Instantiate(CardTypePrefab, CardTypesParent);
                 view.gameObject.SetActive(true);
@@ -136,7 +167,11 @@ namespace M3P
                 BoardActionCardDefinition captured = card;
                 ConfigureTypeButton(view, captured, () => HandleTypeClicked(captured));
                 _typeViews.Add(view);
+                _typeCards.Add(captured);
             }
+
+            if (_selectedCard == null)
+                _selectedCard = first;
         }
 
         void HandleTypeClicked(BoardActionCardDefinition card)
@@ -168,6 +203,12 @@ namespace M3P
             CardToBeCrafted.Configure(_selectedCard, null);
             CardToBeCrafted.SetInteractable(false);
             CardToBeCrafted.SetSelected(false);
+
+            if (_selectedTitle != null)
+                _selectedTitle.text = _selectedCard != null ? _selectedCard.DisplayName : string.Empty;
+
+            if (_selectedDescription != null)
+                _selectedDescription.text = _selectedCard != null ? _selectedCard.Description : string.Empty;
         }
 
         void BuildCosts()
@@ -231,9 +272,14 @@ namespace M3P
                 if (view == null)
                     continue;
 
+                bool selected = i < _typeCards.Count && _typeCards[i] == _selectedCard;
                 UIBoardActionCard cardView = view.GetComponent<UIBoardActionCard>();
                 if (cardView != null)
                     cardView.SetSelected(cardView.Card == _selectedCard);
+
+                Image image = view.GetComponent<Image>();
+                if (image != null && _recipeNormalSprite != null)
+                    image.sprite = selected && _recipeSelectedSprite != null ? _recipeSelectedSprite : _recipeNormalSprite;
             }
         }
 
@@ -282,6 +328,18 @@ namespace M3P
                     label.text = card != null ? card.DisplayName : string.Empty;
             }
 
+            Transform iconTransform = button.transform.Find("Icon");
+            if (iconTransform != null)
+            {
+                Image icon = iconTransform.GetComponent<Image>();
+                if (icon != null)
+                {
+                    icon.sprite = card != null ? card.Artwork : null;
+                    icon.enabled = icon.sprite != null;
+                    icon.preserveAspect = true;
+                }
+            }
+
             button.onClick.AddListener(() => onClicked?.Invoke());
         }
 
@@ -294,6 +352,7 @@ namespace M3P
             }
 
             _typeViews.Clear();
+            _typeCards.Clear();
         }
 
         void ClearCostViews()
