@@ -1,0 +1,13 @@
+{
+  "name": "m3p-elevenlabs-tools",
+  "private": true,
+  "version": "1.0.0",
+  "description": "ElevenLabs CLI for generating project sound effects",
+  "scripts": {
+    "auth": "elevenlabs auth login",
+    "sfx": "elevenlabs text-to-sound-effects convert"
+  },
+  "dependencies": {
+    "@elevenlabs/cli": "1.3.2"
+  }
+}
