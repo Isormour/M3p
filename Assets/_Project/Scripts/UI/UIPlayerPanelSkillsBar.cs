@@ -1,14 +1,16 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace M3P
 {
-    public sealed class UIPlayerPanelSkillsBar : MonoBehaviour
+    public sealed class UIPlayerPanelSkillsBar : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         const string ColorMultProperty = "_ColorMult";
         const float ColorMultUnselected = 0f;
+        const float ColorMultHovered = 1f;
         const float ColorMultSelected = 8f;
         const float InsufficientManaBorderBrightness = 0.35f;
 
@@ -18,7 +20,7 @@ namespace M3P
         [SerializeField] TextMeshProUGUI _skillNameLabel;
         [SerializeField] RectTransform _costContainer;
         [SerializeField] UIPlayerPanelSkillsCostLabel _costLabelPrefab;
-
+        [SerializeField] GameObject _fade;
         SkillDefinition _skill;
         BattleCharacter _owner;
         PlayerBattleCharacter _player;
@@ -27,6 +29,7 @@ namespace M3P
         Material _borderMaterial;
         Color _borderBaseColor;
         bool _hasBorderBaseColor;
+        bool _hovered;
 
         readonly List<UIPlayerPanelSkillsCostLabel> _costLabels = new List<UIPlayerPanelSkillsCostLabel>();
 
@@ -248,6 +251,7 @@ namespace M3P
 
             RefreshSkillName();
             RefreshBorder();
+            RefreshFade();
 
             if (_button == null)
                 return;
@@ -292,8 +296,41 @@ namespace M3P
 
             _borderImage.color = borderColor;
 
-            if (_borderMaterial != null)
-                _borderMaterial.SetFloat(ColorMultProperty, IsSelected() ? ColorMultSelected : ColorMultUnselected);
+            float colorMult = ColorMultUnselected;
+            if (IsSelected())
+                colorMult = ColorMultSelected;
+            else if (_hovered && CanAffordSkill())
+                colorMult = ColorMultHovered;
+
+            ApplyColorMult(_borderMaterial, colorMult);
+
+            Material rendered = _borderImage.materialForRendering;
+            if (rendered != _borderMaterial)
+                ApplyColorMult(rendered, colorMult);
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            _hovered = true;
+            RefreshBorder();
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            _hovered = false;
+            RefreshBorder();
+        }
+
+        void OnDisable()
+        {
+            _hovered = false;
+            RefreshBorder();
+        }
+
+        static void ApplyColorMult(Material material, float colorMult)
+        {
+            if (material != null && material.HasProperty(ColorMultProperty))
+                material.SetFloat(ColorMultProperty, colorMult);
         }
 
         bool IsSelected()
@@ -372,9 +409,48 @@ namespace M3P
             _artworkImage.color = Color.white;
         }
 
+        void RefreshFade()
+        {
+            if (_fade == null)
+            {
+                Transform fade = transform.Find("Fade");
+                if (fade != null)
+                    _fade = fade.gameObject;
+            }
+
+            if (_fade == null)
+                return;
+
+            _fade.SetActive(ShouldFadeSkill());
+        }
+
+        bool ShouldFadeSkill()
+        {
+            if (_skill == null)
+                return true;
+
+            bool unavailable = _owner == null || !_owner.IsSkillReady(_skill);
+            if (_player == null)
+                return unavailable;
+
+            return unavailable || !CanAffordSkill();
+        }
+
+        bool CanAffordSkill()
+        {
+            SoftStats softStats = _player?.Stats?.Soft;
+            if (_skill == null || softStats == null)
+                return false;
+
+            return _skill.HasEnoughActionPoints(softStats) && _skill.HasEnoughMana(softStats);
+        }
+
         bool CanInteractWithSkill()
         {
             if (_skill == null || _player?.Stats?.Soft == null)
+                return false;
+
+            if (!CanAffordSkill())
                 return false;
 
             BattleManager manager = BattleManager.Instance;

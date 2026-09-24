@@ -49,8 +49,22 @@ namespace M3P
         public void SetSelectedHighlight(bool selected)
         {
             EnsureFrameMaterial();
-            if (_frameMaterial != null)
-                _frameMaterial.SetFloat(ColorMultProperty, selected ? ColorMultSelected : ColorMultUnselected);
+            if (_frameImage == null)
+                return;
+
+            float colorMult = selected ? ColorMultSelected : ColorMultUnselected;
+            ApplyColorMult(_frameMaterial, colorMult);
+
+            // Frame owns a Mask, which draws a stencil copy. That copy is what shows on screen.
+            Material rendered = _frameImage.materialForRendering;
+            if (rendered != _frameMaterial)
+                ApplyColorMult(rendered, colorMult);
+        }
+
+        static void ApplyColorMult(Material material, float colorMult)
+        {
+            if (material != null && material.HasProperty(ColorMultProperty))
+                material.SetFloat(ColorMultProperty, colorMult);
         }
 
         void Awake()

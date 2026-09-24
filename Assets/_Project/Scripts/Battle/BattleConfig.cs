@@ -13,7 +13,7 @@ namespace M3P
         public const int MaxSupermatchSize = 10;
 
         [Header("Basic Attack")]
-        [Tooltip("Damage added per matched tile above the minimum-2 threshold, so a match of 3 scores one step.")]
+        [Tooltip("Damage added per tile above a regular match of 3, so a match of 4 scores one extra step.")]
         [SerializeField] int _damagePerMatchedTile = 1;
 
         [Tooltip("Bonus damage for match sizes 3, 4, 5, 6, 7, 8, 9, 10.")]
@@ -58,7 +58,7 @@ namespace M3P
         /// </summary>
         public int CalculateBasicAttackDamage(SoftStats attacker, int matchSize)
         {
-            int extraTiles = Mathf.Max(0, matchSize - (Match3Board.MinimumMatchSize - 1));
+            int extraTiles = Mathf.Max(0, matchSize - Match3Board.MinimumMatchSize);
             int raw = (attacker != null ? attacker.BasicAttackDamage : 1)
                 + _damagePerMatchedTile * extraTiles
                 + GetDamagePerSupermatchSize(matchSize);

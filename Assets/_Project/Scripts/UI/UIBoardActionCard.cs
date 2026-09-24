@@ -1,20 +1,24 @@
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace M3P
 {
-    public sealed class UIBoardActionCard : MonoBehaviour
+    public sealed class UIBoardActionCard : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         const float SelectedScale = 1.2f;
 
         [SerializeField] Button _button;
         [SerializeField] UICardVisuals _visuals;
+        [SerializeField] GameObject _forgroundFade;
 
         BoardActionCardDefinition _card;
         CardPlayController _controller;
         Action _clicked;
         int _handIndex = -1;
+        bool _selected;
+        bool _hovered;
 
         public BoardActionCardDefinition Card => _card;
         public int HandIndex => _handIndex;
@@ -80,12 +84,46 @@ namespace M3P
 
             if (_visuals != null)
                 _visuals.SetFrameMaskEnabled(enabled);
+
+            if (_forgroundFade == null)
+            {
+                Transform fade = transform.Find("foregroundfade");
+                if (fade != null)
+                    _forgroundFade = fade.gameObject;
+            }
+
+            if (_forgroundFade != null)
+                _forgroundFade.SetActive(enabled);
         }
 
         public void SetSelected(bool selected)
         {
+            _selected = selected;
             transform.localScale = Vector3.one * (selected ? SelectedScale : 1f);
-            SetSelectedHighlight(selected);
+            ApplyHighlight();
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            _hovered = true;
+            ApplyHighlight();
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            _hovered = false;
+            ApplyHighlight();
+        }
+
+        void OnDisable()
+        {
+            _hovered = false;
+            ApplyHighlight();
+        }
+
+        void ApplyHighlight()
+        {
+            SetSelectedHighlight(_selected || _hovered);
         }
 
         public void SetSelectedHighlight(bool selected)

@@ -1,5 +1,80 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1926551318501782930
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1274914645878261398}
+  - component: {fileID: 7142933537955304102}
+  - component: {fileID: 2515159488524183046}
+  m_Layer: 5
+  m_Name: foregroundfade
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &1274914645878261398
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1926551318501782930}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0.49}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1295601151407128747}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 138.56001, y: 138.56001}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &7142933537955304102
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1926551318501782930}
+  m_CullTransparentMesh: 1
+--- !u!114 &2515159488524183046
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1926551318501782930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.047169805, g: 0.047169805, b: 0.047169805, a: 0.9490196}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 86410c36785103342b36cdde9d37e002, type: 3}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 0.3
 --- !u!1001 &7679117126517343577
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -132,6 +207,10 @@ PrefabInstance:
       propertyPath: m_Material
       value: 
       objectReference: {fileID: 2100000, guid: e90f0c020f37c4f4b8ffa0cb9540ede0, type: 2}
+    - target: {fileID: 8871315366305869826, guid: 31f2bad57b9f4b440946abcd80ec33c5, type: 3}
+      propertyPath: _forgroundFade
+      value: 
+      objectReference: {fileID: 1926551318501782930}
     - target: {fileID: 8876437170226455044, guid: 31f2bad57b9f4b440946abcd80ec33c5, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -162,11 +241,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8893292277877360114, guid: 31f2bad57b9f4b440946abcd80ec33c5, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: 156.9
       objectReference: {fileID: 0}
     - target: {fileID: 8893292277877360114, guid: 31f2bad57b9f4b440946abcd80ec33c5, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 0
+      value: 238.81
       objectReference: {fileID: 0}
     - target: {fileID: 8893292277877360114, guid: 31f2bad57b9f4b440946abcd80ec33c5, type: 3}
       propertyPath: m_LocalScale.x
@@ -231,6 +310,14 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 3206689755309719023, guid: 31f2bad57b9f4b440946abcd80ec33c5, type: 3}
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 8893292277877360114, guid: 31f2bad57b9f4b440946abcd80ec33c5, type: 3}
+      insertIndex: 2
+      addedObject: {fileID: 1274914645878261398}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 31f2bad57b9f4b440946abcd80ec33c5, type: 3}
+--- !u!224 &1295601151407128747 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 8893292277877360114, guid: 31f2bad57b9f4b440946abcd80ec33c5, type: 3}
+  m_PrefabInstance: {fileID: 7679117126517343577}
+  m_PrefabAsset: {fileID: 0}

@@ -10,15 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 21dd0026e5c32a840b580a147297df55, type: 3}
-  m_Name: GuardUp
+  m_Name: RenewRegenApply
   m_EditorClassIdentifier: Assembly-CSharp::M3P.BattleEffect
   _target: 1
   _logic:
-    rid: 337148090436288576
+    rid: 1000
   references:
     version: 2
     RefIds:
-    - rid: 337148090436288576
-      type: {class: AddShieldLogic, ns: M3P, asm: Assembly-CSharp}
+    - rid: 1000
+      type: {class: ApplyStatusLogic, ns: M3P, asm: Assembly-CSharp}
       data:
-        _amount: 5
+        _status: {fileID: 11400000, guid: a9f8e7d6c5b4a3928170615243341526, type: 2}
+        _stacks: 1

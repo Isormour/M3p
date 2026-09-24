@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: Renew
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
   <_skillName>k__BackingField: Odnowienie
-  _description: Leczy 10 HP. Cooldown: 3 tury.
+  _description: Regeneracja 4 tury — 2 HP na początku każdej twojej tury. Cooldown: 4 tury.
   _artwork: {fileID: 21300000, guid: c285b17238f58f747994138a3733911e, type: 3}
   _manaCosts:
   - TileType: {fileID: 11400000, guid: 88078226c0e3e49458326c6f5b431834, type: 2}
     Amount: 3
   _effects:
-  - {fileID: 11400000, guid: 545ab761ab21a204aa11182cd22109e9, type: 2}
-  _cooldown: 3
+  - {fileID: 11400000, guid: d1e2f3a4b5c6d7e8f90123456789abcd, type: 2}
+  _cooldown: 4
   _oncePerTurn: 0
   _distinctColorManaCost: 0
   _castPrompt: 0

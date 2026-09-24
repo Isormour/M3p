@@ -228,10 +228,11 @@ namespace M3P
                     continue;
 
                 bool inDeck = profile.IsOwnedCardInDeck(ownedIndex);
+                bool deckFull = profile.GetDeckIndices().Count >= _deckLimit;
                 UIBoardActionCard view = Instantiate(_cardPrefab, _ownedCardsGroup);
                 view.name = $"Owned_{card.name}_{ownedIndex + 1}";
                 view.Configure(card, () => HandleOwnedCardClicked(ownedIndex));
-                view.SetInteractable(!inDeck);
+                view.SetInteractable(inDeck || !deckFull);
                 view.SetFrameMaskEnabled(inDeck);
                 view.SetSelectedHighlight(false);
                 _ownedViews.Add(view);
@@ -303,13 +304,38 @@ namespace M3P
         void HandleOwnedCardClicked(int ownedIndex)
         {
             PlayerProfile profile = Profiles?.CurrentProfile;
-            if (profile == null || profile.GetDeckIndices().Count >= _deckLimit)
+            if (profile == null)
                 return;
 
-            if (!profile.TryAddOwnedCardToDeck(ownedIndex))
-                return;
+            if (profile.IsOwnedCardInDeck(ownedIndex))
+            {
+                if (!TryRemoveOwnedCard(profile, ownedIndex))
+                    return;
+            }
+            else
+            {
+                if (profile.GetDeckIndices().Count >= _deckLimit)
+                    return;
+
+                if (!profile.TryAddOwnedCardToDeck(ownedIndex))
+                    return;
+            }
 
             Profiles.Save();
+        }
+
+        static bool TryRemoveOwnedCard(PlayerProfile profile, int ownedIndex)
+        {
+            IReadOnlyList<int> deck = profile.GetDeckIndices();
+            for (int i = 0; i < deck.Count; i++)
+            {
+                if (deck[i] != ownedIndex)
+                    continue;
+
+                return profile.TryRemoveDeckCardAt(i);
+            }
+
+            return false;
         }
 
         void HandleAddCopy(BoardActionCardDefinition card)
