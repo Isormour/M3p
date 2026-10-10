@@ -94,19 +94,24 @@ public class BattleCharacterShield : MonoBehaviour
         SetVisible(_boundStats != null && _boundStats.CurrentShield > 0);
     }
 
-    void SetVisible(bool visible)
-    {
-        _visible = visible;
-        if (_pulseRoutine != null)
+        void SetVisible(bool visible)
         {
-            if (visible)
-                return;
+            if (visible != _visible)
+            {
+                M3P.Sfx.Play(visible ? M3P.SfxId.ShieldAppear : M3P.SfxId.ShieldFade);
+                _visible = visible;
+            }
 
-            StopPulse();
+            if (_pulseRoutine != null)
+            {
+                if (visible)
+                    return;
+
+                StopPulse();
+            }
+
+            FadeTo(visible ? _visiblePower : 0f);
         }
-
-        FadeTo(visible ? _visiblePower : 0f);
-    }
 
     void FadeTo(float target)
     {

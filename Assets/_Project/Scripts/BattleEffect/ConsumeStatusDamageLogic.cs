@@ -9,15 +9,25 @@ namespace M3P
     /// Zapłon is the authored example: all Burn stacks, 4 magic damage per stack.
     /// </summary>
     [Serializable]
-    public class ConsumeStatusDamageLogic : BattleEffectLogic, ITooltipPreview
+    public class ConsumeStatusDamageLogic : BattleEffectLogic, ITooltipPreview, ISkillCastRequirement
     {
         [SerializeField] StatusEffectDefinition _status;
         [Min(1), SerializeField] int _damagePerStack = 4;
         [SerializeField] bool _physical;
+        [Tooltip("When true, the skill is illegal unless the target already has at least one stack.")]
+        [SerializeField] bool _requireStacks;
 
         public StatusEffectDefinition Status => _status;
         public int DamagePerStack => Mathf.Max(1, _damagePerStack);
         public bool Physical => _physical;
+
+        public bool CanCast(BattleCharacter caster, BattleCharacter target, SkillDefinition skill)
+        {
+            if (!_requireStacks || _status == null)
+                return true;
+
+            return target != null && target.CountStatus(_status) > 0;
+        }
 
         public override void Apply(BattleEffectContext context, EEffectTarget target)
         {

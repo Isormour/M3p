@@ -67,12 +67,14 @@ namespace M3P
             {
                 _boundPlayer.StatusesChanged += RefreshPlayerStatusVfx;
                 _boundPlayer.StatusDamageProcessed += HandlePlayerStatusDamage;
+                _boundPlayer.Healed += HandlePlayerHealed;
             }
 
             if (_boundEnemy != null)
             {
                 _boundEnemy.StatusesChanged += RefreshEnemyStatusVfx;
                 _boundEnemy.StatusDamageProcessed += HandleEnemyStatusDamage;
+                _boundEnemy.Healed += HandleEnemyHealed;
             }
 
             RefreshPlayerStatusVfx();
@@ -87,12 +89,14 @@ namespace M3P
             {
                 _boundPlayer.StatusesChanged -= RefreshPlayerStatusVfx;
                 _boundPlayer.StatusDamageProcessed -= HandlePlayerStatusDamage;
+                _boundPlayer.Healed -= HandlePlayerHealed;
             }
 
             if (_boundEnemy != null)
             {
                 _boundEnemy.StatusesChanged -= RefreshEnemyStatusVfx;
                 _boundEnemy.StatusDamageProcessed -= HandleEnemyStatusDamage;
+                _boundEnemy.Healed -= HandleEnemyHealed;
             }
 
             _boundPlayer = null;
@@ -135,12 +139,20 @@ namespace M3P
 
         public void NotifyPlayerHit(bool died, int damage, bool shielded = false)
         {
+            if (shielded && damage > 0)
+                Sfx.Play(SfxId.ShieldHit);
+            if (died)
+                Sfx.Play(SfxId.PlayerDeath);
             _playerCharacter?.PlayHitReaction(died, shielded);
             ShakeFromHit(PlayerVfxPoint, damage);
         }
 
         public void NotifyEnemyHit(bool died, int damage, bool shielded = false)
         {
+            if (shielded && damage > 0)
+                Sfx.Play(SfxId.ShieldHit);
+            if (died)
+                Sfx.Play(SfxId.EnemyDeath);
             _enemyCharacter?.PlayHitReaction(died, shielded);
             ShakeFromHit(EnemyVfxPoint, damage);
         }
@@ -190,6 +202,18 @@ namespace M3P
         {
             if (statusType == EStatusType.Burn)
                 ResolveEnemyVfx()?.PlayFlame();
+        }
+
+        void HandlePlayerHealed(int amount)
+        {
+            if (amount > 0)
+                ResolvePlayerVfx()?.PlayHeal();
+        }
+
+        void HandleEnemyHealed(int amount)
+        {
+            if (amount > 0)
+                ResolveEnemyVfx()?.PlayHeal();
         }
 
         CharacterVFX ResolvePlayerVfx()

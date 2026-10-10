@@ -1,8 +1,8 @@
+using M3P;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using M3P;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -173,6 +173,38 @@ namespace Match3
         {
             Match3Tile tile = GetTile(x, y);
             return tile != null && tile.CanMove;
+        }
+
+        /// <summary>
+        /// Roots up to <paramref name="count"/> random movable tiles. A rooted tile stays in its cell
+        /// until a match destroys it.
+        /// </summary>
+        public int LockRandomTiles(int count)
+        {
+            if (count <= 0 || _tiles == null)
+                return 0;
+
+            var candidates = new List<Match3Tile>();
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    Match3Tile tile = _tiles[x, y];
+                    if (tile != null && tile.CanMove)
+                        candidates.Add(tile);
+                }
+            }
+
+            int locked = 0;
+            while (locked < count && candidates.Count > 0)
+            {
+                int index = UnityEngine.Random.Range(0, candidates.Count);
+                candidates[index].SetLocked(true);
+                candidates.RemoveAt(index);
+                locked++;
+            }
+
+            return locked;
         }
 
         public UnityEvent<int, int> TilesDestroyedInWave => _onTilesDestroyedInWave;
@@ -419,9 +451,13 @@ namespace Match3
             {
                 case BoardOpKind.Swap:
                     if (op.Cells.Length >= 2)
+                    {
+                        Sfx.Play(SfxId.TileSwap);
                         yield return StartCoroutine(SwapRoutine(op.Cells[0], op.Cells[1]));
+                    }
                     yield break;
                 case BoardOpKind.Cycle:
+                    Sfx.Play(op.Cells != null && op.Cells.Length >= 5 ? SfxId.RowShift : SfxId.TileRotate);
                     yield return StartCoroutine(CycleCellsRoutine(op.Cells));
                     yield break;
                 case BoardOpKind.Recolor:
@@ -434,12 +470,17 @@ namespace Match3
                     yield break;
                 case BoardOpKind.Purge:
                     if (op.Cells.Length >= 1 && PurgeTile(op.Cells[0]))
+                    {
+                        Sfx.Play(SfxId.TilePurge);
                         _resolveReport.TilesClearedByCards++;
+                    }
                     yield break;
                 case BoardOpKind.SetGravity:
                     _pendingGravity = (BoardGravity)op.Value;
+                    Sfx.Play(SfxId.GravityShift);
                     yield break;
                 case BoardOpKind.Shuffle:
+                    Sfx.Play(SfxId.BoardShuffle);
                     yield return StartCoroutine(ShuffleMovableTilesRoutine(op.Value));
                     yield break;
             }
@@ -458,6 +499,7 @@ namespace Match3
             }
 
             tile.SetCracked(true);
+            Sfx.Play(SfxId.TileCrackMark);
         }
 
         /// <summary>
@@ -514,6 +556,7 @@ namespace Match3
                 ClearTiles(_matchedTilesBuffer);
                 _resolveReport.AddWave(groups);
                 MatchWaveCompleted?.Invoke(groups);
+                Sfx.Play(SfxId.MatchWaveComplete);
                 AccumulateTilePointsForWave(_destroyedThisWave);
                 RaiseTilePointsChanged();
                 yield return StartCoroutine(CollapseAlongGravity());
@@ -708,6 +751,7 @@ namespace Match3
             spawned.SetTileId(tileId);
             spawned.ApplyFlags(isLocked, isNegative, isBlockade, isEnemyElement, allowsColorChange, canDestroy);
             spawned.SetCracked(isCracked);
+            Sfx.Play(SfxId.TileRecolor);
             return true;
         }
 
@@ -832,6 +876,7 @@ namespace Match3
                 }
 
                 TileDestroyed?.Invoke(tile.transform.position, typeId);
+                Sfx.Play(SfxId.TileBreak);
 
                 _tiles[tile.X, tile.Y] = null;
                 Destroy(tile.gameObject);
@@ -906,12 +951,16 @@ namespace Match3
             {
                 yield return moveCoroutines[i];
             }
+
+            if (moveCoroutines.Count > 0)
+                Sfx.Play(SfxId.TileFall);
         }
 
         private IEnumerator RefillBoard()
         {
             List<Coroutine> moveCoroutines = new List<Coroutine>();
 
+            bool spawnedAny = false;
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
@@ -927,8 +976,12 @@ namespace Match3
                     tile.transform.position = GetRefillSpawnPosition(x, y);
                     Vector3 targetPos = GridToWorld(x, y);
                     moveCoroutines.Add(StartCoroutine(AnimateMove(tile.transform, targetPos, fallDuration)));
+                    spawnedAny = true;
                 }
             }
+
+            if (spawnedAny)
+                Sfx.Play(SfxId.TileSpawn);
 
             for (int i = 0; i < moveCoroutines.Count; i++)
             {

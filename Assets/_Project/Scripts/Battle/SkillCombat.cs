@@ -94,8 +94,9 @@ namespace M3P
         }
 
         /// <summary>
-        /// Applies a skill hit: outgoing bonuses, incoming reduction, then optional Riposte counter.
-        /// Status ticks pass <see cref="BattleEffectContext.DirectHit"/> as false and skip those modifiers.
+        /// Applies a skill hit: outgoing bonuses, incoming reduction from a guard status or
+        /// combat modifier, then optional counter. Status ticks pass
+        /// <see cref="BattleEffectContext.DirectHit"/> as false and skip those modifiers.
         /// </summary>
         public static void ApplyHit(BattleEffectContext context, BattleCharacter defender, int amount, bool physical)
         {
@@ -111,13 +112,18 @@ namespace M3P
 
             BattleCharacter attacker = context.Caster;
             if (attacker != null)
+            {
                 amount += attacker.Modifiers.ConsumeOutgoingHitBonus();
+                amount += attacker.GetPersistentOutgoingBonus();
+            }
 
             int reduction = 0;
             int counterDamage = 0;
             bool counterPhysical = false;
-            defender.Modifiers.TryConsumeIncoming(out reduction, out counterDamage, out counterPhysical);
+            if (!defender.TryConsumeIncomingGuard(out reduction, out counterDamage, out counterPhysical))
+                defender.Modifiers.TryConsumeIncoming(out reduction, out counterDamage, out counterPhysical);
             amount = Mathf.Max(0, amount - reduction);
+            amount = Mathf.Max(0, amount - defender.GetPersistentIncomingReduction());
 
             if (amount > 0)
                 defender.Stats.Soft.TakeDamage(amount);
@@ -146,7 +152,11 @@ namespace M3P
 
             int scaled = ScaleAmount(context, damagePerHit, physical);
             for (int i = 0; i < hits; i++)
+            {
+                if (i > 0)
+                    Sfx.Play(SfxId.MultiHitTick);
                 ApplyHit(context, defender, scaled, physical);
+            }
         }
 
         public static void DealScaledDamage(

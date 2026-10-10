@@ -18,7 +18,8 @@ namespace M3P
             int experienceReward,
             string displayName,
             int effectiveFloor,
-            MapNodeType encounterType)
+            MapNodeType encounterType,
+            int rank)
         {
             Definition = definition;
             HardStats = hardStats;
@@ -28,6 +29,7 @@ namespace M3P
             DisplayName = displayName ?? string.Empty;
             EffectiveFloor = System.Math.Max(1, effectiveFloor);
             EncounterType = encounterType;
+            Rank = System.Math.Max(1, rank);
         }
 
         public EnemyDefinition Definition { get; }
@@ -46,5 +48,8 @@ namespace M3P
         public int EffectiveFloor { get; }
 
         public MapNodeType EncounterType { get; }
+
+        /// <summary>1-based count of rank thresholds reached on <see cref="EffectiveFloor"/>. At least 1.</summary>
+        public int Rank { get; }
     }
 }

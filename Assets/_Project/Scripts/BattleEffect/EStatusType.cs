@@ -5,5 +5,8 @@ namespace M3P
     {
         None = 0,
         Burn = 1,
+        Riposte = 2,
+        Confusion = 3,
+        Poison = 4,
     }
 }

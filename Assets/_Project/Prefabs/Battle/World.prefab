@@ -7834,6 +7834,7 @@ MonoBehaviour:
   - {fileID: 2908690220631979346}
   - {fileID: 7580949808825771627}
   flameParticle: {fileID: 4039032520838499720}
+  healParticle: {fileID: 4738291056473829102}
 --- !u!137 &2908690220631979346 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: 3578677688412920820, guid: bdbd11b852d47f649bb7fefcf26b42c5, type: 3}
@@ -7922,6 +7923,11 @@ Transform:
 --- !u!198 &4039032520838499720 stripped
 ParticleSystem:
   m_CorrespondingSourceObject: {fileID: 2448335937907221294, guid: bdbd11b852d47f649bb7fefcf26b42c5, type: 3}
+  m_PrefabInstance: {fileID: 1871168945061113510}
+  m_PrefabAsset: {fileID: 0}
+--- !u!198 &4738291056473829102 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 6193847261058374620, guid: bdbd11b852d47f649bb7fefcf26b42c5, type: 3}
   m_PrefabInstance: {fileID: 1871168945061113510}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &4333823005833430974 stripped

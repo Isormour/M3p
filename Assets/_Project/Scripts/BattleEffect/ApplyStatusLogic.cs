@@ -33,12 +33,15 @@ namespace M3P
                 return;
 
             string name = _status.DisplayName;
-            int duration = _status.DurationTurns;
+            string duration = _status.PersistUntilConsumed
+                ? "do następnego ataku"
+                : $"{_status.DurationTurns} tury";
             int stacks = Stacks;
             string text = stacks > 1
-                ? $"Nakłada {stacks} stacki: {name} ({duration} tury)"
-                : $"Nakłada {name} ({duration} tury)";
+                ? $"Nakłada {stacks} stacki: {name} ({duration})"
+                : $"Nakłada {name} ({duration})";
             lines.Add(new TooltipLine(TooltipLineKind.Status, text));
+            _status.AppendIncomingGuardTooltip(lines);
         }
     }
 }

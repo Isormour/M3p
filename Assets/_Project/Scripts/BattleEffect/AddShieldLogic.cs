@@ -22,7 +22,11 @@ namespace M3P
                 return;
 
             int amount = ResolveAmount(context);
+            if (amount <= 0)
+                return;
+
             softStats.AddShield(amount);
+            Sfx.Play(SfxId.ShieldApply);
         }
 
         public void AppendTooltipLines(BattleEffectContext preview, EEffectTarget target, List<TooltipLine> lines)

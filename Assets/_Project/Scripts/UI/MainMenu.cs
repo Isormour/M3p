@@ -51,8 +51,13 @@ namespace M3P
                 return;
 
             if (!game.TryContinueMap())
+            {
                 Debug.LogWarning($"{nameof(MainMenu)}: no map run to continue.", this);
+                RefreshContinue();
+                return;
+            }
 
+            Sfx.Play(SfxId.MenuConfirm);
             RefreshContinue();
         }
 
@@ -62,6 +67,7 @@ namespace M3P
             if (game == null)
                 return;
 
+            Sfx.Play(SfxId.MenuConfirm);
             game.ResetProfileSave();
             game.StartNewGeneratedMap();
         }
@@ -72,6 +78,7 @@ namespace M3P
             if (game == null)
                 return;
 
+            Sfx.Play(SfxId.MenuConfirm);
             game.StartDebugMap();
         }
 
@@ -87,6 +94,7 @@ namespace M3P
 
         public void OnQuit()
         {
+            Sfx.Play(SfxId.MenuConfirm);
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
 #else

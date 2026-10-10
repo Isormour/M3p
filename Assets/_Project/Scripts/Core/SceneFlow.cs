@@ -9,11 +9,17 @@ namespace M3P
         public const string MapScene = "Map";
         public const string BattleScene = "Battle";
 
-        public static void LoadMenu() => SceneManager.LoadScene(MenuScene);
+        public static void LoadMenu() => Load(MenuScene);
 
-        public static void LoadMap() => SceneManager.LoadScene(MapScene);
+        public static void LoadMap() => Load(MapScene);
 
-        public static void LoadBattle() => SceneManager.LoadScene(BattleScene);
+        public static void LoadBattle() => Load(BattleScene);
+
+        static void Load(string scene)
+        {
+            Sfx.Play(SfxId.SceneTransition);
+            SceneManager.LoadScene(scene);
+        }
 
         public static void LoadMain() => LoadMenu();
     }

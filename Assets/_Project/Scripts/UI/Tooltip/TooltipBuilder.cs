@@ -57,6 +57,8 @@ namespace M3P
             content.Meta = BuildStatusMeta(status, count);
 
             AppendStatModifiers(definition, count, content.Lines);
+            definition.AppendIncomingGuardTooltip(content.Lines);
+            definition.AppendPersistentModifierTooltip(content.Lines, status.Magnitude);
 
             var context = new BattleEffectContext(
                 status.Source != null ? status.Source : bearer,
@@ -157,7 +159,10 @@ namespace M3P
         static string BuildStatusMeta(StatusInstance status, int stacks)
         {
             var parts = new List<string>(3);
-            parts.Add($"Tury: {Mathf.Max(0, status.RemainingTurns)}");
+            if (status.Definition.PersistUntilConsumed)
+                parts.Add("Do następnego ataku");
+            else
+                parts.Add($"Tury: {Mathf.Max(0, status.RemainingTurns)}");
             if (stacks > 1)
                 parts.Add($"Stacki: {stacks}");
             if (status.Definition.CanStack)

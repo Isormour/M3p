@@ -451,6 +451,8 @@ namespace M3P
 
             if (!_nodePositions.TryGetValue(nodeId, out Vector3 target))
                 return;
+
+            Sfx.Play(SfxId.MapNodeSelect);
             _mapCam.SetTarget(node);
 
             PromptWalkTo(nodeId, target, node);
@@ -499,6 +501,7 @@ namespace M3P
 
             _previewNode = node;
             RefreshNodeStates();
+            Sfx.Play(SfxId.RoutePreview);
         }
 
         void ClearPreviewNode(bool refresh = true)
@@ -514,6 +517,7 @@ namespace M3P
         void OnArrivedAtNode()
         {
             _inputLocked = false;
+            Sfx.Play(SfxId.MapArrival);
             RefreshNodeStates();
             PersistRun();
             ResolveNode(Run.CurrentNodeId, arrivedFresh: true);
@@ -574,7 +578,10 @@ namespace M3P
                     if (!Run.IsCleared(nodeId))
                         OpenChest(nodeId, node.Encounter);
                     else if (!arrivedFresh)
+                    {
+                        Sfx.Play(SfxId.ChestEmpty);
                         _events.Show("Chest", "This chest is empty.", "OK", null);
+                    }
                     break;
             }
         }
@@ -590,6 +597,7 @@ namespace M3P
 
             Run.BeginBattle(nodeId, encounter, encounterType);
             _inputLocked = true;
+            Sfx.Play(EncounterSfx(encounterType));
             SceneFlow.LoadBattle();
         }
 
@@ -598,6 +606,7 @@ namespace M3P
             EnsureServicePanels();
             if (_cardShopPanel != null)
             {
+                Sfx.Play(SfxId.CardShopOpen);
                 _cardShopPanel.Show();
                 MarkServiceVisited(nodeId);
                 return;
@@ -611,6 +620,7 @@ namespace M3P
             EnsureServicePanels();
             if (_forgePanel != null)
             {
+                Sfx.Play(SfxId.ForgeOpen);
                 _forgePanel.Show();
                 MarkServiceVisited(nodeId);
                 return;
@@ -656,6 +666,7 @@ namespace M3P
                     encounter);
             }
 
+            Sfx.Play(SfxId.ChestOpen);
             bool canGrant = progression != null && chest != null && chest.HasRewards;
             string rewardText = progression == null
                 ? "You crack the chest open (no GameManager — reward skipped)."
@@ -670,12 +681,25 @@ namespace M3P
                 () =>
                 {
                     if (canGrant)
+                    {
+                        Sfx.Play(SfxId.ChestReward);
                         progression.ApplyRewards(chest.Experience, chest.Shards);
+                    }
 
                     Run.MarkCleared(nodeId);
                     RefreshNodeStates();
                     PersistRun();
                 });
+        }
+
+        static SfxId EncounterSfx(MapNodeType encounterType)
+        {
+            switch (encounterType)
+            {
+                case MapNodeType.Elite: return SfxId.EncounterElite;
+                case MapNodeType.Boss: return SfxId.EncounterBoss;
+                default: return SfxId.EncounterNormal;
+            }
         }
 
         Color ColorForType(MapNodeType type)

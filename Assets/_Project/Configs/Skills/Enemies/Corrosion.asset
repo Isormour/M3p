@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
+  m_Name: Corrosion
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
+  <_skillName>k__BackingField: Corrosion
+  _description: Kradnie do 5 razy piętro tarczy i dodaje ją sobie.
+  _artwork: {fileID: 21300000, guid: 27544d6a38dc484bb409aa294d0585cc, type: 3}
+  _manaCosts: []
+  _effects:
+  - {fileID: 11400000, guid: 22bb12e1b2c34d5e6f708192a3b4c5d6, type: 2}
+  _cooldown: 2
+  _oncePerTurn: 0
+  _distinctColorManaCost: 0
+  _castPrompt: 0
+  _physicalSkill: 0
+  _archetype: 0
+  <_animationName>k__BackingField: BasicAttack

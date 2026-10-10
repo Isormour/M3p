@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace M3P
 {
     /// <summary>
-    /// Authoring data for a lasting combat status: optional stat modifiers and optional per-turn effects.
-    /// Duration ticks on the bearer's turn starts, beginning the turn after application.
+    /// Authoring data for a lasting combat status: optional stat modifiers, per-turn effects,
+    /// or an incoming-hit guard consumed by the next direct attack.
     /// </summary>
     [CreateAssetMenu(fileName = "StatusEffect", menuName = "M3P/Status Effect", order = 11)]
     public class StatusEffectDefinition : ScriptableObject
@@ -22,6 +23,16 @@ namespace M3P
         [SerializeField] StatusStatModifier[] _statModifiers = Array.Empty<StatusStatModifier>();
         [Tooltip("Fired on the status bearer at the start of each of their turns. Authored Effect Target is ignored; the bearer always receives the effect.")]
         [SerializeField] BattleEffect[] _onTurnEffects = Array.Empty<BattleEffect>();
+        [Tooltip("When true, remaining turns do not tick down. The status stays until an incoming hit consumes it, or the battle ends.")]
+        [SerializeField] bool _persistUntilConsumed;
+        [Tooltip("Flat damage subtracted from the next direct hit that consumes this status.")]
+        [Min(0), SerializeField] int _incomingDamageReduction;
+        [Min(0), SerializeField] int _incomingCounterDamage;
+        [SerializeField] bool _incomingCounterPhysical = true;
+        [Tooltip("While active, subtract the instance magnitude from every incoming direct hit. The status is not consumed.")]
+        [SerializeField] bool _persistentIncomingReduction;
+        [Tooltip("While active, add the instance magnitude to every outgoing direct hit. The status is not consumed.")]
+        [SerializeField] bool _persistentOutgoingBonus;
 
         public EStatusType StatusType => _statusType;
 
@@ -38,6 +49,48 @@ namespace M3P
         public StatusStatModifier[] StatModifiers => _statModifiers ?? Array.Empty<StatusStatModifier>();
 
         public BattleEffect[] OnTurnEffects => _onTurnEffects ?? Array.Empty<BattleEffect>();
+
+        public bool PersistUntilConsumed => _persistUntilConsumed;
+
+        public int IncomingDamageReduction => Mathf.Max(0, _incomingDamageReduction);
+
+        public int IncomingCounterDamage => Mathf.Max(0, _incomingCounterDamage);
+
+        public bool IncomingCounterPhysical => _incomingCounterPhysical;
+
+        public bool HasIncomingGuard => IncomingDamageReduction > 0 || IncomingCounterDamage > 0;
+
+        public bool PersistentIncomingReduction => _persistentIncomingReduction;
+
+        public bool PersistentOutgoingBonus => _persistentOutgoingBonus;
+
+        public void AppendIncomingGuardTooltip(List<TooltipLine> lines)
+        {
+            if (lines == null)
+                return;
+
+            if (IncomingDamageReduction > 0)
+                lines.Add(new TooltipLine(
+                    TooltipLineKind.Other,
+                    $"Następny atak: -{IncomingDamageReduction} obrażeń"));
+
+            if (IncomingCounterDamage > 0)
+                lines.Add(new TooltipLine(
+                    TooltipLineKind.Damage,
+                    $"Kontratak: {IncomingCounterDamage}"));
+        }
+
+        public void AppendPersistentModifierTooltip(List<TooltipLine> lines, int magnitude)
+        {
+            if (lines == null || magnitude <= 0)
+                return;
+
+            if (PersistentIncomingReduction)
+                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Redukcja obrażeń: {magnitude}"));
+
+            if (PersistentOutgoingBonus)
+                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Ataki: +{magnitude}"));
+        }
 
         public bool Matches(StatusEffectDefinition other)
         {

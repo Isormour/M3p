@@ -106,6 +106,7 @@ namespace M3P
         public void OnPointerEnter(PointerEventData eventData)
         {
             _hovered = true;
+            Sfx.Play(SfxId.UiHover);
             ApplyHighlight();
         }
 

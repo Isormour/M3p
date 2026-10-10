@@ -4,7 +4,7 @@ namespace M3P
 {
     /// <summary>
     /// Pending combat buffs that live on a character until they are consumed by a hit or skill.
-    /// Armed by skills such as Riposte, Ice Ward, Expose Weakness and Unyielding.
+    /// Armed by skills such as Ice Ward, Expose Weakness and Unyielding. Riposte uses a status instead.
     /// </summary>
     public sealed class CombatModifiers
     {

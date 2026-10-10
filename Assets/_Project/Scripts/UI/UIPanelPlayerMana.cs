@@ -152,6 +152,7 @@ namespace M3P
                 return;
 
             _player.Stats.Soft.AddManaFromBrokenTiles(tileTypeId, destroyedCount);
+            Sfx.Play(SfxId.ManaGain);
         }
 
         void RefreshAllBars()

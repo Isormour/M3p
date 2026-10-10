@@ -15,6 +15,7 @@ public class CharacterVFX : MonoBehaviour
 
     [SerializeField] SkinnedMeshRenderer[] renderers;
     [SerializeField] ParticleSystem flameParticle;
+    [SerializeField] ParticleSystem healParticle;
 
     MaterialPropertyBlock _block;
     EStatusType _activeStatus;
@@ -70,27 +71,38 @@ public class CharacterVFX : MonoBehaviour
     /// <summary>Restarts the authored flame burst. No-ops when the particle is unassigned.</summary>
     public void PlayFlame()
     {
-        if (flameParticle == null)
-            return;
-
-        BindFlameShape();
-        flameParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-        flameParticle.Play();
+        PlayBurst(flameParticle);
     }
 
-    void BindFlameShape()
+    /// <summary>Restarts the authored heal burst. No-ops when the particle is unassigned.</summary>
+    public void PlayHeal()
     {
-        SkinnedMeshRenderer mesh = ResolveFlameMesh();
+        PlayBurst(healParticle);
+    }
+
+    void PlayBurst(ParticleSystem particle)
+    {
+        if (particle == null)
+            return;
+
+        BindBodyShape(particle);
+        particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        particle.Play();
+    }
+
+    void BindBodyShape(ParticleSystem particle)
+    {
+        SkinnedMeshRenderer mesh = ResolveBodyMesh();
         if (mesh == null)
             return;
 
-        ParticleSystem.ShapeModule shape = flameParticle.shape;
+        ParticleSystem.ShapeModule shape = particle.shape;
         shape.enabled = true;
         shape.shapeType = ParticleSystemShapeType.SkinnedMeshRenderer;
         shape.skinnedMeshRenderer = mesh;
     }
 
-    SkinnedMeshRenderer ResolveFlameMesh()
+    SkinnedMeshRenderer ResolveBodyMesh()
     {
         if (renderers == null || renderers.Length == 0)
             CollectRenderers();

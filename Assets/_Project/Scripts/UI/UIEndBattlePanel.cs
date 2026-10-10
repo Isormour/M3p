@@ -117,10 +117,16 @@ namespace M3P
                 _rewardsSection.SetActive(rewards.HasRewards);
 
             if (rewards.HasRewards)
+            {
+                Sfx.Play(SfxId.BattleRewardsReveal);
                 PopulateRewardIndicators(rewards);
+            }
 
             if (_levelUpSection != null)
                 _levelUpSection.SetActive(rewards.LeveledUp);
+
+            if (rewards.LeveledUp)
+                Sfx.Play(SfxId.LevelUp);
 
             if (_levelUpText != null)
                 _levelUpText.text = $"Level {rewards.LevelAfter}";
@@ -213,6 +219,7 @@ namespace M3P
 
         void HandleCloseClicked()
         {
+            Sfx.Play(SfxId.BattleResultClose);
             Hide();
             BattleManager.Instance?.DismissEndBattlePanel();
         }
@@ -289,6 +296,8 @@ namespace M3P
         IEnumerator FillExperienceBarRoutine(LevelProgressionConfig curve, int startTotal, int endTotal)
         {
             int xp = startTotal;
+            if (xp < endTotal)
+                Sfx.Play(SfxId.ExperienceFill);
             while (xp < endTotal)
             {
                 int level = curve.GetLevelForTotalExperience(xp);

@@ -22,6 +22,9 @@ namespace Match3
         /// <summary>Colour multiplied into the sprite while the tile is marked for removal.</summary>
         static readonly Color CrackedTint = new Color(0.45f, 0.45f, 0.5f, 0.85f);
 
+        /// <summary>Colour multiplied into a tile rooted in place by Entail.</summary>
+        static readonly Color RootedTint = new Color(0.62f, 0.78f, 0.42f, 1f);
+
         public int X { get; private set; }
         public int Y { get; private set; }
         public int TypeId { get; private set; }
@@ -221,9 +224,27 @@ namespace Match3
         public void SetCracked(bool cracked)
         {
             IsCracked = cracked;
+            RefreshMarkerTint();
+        }
 
-            if (_tileRenderer != null)
-                _tileRenderer.color = cracked ? CrackedTint : Color.white;
+        /// <summary>Roots the tile in its cell until a match destroys it.</summary>
+        public void SetLocked(bool locked)
+        {
+            IsLocked = locked;
+            RefreshMarkerTint();
+        }
+
+        void RefreshMarkerTint()
+        {
+            if (_tileRenderer == null)
+                return;
+
+            if (IsCracked)
+                _tileRenderer.color = CrackedTint;
+            else if (IsLocked)
+                _tileRenderer.color = RootedTint;
+            else
+                _tileRenderer.color = Color.white;
         }
 
         public void ApplyFlags(
@@ -240,6 +261,7 @@ namespace Match3
             IsEnemyElement = isEnemyElement;
             AllowsColorChange = allowsColorChange;
             CanDestroy = canDestroy;
+            RefreshMarkerTint();
         }
 
         public void ClearNegativeOverlay()
@@ -250,6 +272,7 @@ namespace Match3
             AllowsColorChange = true;
             CanDestroy = true;
             IsLocked = false;
+            RefreshMarkerTint();
         }
 
         public void SetSelected(bool selected)

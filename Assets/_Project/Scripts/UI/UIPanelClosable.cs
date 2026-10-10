@@ -79,16 +79,22 @@ namespace M3P
         public virtual void Show()
         {
             Initialize();
+            bool wasOpen = Root.activeSelf;
             BlockWorldInput();
             Root.SetActive(true);
+            if (!wasOpen)
+                Sfx.Play(SfxId.PanelOpen);
         }
 
         public virtual void Hide()
         {
+            bool wasOpen = Root.activeSelf;
             if (Root.activeInHierarchy)
                 BlockWorldInput();
 
             Root.SetActive(false);
+            if (wasOpen)
+                Sfx.Play(SfxId.PanelClose);
         }
 
         public virtual void Toggle()

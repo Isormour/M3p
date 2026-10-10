@@ -416,6 +416,8 @@ namespace M3P
 
             _matchWaveIndex++;
             UpdateBattleIndicators(groups);
+            if (_matchWaveIndex >= 2)
+                Sfx.Play(SfxId.CascadeWave);
         }
 
         /// <summary>
@@ -431,8 +433,10 @@ namespace M3P
 
             bool died = attack.IsLethal;
             int damage = attack.Damage;
+            Sfx.Play(SfxId.PlayerProjectileLaunch);
             SpawnAttackProjectile(origin, GetEnemyVfxPoint(), attack.TypeId, damage, () =>
             {
+                Sfx.Play(SfxId.EnemyProjectileHit);
                 world?.NotifyEnemyHit(died, damage);
                 PulseBattleIndicators();
             });
@@ -451,7 +455,11 @@ namespace M3P
 
             int largestSize = GetLargestMatchSize(groups);
             if (largestSize < _superMatchMinSize)
+            {
+                if (largestSize >= 4)
+                    Sfx.Play(SfxId.BigMatch);
                 return;
+            }
 
             if (_superMatchIndicator != null
                 && _superMatchIndicator.IsShowing
@@ -459,6 +467,7 @@ namespace M3P
                 return;
 
             _superMatchIndicator?.Present(largestSize);
+            Sfx.Play(SfxId.SuperMatch);
         }
 
         void PulseBattleIndicators()
@@ -504,8 +513,12 @@ namespace M3P
             bool hitPlayer = target != null && target.IsPlayerControlled;
             int damage = _battleManager != null ? _battleManager.LastOpponentHitDamage : 0;
             bool shielded = _battleManager != null && _battleManager.LastOpponentHitHadShield;
+            bool playerCast = caster.IsPlayerControlled;
+            if (playerCast)
+                Sfx.Play(SfxId.PlayerProjectileLaunch);
             SpawnAttackProjectile(origin, destination, damage: damage, onArrived: () =>
             {
+                Sfx.Play(hitPlayer ? SfxId.PlayerHit : SfxId.EnemyProjectileHit);
                 bool died = target != null && !target.IsAlive;
                 if (hitPlayer)
                     world?.NotifyPlayerHit(died, damage, shielded);
@@ -525,6 +538,7 @@ namespace M3P
             instance.Setup(config != null ? config.GetTileType(drop.TileTypeId) : null, drop.Amount);
 
             BindAttractor(instance.gameObject, _shardTarget != null ? _shardTarget : _particleTarget);
+            Sfx.Play(SfxId.ShardCollect);
 
             Destroy(instance.gameObject, _shardVfxLifetime);
         }

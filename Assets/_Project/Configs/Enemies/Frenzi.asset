@@ -27,9 +27,21 @@ MonoBehaviour:
   _enemyCharacterPrefab: {fileID: 5361038239209304539, guid: 7f6fff7c585ec75448eb03cc5e3e3628, type: 3}
   _skills:
   - {fileID: 11400000, guid: 0a4a6c8b2a1b7d6c5b4a392810feed01, type: 2}
-  - {fileID: 11400000, guid: 2a6c8e0d4a3b9f8e7d6c5b4a39281001, type: 2}
-  - {fileID: 11400000, guid: 1b5c7d9e3a2f8c6b5a4d392810feed11, type: 2}
-  - {fileID: 11400000, guid: 4a8e0b2a6c5d1b0a9f8e7d6c5b4a3901, type: 2}
-  _skillUnlocks: []
+  - {fileID: 11400000, guid: 11aa0de1b2c34d5e6f708192a3b4c5d6, type: 2}
+  - {fileID: 11400000, guid: 11aa0ee1b2c34d5e6f708192a3b4c5d6, type: 2}
+  - {fileID: 11400000, guid: 11aa0fe1b2c34d5e6f708192a3b4c5d6, type: 2}
+  _skillUnlocks:
+  - Skill: {fileID: 11400000, guid: 0a4a6c8b2a1b7d6c5b4a392810feed01, type: 2}
+    MinFloor: 1
+    Replaces: {fileID: 0}
+  - Skill: {fileID: 11400000, guid: 11aa0de1b2c34d5e6f708192a3b4c5d6, type: 2}
+    MinFloor: 2
+    Replaces: {fileID: 0}
+  - Skill: {fileID: 11400000, guid: 11aa0ee1b2c34d5e6f708192a3b4c5d6, type: 2}
+    MinFloor: 3
+    Replaces: {fileID: 0}
+  - Skill: {fileID: 11400000, guid: 11aa0fe1b2c34d5e6f708192a3b4c5d6, type: 2}
+    MinFloor: 5
+    Replaces: {fileID: 0}
   _rankThresholds: []
   _enemyModelPrefab: {fileID: 6597027836471231214, guid: 9a8fa711845d3d04eae456ceaf9bdfb3, type: 3}

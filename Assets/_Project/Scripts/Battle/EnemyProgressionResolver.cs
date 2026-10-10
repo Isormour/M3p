@@ -37,13 +37,15 @@ namespace M3P
                     0,
                     string.Empty,
                     effectiveFloor,
-                    encounterType);
+                    encounterType,
+                    1);
             }
 
             HardStats hardStats = GrowStats(definition.HardStats, definition.StatGrowthPerFloor, effectiveFloor);
             SkillDefinition[] skills = BuildActiveSkills(definition, effectiveFloor);
             int experience = ScaleExperience(definition.ExperienceReward, effectiveFloor, experienceMultiplier);
             string displayName = BuildDisplayName(definition.Name, definition.RankThresholds, effectiveFloor);
+            int rank = ResolveRank(definition.RankThresholds, effectiveFloor);
 
             return new EnemyRuntimeSpec(
                 definition,
@@ -53,7 +55,29 @@ namespace M3P
                 experience,
                 displayName,
                 effectiveFloor,
-                encounterType);
+                encounterType,
+                rank);
+        }
+
+        /// <summary>
+        /// How many named rank thresholds the floor has reached. Enemies with no thresholds stay at 1.
+        /// </summary>
+        public static int ResolveRank(IReadOnlyList<EnemyRankThreshold> ranks, int effectiveFloor)
+        {
+            if (ranks == null || ranks.Count == 0)
+                return 1;
+
+            int rank = 0;
+            for (int i = 0; i < ranks.Count; i++)
+            {
+                EnemyRankThreshold threshold = ranks[i];
+                if (string.IsNullOrEmpty(threshold.RankName) || threshold.MinFloor > effectiveFloor)
+                    continue;
+
+                rank++;
+            }
+
+            return Mathf.Max(1, rank);
         }
 
         public static int GetEffectiveFloor(int floorIndex, MapNodeType encounterType)

@@ -145,6 +145,8 @@ namespace M3P
             if (!profile.TryAddSkill(skillId, skill.DisplayName))
                 return;
 
+            Sfx.Play(SfxId.NewSkillChoose);
+
             Profiles.Save();
             Hide();
         }

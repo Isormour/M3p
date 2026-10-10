@@ -383,7 +383,8 @@ namespace M3P
         public override void Apply(BattleEffectContext context, EEffectTarget target)
         {
             BattleDeck deck = BattleManager.Instance != null ? BattleManager.Instance.CardPlay?.Deck : null;
-            deck?.TryReturnFromDiscardToHand(context.ChoicePrimary);
+            if (deck != null && deck.TryReturnFromDiscardToHand(context.ChoicePrimary))
+                Sfx.Play(SfxId.CardRecover);
         }
     }
 
@@ -430,6 +431,7 @@ namespace M3P
 
             soft.SetManaForTileType(fromId, soft.GetManaForTileType(fromId) - moved);
             soft.SetManaForTileType(toId, soft.GetManaForTileType(toId) + moved);
+            Sfx.Play(SfxId.ManaTransmute);
         }
     }
 
@@ -448,6 +450,7 @@ namespace M3P
 
             soft.LoseHealthIgnoringShield(_healthLost);
             soft.AddActionPoints(_actionPointsGained);
+            Sfx.Play(SfxId.HpSacrifice);
         }
     }
 
@@ -467,6 +470,8 @@ namespace M3P
                 souls = Mathf.Min(_maxSouls, souls);
 
             soft.AddSouls(souls);
+            if (souls > 0)
+                Sfx.Play(SfxId.SoulCollect);
         }
     }
 

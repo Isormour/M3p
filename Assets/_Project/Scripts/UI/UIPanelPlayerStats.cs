@@ -160,6 +160,7 @@ namespace M3P
                 return;
 
             _pendingByTree[treeId] = GetPending(treeId) + 1;
+            Sfx.Play(SfxId.StatPointAdd);
             Refresh();
         }
 
@@ -174,11 +175,14 @@ namespace M3P
             else
                 _pendingByTree[treeId] = pending - 1;
 
+            Sfx.Play(SfxId.StatPointUndo);
             Refresh();
         }
 
         void HandleConfirmClicked()
         {
+            if (TotalPending > 0)
+                Sfx.Play(SfxId.StatPointsConfirm);
             CommitPendingAllocation();
             Root.SetActive(false);
         }

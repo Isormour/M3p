@@ -154,6 +154,7 @@ namespace M3P
 
         void HandleCancelled()
         {
+            Sfx.Play(SfxId.CardChoiceCancel);
             Action cancelled = _cancelled;
             _picked = null;
             _cancelled = null;
@@ -162,6 +163,7 @@ namespace M3P
 
         void HandlePicked(int value)
         {
+            Sfx.Play(SfxId.CardChoiceConfirm);
             Action<int> picked = _picked;
             _picked = null;
             _cancelled = null;

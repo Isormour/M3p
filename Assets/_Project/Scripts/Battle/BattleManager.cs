@@ -185,6 +185,7 @@ namespace M3P
 
             SnapshotVitals(target, out int health, out int shield);
             skill.UseSkill(caster, target, choice);
+            Sfx.PlaySkill(skill, caster != null && !caster.IsPlayerControlled);
             LastOpponentHitDamage = MeasureDamageTaken(target, health, shield);
             LastOpponentHitHadShield = LastOpponentHitDamage > 0
                 && target.Stats?.Soft != null
@@ -339,6 +340,7 @@ namespace M3P
             }
             _cardPlay?.BeginBattle(_activeBoard, _player);
             _battleWorld?.BindStatusVisuals(_player, _activeEnemy);
+            Sfx.Play(SfxId.BattleStart);
             OnBattleStarted?.Invoke(_activeBoard);
             StartCoroutine(SetupTurnFlowRoutine());
         }
@@ -545,6 +547,7 @@ namespace M3P
             if (!_cardPlay.CanResolve())
                 return;
 
+            Sfx.Play(SfxId.ResolveStart);
             StartCoroutine(ResolveSequenceRoutine(endTurnAfterwards: false));
         }
 
@@ -560,6 +563,7 @@ namespace M3P
 
             if (_cardPlay != null && _cardPlay.CanResolve())
             {
+                Sfx.Play(SfxId.ResolveStart);
                 StartCoroutine(ResolveSequenceRoutine(endTurnAfterwards: true));
                 return;
             }
@@ -619,6 +623,7 @@ namespace M3P
 
                 PendingBasicAttack attack = _launchBuffer[i];
                 _battleWorld?.NotifyBasicAttack();
+                Sfx.Play(SfxId.PlayerAttackWindup);
                 yield return WaitSeconds(_attackWindup);
 
                 if (_battleResolved || _activeEnemy == null || !_activeEnemy.IsAlive)
@@ -753,6 +758,7 @@ namespace M3P
             if (_battleResolved)
                 return;
 
+            Sfx.Play(SfxId.PlayerTurnStart);
             _cardPlay?.BeginTurn();
         }
 
@@ -763,6 +769,7 @@ namespace M3P
 
             _isPlayerTurn = false;
             _awaitingSkillChoice = false;
+            Sfx.Play(SfxId.PlayerTurnEnd);
 
             if (_activeBoard != null)
                 _activeBoard.AllowPlayerInput = false;
@@ -784,6 +791,7 @@ namespace M3P
 
         IEnumerator RunEnemyTurnRoutine()
         {
+            Sfx.Play(SfxId.EnemyTurnStart);
             SnapshotVitals(_activeEnemy, out int enemyHealth, out int enemyShield);
             _activeEnemy?.OnTurnStarted();
             NotifyHitReaction(_activeEnemy, enemyHealth, enemyShield);
@@ -793,6 +801,7 @@ namespace M3P
                 yield break;
 
             yield return _activeEnemy.PlayTurn(_activeBoard);
+            Sfx.Play(SfxId.EnemyTurnEnd);
             _activeEnemy?.TickSkillCooldowns();
             TryResolveBattleOutcome();
 
@@ -836,6 +845,7 @@ namespace M3P
                 _activeBoard.AllowPlayerInput = false;
 
             _endBattlePanel?.Show(outcome, GrantBattleRewards(outcome));
+            Sfx.Play(outcome == BattleOutcome.Win ? SfxId.Victory : SfxId.Defeat);
         }
 
         /// <summary>
@@ -903,6 +913,7 @@ namespace M3P
             _gainSkillPanel.Closed -= HandleBossSkillPanelClosed;
             _gainSkillPanel.Closed += HandleBossSkillPanelClosed;
             _gainSkillPanel.Show();
+            Sfx.Play(SfxId.BossRewardReveal);
             return true;
         }
 

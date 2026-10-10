@@ -116,6 +116,7 @@ namespace M3P
 
         void HandleConfirm()
         {
+            Sfx.Play(SfxId.ChestEmpty);
             Action callback = _onConfirm;
             Hide();
             callback?.Invoke();

@@ -176,11 +176,14 @@ namespace M3P
             if (skillId == SkillConfig.InvalidSkillId)
                 return;
 
-            bool changed = IsInLoadout(profile, skillId)
-                ? profile.TryRemoveSkillFromLoadout(skillId)
-                : profile.TryAddSkillToLoadout(skillId);
+            bool equipped = !IsInLoadout(profile, skillId);
+            bool changed = equipped
+                ? profile.TryAddSkillToLoadout(skillId)
+                : profile.TryRemoveSkillFromLoadout(skillId);
             if (!changed)
                 return;
+
+            Sfx.Play(equipped ? SfxId.SkillEquip : SfxId.SkillUnequip);
 
             Profiles.Save();
         }
@@ -191,6 +194,7 @@ namespace M3P
             if (profile == null || !profile.TryRemoveLoadoutAt(slotIndex))
                 return;
 
+            Sfx.Play(SfxId.SkillUnequip);
             Profiles.Save();
         }
 

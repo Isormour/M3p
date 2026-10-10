@@ -149,6 +149,10 @@ namespace M3P
 
         void SetShelf(CardShelf shelf)
         {
+            if (_shelf == shelf)
+                return;
+
+            Sfx.Play(SfxId.CardFilterChange);
             _shelf = shelf;
             _page = 0;
             Refresh();
@@ -160,13 +164,17 @@ namespace M3P
                 return;
 
             _page--;
+            Sfx.Play(SfxId.CardPageChange);
             Refresh();
         }
 
         void ShowNextPage()
         {
+            int before = _page;
             _page++;
             Refresh();
+            if (_page != before)
+                Sfx.Play(SfxId.CardPageChange);
         }
 
         void Refresh()
@@ -311,6 +319,8 @@ namespace M3P
             {
                 if (!TryRemoveOwnedCard(profile, ownedIndex))
                     return;
+
+                Sfx.Play(SfxId.DeckCardRemove);
             }
             else
             {
@@ -319,6 +329,8 @@ namespace M3P
 
                 if (!profile.TryAddOwnedCardToDeck(ownedIndex))
                     return;
+
+                Sfx.Play(SfxId.DeckCardAdd);
             }
 
             Profiles.Save();
@@ -349,6 +361,8 @@ namespace M3P
             if (ownedIndex < 0 || !profile.TryAddOwnedCardToDeck(ownedIndex))
                 return;
 
+            Sfx.Play(SfxId.DeckCardAdd);
+
             Profiles.Save();
         }
 
@@ -357,6 +371,8 @@ namespace M3P
             PlayerProfile profile = Profiles?.CurrentProfile;
             if (profile == null || !profile.TryRemoveDeckCardAt(deckIndex))
                 return;
+
+            Sfx.Play(SfxId.DeckCardRemove);
 
             Profiles.Save();
         }

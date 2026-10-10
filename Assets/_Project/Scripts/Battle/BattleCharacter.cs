@@ -35,26 +35,35 @@ namespace M3P
         /// <summary>Raised after incoming damage reduces health or shield.</summary>
         public event Action<int> Damaged;
 
+        /// <summary>Raised after healing increases health.</summary>
+        public event Action<int> Healed;
+
         public CombatModifiers Modifiers => _modifiers;
 
         protected void SetCharacterStats(CharacterStats stats)
         {
-            UnbindSoftDamage();
+            UnbindSoftVitals();
             _characterStats = stats;
-            BindSoftDamage();
+            BindSoftVitals();
         }
 
-        void BindSoftDamage()
+        void BindSoftVitals()
         {
             _boundSoft = _characterStats != null ? _characterStats.Soft : null;
-            if (_boundSoft != null)
-                _boundSoft.Damaged += HandleSoftDamaged;
+            if (_boundSoft == null)
+                return;
+
+            _boundSoft.Damaged += HandleSoftDamaged;
+            _boundSoft.Healed += HandleSoftHealed;
         }
 
-        void UnbindSoftDamage()
+        void UnbindSoftVitals()
         {
             if (_boundSoft != null)
+            {
                 _boundSoft.Damaged -= HandleSoftDamaged;
+                _boundSoft.Healed -= HandleSoftHealed;
+            }
 
             _boundSoft = null;
         }
@@ -64,9 +73,14 @@ namespace M3P
             Damaged?.Invoke(amount);
         }
 
+        void HandleSoftHealed(int amount)
+        {
+            Healed?.Invoke(amount);
+        }
+
         void OnDestroy()
         {
-            UnbindSoftDamage();
+            UnbindSoftVitals();
         }
 
         public virtual void OnTurnStarted()
@@ -194,6 +208,72 @@ namespace M3P
             return count;
         }
 
+        /// <summary>Flat reduction applied to every incoming direct hit by lasting statuses. Not consumed.</summary>
+        public int GetPersistentIncomingReduction()
+        {
+            int total = 0;
+            for (int i = 0; i < _statuses.Count; i++)
+            {
+                StatusInstance status = _statuses[i];
+                StatusEffectDefinition definition = status?.Definition;
+                if (definition == null || !definition.PersistentIncomingReduction || status.Magnitude <= 0)
+                    continue;
+
+                total += status.Magnitude * status.Stacks;
+            }
+
+            return total;
+        }
+
+        /// <summary>Flat bonus added to every outgoing direct hit by lasting statuses. Not consumed.</summary>
+        public int GetPersistentOutgoingBonus()
+        {
+            int total = 0;
+            for (int i = 0; i < _statuses.Count; i++)
+            {
+                StatusInstance status = _statuses[i];
+                StatusEffectDefinition definition = status?.Definition;
+                if (definition == null || !definition.PersistentOutgoingBonus || status.Magnitude <= 0)
+                    continue;
+
+                total += status.Magnitude * status.Stacks;
+            }
+
+            return total;
+        }
+
+        /// <summary>
+        /// Consumes one incoming-guard status on the next direct hit: reduction, then optional counter.
+        /// Newest matching status wins. Stacked copies lose one stack per hit.
+        /// </summary>
+        public bool TryConsumeIncomingGuard(out int reduction, out int counterDamage, out bool counterPhysical)
+        {
+            reduction = 0;
+            counterDamage = 0;
+            counterPhysical = false;
+
+            for (int i = _statuses.Count - 1; i >= 0; i--)
+            {
+                StatusInstance status = _statuses[i];
+                StatusEffectDefinition definition = status?.Definition;
+                if (definition == null || !definition.HasIncomingGuard)
+                    continue;
+
+                reduction = definition.IncomingDamageReduction;
+                counterDamage = definition.IncomingCounterDamage;
+                counterPhysical = definition.IncomingCounterPhysical;
+
+                status.Stacks--;
+                if (status.Stacks <= 0)
+                    _statuses.RemoveAt(i);
+
+                RaiseStatusesChanged();
+                return true;
+            }
+
+            return false;
+        }
+
         /// <summary>Removes every matching status and returns how many stacks were consumed.</summary>
         public int ConsumeStatus(StatusEffectDefinition definition)
         {
@@ -223,10 +303,25 @@ namespace M3P
         /// </summary>
         public void ApplyStatus(StatusEffectDefinition definition, BattleCharacter source)
         {
-            if (definition == null)
+            ApplyStatusStacks(definition, source, 1, 0, 0);
+        }
+
+        /// <summary>
+        /// Adds <paramref name="stacks"/> copies at once.
+        /// <paramref name="durationOverride"/> and <paramref name="magnitude"/> replace the authored
+        /// duration and store a scaled payload when they are greater than zero.
+        /// </summary>
+        public void ApplyStatusStacks(
+            StatusEffectDefinition definition,
+            BattleCharacter source,
+            int stacks,
+            int durationOverride,
+            int magnitude)
+        {
+            if (definition == null || stacks <= 0)
                 return;
 
-            int duration = definition.DurationTurns;
+            int duration = durationOverride > 0 ? durationOverride : definition.DurationTurns;
 
             for (int i = 0; i < _statuses.Count; i++)
             {
@@ -235,15 +330,28 @@ namespace M3P
                     continue;
 
                 if (definition.CanStack)
-                    existing.Stacks++;
+                {
+                    existing.Stacks += stacks;
+                    Sfx.Play(SfxId.StatusStrengthen);
+                }
+                else
+                {
+                    Sfx.Play(SfxId.StatusApply);
+                }
 
                 existing.RemainingTurns = duration;
                 existing.Source = source;
+                if (magnitude > 0)
+                    existing.Magnitude = magnitude;
                 RaiseStatusesChanged();
                 return;
             }
 
-            _statuses.Add(new StatusInstance(definition, source, duration));
+            StatusInstance created = new StatusInstance(definition, source, duration, stacks);
+            if (magnitude > 0)
+                created.Magnitude = magnitude;
+            _statuses.Add(created);
+            Sfx.Play(SfxId.StatusApply);
             RaiseStatusesChanged();
         }
 
@@ -276,8 +384,9 @@ namespace M3P
         }
 
         /// <summary>
-        /// Fires per-turn status logics, then decrements duration. Called from <see cref="OnTurnStarted"/>,
-        /// so a status applied mid-turn first ticks on the bearer's next turn.
+        /// Fires per-turn status logics, then decrements duration unless the status persists
+        /// until consumed. Called from <see cref="OnTurnStarted"/>, so a timed status applied
+        /// mid-turn first ticks on the bearer's next turn.
         /// </summary>
         void TickStatuses()
         {
@@ -298,9 +407,13 @@ namespace M3P
 
                 ApplyOnTurnEffectsAndNotify(status);
 
+                if (definition.PersistUntilConsumed)
+                    continue;
+
                 status.RemainingTurns--;
                 if (status.RemainingTurns <= 0)
                 {
+                    Sfx.Play(SfxId.StatusExpire);
                     _statuses.RemoveAt(i);
                     changed = true;
                 }
@@ -322,8 +435,15 @@ namespace M3P
             if (soft == null)
                 return;
 
+            if (soft.CurrentHealth > healthBefore)
+                Sfx.Play(SfxId.RegenerationTick);
+
             if (soft.CurrentHealth < healthBefore || soft.CurrentShield < shieldBefore)
+            {
+                if (definition.StatusType == EStatusType.Burn)
+                    Sfx.Play(SfxId.BurnTick);
                 StatusDamageProcessed?.Invoke(definition.StatusType);
+            }
         }
 
         void RaiseStatusesChanged()

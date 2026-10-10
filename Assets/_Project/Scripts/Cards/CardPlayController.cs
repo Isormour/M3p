@@ -108,6 +108,7 @@ namespace M3P
         {
             CancelSelection();
             _deck.DrawUpTo(MaxHandSize);
+            Sfx.Play(SfxId.HandDraw);
             BeginSequence();
             Changed?.Invoke();
         }
@@ -153,6 +154,7 @@ namespace M3P
                 return;
 
             _deck.DrawUpTo(_deck.Hand.Count + count);
+            Sfx.Play(SfxId.SingleCardDraw);
             Changed?.Invoke();
         }
 
@@ -210,6 +212,7 @@ namespace M3P
 
             if (_selectedHandIndex == handIndex)
             {
+                Sfx.Play(SfxId.CardDeselect);
                 CancelSelection();
                 return;
             }
@@ -222,6 +225,7 @@ namespace M3P
 
             _selectedHandIndex = handIndex;
             _selectedCard = card;
+            Sfx.Play(SfxId.CardSelect);
             Changed?.Invoke();
 
             if (card.Targeting == CardTargeting.None)
@@ -266,6 +270,7 @@ namespace M3P
 
             _player?.Stats?.Soft?.AddActionPoints(entry.StaminaPaid);
             _deck.ReturnFromSequenceToHand(entry.Card, entry.HandIndex);
+            Sfx.Play(SfxId.CardQueueUndo);
             Changed?.Invoke();
             return true;
         }
@@ -285,6 +290,7 @@ namespace M3P
             int cardCount = _queue.Count;
             _queue.CollectOps(_opsBuffer);
             _deck.DiscardSequence();
+            Sfx.Play(SfxId.CardsDiscard);
             _queue.Clear();
             Changed?.Invoke();
 
@@ -322,9 +328,12 @@ namespace M3P
 
             if (_pickedTargets.Count < logic.RequiredTargetCount)
             {
+                Sfx.Play(SfxId.TargetTileSelect);
                 Changed?.Invoke();
                 return;
             }
+
+            Sfx.Play(SfxId.TargetSelectionComplete);
 
             int handIndex = _selectedHandIndex;
             List<Vector2Int> targets = new List<Vector2Int>(_pickedTargets);
@@ -364,6 +373,7 @@ namespace M3P
                 _choiceBuffer,
                 value => HandleExtraChoicePicked(handIndex, targets, value),
                 CancelSelection);
+            Sfx.Play(SfxId.CardChoiceOpen);
             Changed?.Invoke();
         }
 
@@ -417,6 +427,7 @@ namespace M3P
                 extraChoice,
                 seed,
                 _opsBuffer.ToArray()));
+            Sfx.Play(SfxId.CardQueueAdd);
 
             HideChoiceOverlay();
             ClearHighlights();

@@ -19,8 +19,7 @@ MonoBehaviour:
     version: 2
     RefIds:
     - rid: 1000
-      type: {class: IncomingGuardLogic, ns: M3P, asm: Assembly-CSharp}
+      type: {class: ApplyStatusLogic, ns: M3P, asm: Assembly-CSharp}
       data:
-        _reduction: 4
-        _counterDamage: 6
-        _counterPhysical: 1
+        _status: {fileID: 11400000, guid: 4e8a1c6b9d2f47a3b5c0e7d1a8f392b6, type: 2}
+        _stacks: 1

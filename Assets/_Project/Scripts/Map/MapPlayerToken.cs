@@ -17,6 +17,7 @@ namespace M3P
 
         Coroutine _moveRoutine;
         int _moveBoolHash;
+        float _stepDistance;
 
         public bool IsMoving { get; private set; }
 
@@ -64,6 +65,7 @@ namespace M3P
         {
             IsMoving = true;
             SetMoveAnimation(true);
+            _stepDistance = 0f;
 
             while ((transform.position - target).sqrMagnitude > 0.0004f)
             {
@@ -74,6 +76,13 @@ namespace M3P
 
                 if (_faceMoveDirection)
                     FaceDirection(next - transform.position);
+
+                _stepDistance += Vector3.Distance(transform.position, next);
+                if (_stepDistance >= 1.1f)
+                {
+                    _stepDistance = 0f;
+                    Sfx.Play(SfxId.MapTokenStep);
+                }
 
                 transform.position = next;
                 yield return null;

@@ -106,6 +106,7 @@ namespace M3P
             if (_skill == null)
                 return;
 
+            Sfx.Play(SfxId.UiHover);
             _hovered?.Invoke(_skill);
         }
 

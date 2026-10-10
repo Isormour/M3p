@@ -35,6 +35,9 @@ namespace M3P
         /// <summary>Health plus shield actually lost by the last <see cref="TakeDamage"/>.</summary>
         public event Action<int> Damaged;
 
+        /// <summary>Health actually gained by the last <see cref="Heal"/>.</summary>
+        public event Action<int> Healed;
+
         public SoftStats(
             HardStats hard,
             StatProgressionConfig progression,
@@ -124,8 +127,13 @@ namespace M3P
             if (amount <= 0)
                 return;
 
+            int healthBefore = CurrentHealth;
             CurrentHealth = Math.Min(MaxHP, CurrentHealth + amount);
             NotifyChanged();
+
+            int healed = CurrentHealth - healthBefore;
+            if (healed > 0)
+                Healed?.Invoke(healed);
         }
 
         public void AddShield(int amount)
@@ -144,6 +152,18 @@ namespace M3P
 
             CurrentShield = 0;
             NotifyChanged();
+        }
+
+        /// <summary>Removes up to <paramref name="amount"/> shield and returns how much was actually taken.</summary>
+        public int RemoveShield(int amount)
+        {
+            if (amount <= 0 || CurrentShield <= 0)
+                return 0;
+
+            int removed = Math.Min(CurrentShield, amount);
+            CurrentShield -= removed;
+            NotifyChanged();
+            return removed;
         }
 
         /// <summary>
@@ -257,6 +277,18 @@ namespace M3P
 
             CurrentActionPoints += amount;
             NotifyChanged();
+        }
+
+        /// <summary>Removes up to <paramref name="amount"/> action points and returns how many were lost.</summary>
+        public int RemoveActionPoints(int amount)
+        {
+            if (amount <= 0 || CurrentActionPoints <= 0)
+                return 0;
+
+            int removed = Math.Min(CurrentActionPoints, amount);
+            CurrentActionPoints -= removed;
+            NotifyChanged();
+            return removed;
         }
 
         public void ResetMana()

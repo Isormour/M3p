@@ -31,6 +31,8 @@ namespace M3P
 
             TryGetReadySkill(skills, out SkillDefinition skill);
             TelegraphedSkill = skill;
+            if (skill != null)
+                Sfx.Play(SfxId.EnemyIntent);
         }
 
         public EnemyRuntimeSpec RuntimeSpec => _spec;
@@ -104,12 +106,13 @@ namespace M3P
             if (skills == null)
                 return false;
 
+            BattleCharacter opponent = BattleManager.Instance != null ? BattleManager.Instance.Player : null;
             int readyCount = 0;
             int readyExceptLast = 0;
             for (int i = 0; i < skills.Count; i++)
             {
                 SkillDefinition candidate = skills[i];
-                if (candidate == null || !IsSkillReady(candidate))
+                if (!IsSelectable(candidate, opponent))
                     continue;
 
                 readyCount++;
@@ -126,7 +129,7 @@ namespace M3P
             for (int i = 0; i < skills.Count; i++)
             {
                 SkillDefinition candidate = skills[i];
-                if (candidate == null || !IsSkillReady(candidate))
+                if (!IsSelectable(candidate, opponent))
                     continue;
 
                 if (skipLastUsed && candidate == _lastUsedSkill)
@@ -142,6 +145,17 @@ namespace M3P
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Planning filter. A skill already telegraphed is still executed later even if the
+        /// requirement stops being true, so a weakened intent is not swapped for another attack.
+        /// </summary>
+        bool IsSelectable(SkillDefinition skill, BattleCharacter opponent)
+        {
+            return skill != null
+                && IsSkillReady(skill)
+                && skill.MeetsCastRequirements(this, opponent);
         }
     }
 }

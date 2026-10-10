@@ -79,6 +79,7 @@ namespace M3P
             Instance = this;
             DontDestroyOnLoad(gameObject);
             MapRunState.Active = MapRun;
+            SfxPlayer.Ensure(_config != null ? _config.Sfx : null);
         }
 
         void Start()

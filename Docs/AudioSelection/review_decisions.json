@@ -1,0 +1,616 @@
+{
+  "schema_version": 2,
+  "date": "2026-09-25T18:43:37.501Z",
+  "decisions": {
+    "menu_confirm": "keep",
+    "route_cancel": "keep",
+    "menu_confirm_alt": "keep",
+    "map_node_select": "keep",
+    "map_token_step": "reject",
+    "scene_transition": "keep",
+    "chest_open": "keep",
+    "chest_open_alt": "keep",
+    "panel_open": "keep",
+    "card_select": "keep",
+    "single_card_draw": "keep",
+    "card_queue_add": "keep",
+    "card_deselect": "keep",
+    "hand_draw": "keep",
+    "hand_draw_alt": "keep",
+    "cards_discard": "keep",
+    "tile_fall": "keep",
+    "tile_swap": "keep",
+    "tile_break": "keep",
+    "tile_break_alt": "keep",
+    "map_arrival": "keep",
+    "player_attack_windup": "keep",
+    "player_projectile_launch": "keep",
+    "heavy_slash": "keep",
+    "enemy_projectile_hit": "keep",
+    "player_hit": "keep",
+    "shield_appear": "keep",
+    "multi_hit_tick": "keep",
+    "shield_fade": "keep",
+    "burn_tick": "keep",
+    "ignite": "keep",
+    "wildfire": "keep",
+    "lightning_chain": "keep",
+    "fire_alt": "keep",
+    "ice_ward": "keep",
+    "enemy_intent": "keep",
+    "resolve_start": "keep",
+    "forge_open": "reject",
+    "craft_magic": "keep"
+  },
+  "variants": {
+    "card_select": "",
+    "menu_confirm_alt": "original",
+    "tile_fall": "preview",
+    "player_projectile_launch": "original",
+    "multi_hit_tick": "preview",
+    "enemy_intent": "original",
+    "resolve_start": "original",
+    "forge_open": "",
+    "craft_magic": "original"
+  },
+  "entries": [
+    {
+      "id": "menu_confirm",
+      "cues": [
+        "menu_confirm",
+        "route_confirm",
+        "card_choice_confirm"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\BUTTONS\\BUTTON_Clean_Tap_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": 0.24
+    },
+    {
+      "id": "menu_confirm_alt",
+      "cues": [
+        "menu_confirm",
+        "route_confirm"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\BUTTONS\\BUTTON_Deep_Smooth_Click_mono.wav",
+      "decision": "keep",
+      "selected_variant": "original",
+      "selected_file": "originals/menu_confirm_alt.wav",
+      "selected_seconds": 0.736,
+      "excerpt": null,
+      "audition_gain_db": -5.5
+    },
+    {
+      "id": "route_cancel",
+      "cues": [
+        "route_cancel",
+        "card_choice_cancel",
+        "chest_empty"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\BUTTONS\\BUTTON_Short_Dry_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -4.41
+    },
+    {
+      "id": "map_node_select",
+      "cues": [
+        "map_node_select",
+        "target_tile_select",
+        "tile_type_select"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\IMPACTS\\Stone\\IMPACT_Stone_On_Stone_03_Subtle_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -4.96
+    },
+    {
+      "id": "map_token_step",
+      "cues": [
+        "map_token_step",
+        "tile_slot_select"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\IMPACTS\\Stone\\IMPACT_Stone_On_Stone_04_Subtle_mono.wav",
+      "decision": "reject",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -5.5
+    },
+    {
+      "id": "scene_transition",
+      "cues": [
+        "scene_transition",
+        "battle_result_close"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\WHOOSHES\\Classic\\WHOOSH_Deep_Smooth_01_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": 1.66
+    },
+    {
+      "id": "chest_open",
+      "cues": [
+        "chest_open"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\ACTIONS\\ACTION_Open_Chest_04_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -4.99
+    },
+    {
+      "id": "chest_open_alt",
+      "cues": [
+        "chest_open"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\ACTIONS\\ACTION_Open_Chest_06_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -1.66
+    },
+    {
+      "id": "panel_open",
+      "cues": [
+        "panel_open",
+        "route_preview",
+        "card_page_change"
+      ],
+      "source_path": "D:\\Unity\\_Audio\\Cinematic Sound Design - Paper Foley\\Encyclopedia Glossy Page Turn Muted.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": 13.36
+    },
+    {
+      "id": "card_select",
+      "cues": [
+        "card_select",
+        "card_recipe_select"
+      ],
+      "source_path": "D:\\Unity\\_Audio\\Epic Stock Media - Board Game - Sound Set Kit for Tabletop and Digital Games\\PAPRHndl_Game Play Cards Dry Show Flip Toss Disgard Near 12_ESM_BG.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -5
+    },
+    {
+      "id": "single_card_draw",
+      "cues": [
+        "single_card_draw",
+        "tile_bonus_card",
+        "deck_card_add"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\CARDS\\CARDS_Deal_01_RR4_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": 4.9
+    },
+    {
+      "id": "card_queue_add",
+      "cues": [
+        "card_queue_add"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\CARDS\\CARDS_Deal_01_RR5_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -2.65
+    },
+    {
+      "id": "card_deselect",
+      "cues": [
+        "card_deselect",
+        "card_queue_undo",
+        "deck_card_remove"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\CARDS\\CARDS_Deal_01_RR4_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": 4.9
+    },
+    {
+      "id": "hand_draw",
+      "cues": [
+        "hand_draw",
+        "card_shop_open"
+      ],
+      "source_path": "D:\\Unity\\_Audio\\344 Audio - Casino Cards Vol. 1\\GAMECas_Pick Up Multiple Cards At Once 5_344 Audio_Casino Cards Vol 1.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": 33.94
+    },
+    {
+      "id": "hand_draw_alt",
+      "cues": [
+        "hand_draw"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\CARDS\\CARDS_Shuffle_01_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -4.97
+    },
+    {
+      "id": "cards_discard",
+      "cues": [
+        "cards_discard",
+        "player_turn_end"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\CARDS\\CARDS_Deal_02_RR4_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": 2.73
+    },
+    {
+      "id": "tile_swap",
+      "cues": [
+        "tile_swap_timed",
+        "tile_rotate",
+        "row_shift"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\ELEMENTS\\Earth\\EARTH_Rocks_Pebbles_Move_01_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -5.5
+    },
+    {
+      "id": "tile_fall",
+      "cues": [
+        "tile_fall"
+      ],
+      "source_path": "D:\\Unity\\_Audio\\Epic Stock Media - Board Game - Sound Set Kit for Tabletop and Digital Games\\GAMEBoard_Game Play Piece Action Organic Connect Dots Fall Bounce 04_ESM_BG.wav",
+      "decision": "keep",
+      "selected_variant": "preview",
+      "selected_file": "previews/tile_fall.wav",
+      "selected_seconds": 0.2,
+      "excerpt": {
+        "start": 0.005,
+        "end": 0.205,
+        "reverse": false
+      },
+      "audition_gain_db": -5
+    },
+    {
+      "id": "tile_break",
+      "cues": [
+        "tile_break",
+        "tile_crack_mark",
+        "tile_bonus_neighbor_break"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\BREAKS_SNAPS\\BREAK_Subtle_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -0.66
+    },
+    {
+      "id": "tile_break_alt",
+      "cues": [
+        "tile_break"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\BREAKS_SNAPS\\BREAK_Fast_Clean_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -3.92
+    },
+    {
+      "id": "map_arrival",
+      "cues": [
+        "map_arrival"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\IMPACTS\\Stone\\IMPACT_Stone_On_Stone_02_Subtle_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -4.92
+    },
+    {
+      "id": "player_attack_windup",
+      "cues": [
+        "player_attack_windup",
+        "basic_attack_skill",
+        "enemy_strike",
+        "backstab"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\WHOOSHES\\Classic\\WHOOSH_Quick_Darker_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": 3.29
+    },
+    {
+      "id": "player_projectile_launch",
+      "cues": [
+        "player_projectile_launch"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\WHOOSHES\\Classic\\WHOOSH_Quick_mono.wav",
+      "decision": "keep",
+      "selected_variant": "original",
+      "selected_file": "originals/player_projectile_launch.wav",
+      "selected_seconds": 0.279,
+      "excerpt": null,
+      "audition_gain_db": 3.29
+    },
+    {
+      "id": "heavy_slash",
+      "cues": [
+        "heavy_slash",
+        "wide_swing",
+        "execute",
+        "shield_slam"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\WHOOSHES\\Classic\\WHOOSH_Wide_Fast_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": 2.04
+    },
+    {
+      "id": "enemy_projectile_hit",
+      "cues": [
+        "enemy_projectile_hit"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\IMPACTS\\Punch\\IMPACT_Punch_03_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -5.5
+    },
+    {
+      "id": "player_hit",
+      "cues": [
+        "player_hit"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\IMPACTS\\Punch\\IMPACT_Punch_01_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -5.5
+    },
+    {
+      "id": "multi_hit_tick",
+      "cues": [
+        "multi_hit_tick"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\IMPACTS\\Punch\\IMPACT_Punch_02_mono.wav",
+      "decision": "keep",
+      "selected_variant": "preview",
+      "selected_file": "previews/multi_hit_tick.wav",
+      "selected_seconds": 0.1098,
+      "excerpt": {
+        "start": 0,
+        "end": 0.1098,
+        "reverse": false
+      },
+      "audition_gain_db": -5.5
+    },
+    {
+      "id": "shield_appear",
+      "cues": [
+        "shield_appear",
+        "shield_apply",
+        "guard_up",
+        "enemy_guard"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\MAGIC_SPELLS\\MAGIC_SPELL_Shield_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -0.89
+    },
+    {
+      "id": "shield_fade",
+      "cues": [
+        "shield_fade"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\MAGIC_SPELLS\\MAGIC_SPELL_Shield_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -0.89
+    },
+    {
+      "id": "burn_tick",
+      "cues": [
+        "burn_tick_timed"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\MAGIC_SPELLS\\MAGIC_SPELL_Flame_02_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -4.88
+    },
+    {
+      "id": "ignite",
+      "cues": [
+        "ignite",
+        "fire_spark",
+        "kindle",
+        "enemy_ember",
+        "tile_bonus_ignite"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\MAGIC_SPELLS\\MAGIC_SPELL_Flame_03_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -5.5
+    },
+    {
+      "id": "wildfire",
+      "cues": [
+        "wildfire",
+        "ignite_burst"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\MAGIC_SPELLS\\MAGIC_SPELL_Flame_01_mono.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -0.86
+    },
+    {
+      "id": "fire_alt",
+      "cues": [
+        "burn_tick_timed"
+      ],
+      "source_path": "D:\\Unity\\_Audio\\Dark Fantasy Studio-Fire spell\\Wav\\Stereo\\Dark Fantasy Studio- Fire spell 21.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -6
+    },
+    {
+      "id": "ice_ward",
+      "cues": [
+        "ice_ward"
+      ],
+      "source_path": "D:\\Unity\\_Audio\\Dark Fantasy Studio-Ice spell\\Wav\\Stereo\\Dark Fantasy Studio- Ice spell 4.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -5.01
+    },
+    {
+      "id": "lightning_chain",
+      "cues": [
+        "lightning_chain"
+      ],
+      "source_path": "D:\\Unity\\_Audio\\Dark Fantasy Studio-Electric spell\\Wav\\stereo\\Dark Fantasy Studio- Electric spell 1.wav",
+      "decision": "keep",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -2.6
+    },
+    {
+      "id": "enemy_intent",
+      "cues": [
+        "enemy_intent",
+        "enemy_turn_start",
+        "enemy_layer",
+        "hp_sacrifice"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\MAGIC_SPELLS\\MAGIC_SPELL_Dark_Pulse_Echo_Subtle_mono.wav",
+      "decision": "keep",
+      "selected_variant": "original",
+      "selected_file": "originals/enemy_intent.wav",
+      "selected_seconds": 0.9874,
+      "excerpt": null,
+      "audition_gain_db": -3.69
+    },
+    {
+      "id": "resolve_start",
+      "cues": [
+        "resolve_start",
+        "player_skill_cast",
+        "chromatic_bolt"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\MAGIC_SPELLS\\MAGIC_SPELL_Short_Fast_Burst_Quick_Fade_mono.wav",
+      "decision": "keep",
+      "selected_variant": "original",
+      "selected_file": "originals/resolve_start.wav",
+      "selected_seconds": 0.8762,
+      "excerpt": null,
+      "audition_gain_db": -4.97
+    },
+    {
+      "id": "forge_open",
+      "cues": [
+        "forge_open"
+      ],
+      "source_path": "D:\\Unity\\projs\\M3p\\Assets\\Universal Sound FX\\ELEMENTS\\Fire\\FIRE_Hot_Furnice_Smooth_loop_mono.wav",
+      "decision": "reject",
+      "selected_variant": null,
+      "selected_file": null,
+      "selected_seconds": null,
+      "excerpt": null,
+      "audition_gain_db": -5.5
+    },
+    {
+      "id": "craft_magic",
+      "cues": [
+        "tile_craft_success",
+        "card_craft_success",
+        "level_up"
+      ],
+      "source_path": "D:\\Unity\\_Audio\\CB_Sounddesign - Applicable Sounds - Organic UI and Building Games SFX\\GAMEMisc_Magic Creation 23_CB Sounddesign_APPlicable Sounds.wav",
+      "decision": "keep",
+      "selected_variant": "original",
+      "selected_file": "originals/craft_magic.wav",
+      "selected_seconds": 3.1858,
+      "excerpt": null,
+      "audition_gain_db": -3
+    }
+  ]
+}

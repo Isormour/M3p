@@ -46,6 +46,9 @@ namespace M3P
         [Tooltip("Status outline palettes and other authored combat VFX.")]
         [SerializeField] VFXConfig _vfx;
 
+        [Tooltip("One-shot effects for menu, map, battle and rewards.")]
+        [SerializeField] SfxLibrary _sfx;
+
         Dictionary<Match3TileTypeDefinition, int> _tileTypeIds;
         StatProgressionConfig _fallbackStatProgression;
         BattleConfig _fallbackBattle;
@@ -81,6 +84,8 @@ namespace M3P
                 : _fallbackBattle ??= BattleConfig.CreateDefault();
 
         public VFXConfig VFX => _vfx;
+
+        public SfxLibrary Sfx => _sfx;
 
         public int TileTypeCount => _tileTypes != null ? _tileTypes.Length : 0;
 

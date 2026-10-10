@@ -15,6 +15,7 @@ namespace M3P
         public override void OnCleared(TileUpgradeContext context)
         {
             context.Player?.Stats?.Soft?.AddManaFromBrokenTiles(context.TileTypeId, Amount);
+            Sfx.Play(SfxId.TileBonusMana);
         }
     }
 
@@ -28,6 +29,7 @@ namespace M3P
         public override void OnCleared(TileUpgradeContext context)
         {
             context.Player?.Stats?.Soft?.Heal(Amount);
+            Sfx.Play(SfxId.TileBonusHeal);
         }
     }
 
@@ -43,6 +45,7 @@ namespace M3P
         {
             context.Limits?.RecordStaminaRefund(Amount);
             context.Player?.Stats?.Soft?.AddActionPoints(Amount);
+            Sfx.Play(SfxId.TileBonusAction);
         }
     }
 
@@ -59,6 +62,7 @@ namespace M3P
                 return;
 
             context.CardPlay.DrawCards(1);
+            Sfx.Play(SfxId.TileBonusCard);
         }
     }
 
@@ -72,6 +76,7 @@ namespace M3P
         public override void OnCleared(TileUpgradeContext context)
         {
             context.Player?.Stats?.Soft?.AddShield(Amount);
+            Sfx.Play(SfxId.TileBonusShield);
         }
     }
 
@@ -95,6 +100,7 @@ namespace M3P
                 return;
 
             context.Opponent.ApplyStatus(_burn, context.Player);
+            Sfx.Play(SfxId.TileBonusIgnite);
         }
     }
 
@@ -150,7 +156,10 @@ namespace M3P
 
             Match3Tile neighbour = board.GetTile(x, y);
             if (neighbour != null)
+            {
                 destination.Add(neighbour);
+                Sfx.Play(SfxId.TileBonusNeighborBreak);
+            }
         }
     }
 }

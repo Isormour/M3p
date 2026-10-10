@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e7355e1d850817a4a80f5aadf212fe7b, type: 3}
   m_Name: MinioTaur
   m_EditorClassIdentifier: Assembly-CSharp::M3P.EnemyDefinition
-  _name: Miniotaur
+  _name: Miniootaur
   _hardStats:
     Strength: 5
     Intelligence: 0
@@ -27,20 +27,20 @@ MonoBehaviour:
   _enemyCharacterPrefab: {fileID: 5361038239209304539, guid: 7f6fff7c585ec75448eb03cc5e3e3628, type: 3}
   _skills:
   - {fileID: 11400000, guid: 4a8e0b2a6c5d1b0a9f8e7d6c5b4a3901, type: 2}
-  - {fileID: 11400000, guid: 1b5c7d9e3a2f8c6b5a4d392810feed11, type: 2}
-  - {fileID: 11400000, guid: 2a6c8e0d4a3b9f8e7d6c5b4a39281001, type: 2}
-  - {fileID: 11400000, guid: 0a4a6c8b2a1b7d6c5b4a392810feed01, type: 2}
+  - {fileID: 11400000, guid: 11aa03e1b2c34d5e6f708192a3b4c5d6, type: 2}
+  - {fileID: 11400000, guid: 11aa04e1b2c34d5e6f708192a3b4c5d6, type: 2}
+  - {fileID: 11400000, guid: 11aa02e1b2c34d5e6f708192a3b4c5d6, type: 2}
   _skillUnlocks:
   - Skill: {fileID: 11400000, guid: 4a8e0b2a6c5d1b0a9f8e7d6c5b4a3901, type: 2}
     MinFloor: 1
     Replaces: {fileID: 0}
-  - Skill: {fileID: 11400000, guid: 1b5c7d9e3a2f8c6b5a4d392810feed11, type: 2}
+  - Skill: {fileID: 11400000, guid: 11aa03e1b2c34d5e6f708192a3b4c5d6, type: 2}
     MinFloor: 2
     Replaces: {fileID: 0}
-  - Skill: {fileID: 11400000, guid: 2a6c8e0d4a3b9f8e7d6c5b4a39281001, type: 2}
+  - Skill: {fileID: 11400000, guid: 11aa04e1b2c34d5e6f708192a3b4c5d6, type: 2}
     MinFloor: 3
     Replaces: {fileID: 0}
-  - Skill: {fileID: 11400000, guid: 0a4a6c8b2a1b7d6c5b4a392810feed01, type: 2}
+  - Skill: {fileID: 11400000, guid: 11aa02e1b2c34d5e6f708192a3b4c5d6, type: 2}
     MinFloor: 5
     Replaces: {fileID: 0}
   _rankThresholds:

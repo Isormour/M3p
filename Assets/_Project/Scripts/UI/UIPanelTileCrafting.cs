@@ -220,6 +220,10 @@ namespace M3P
 
         void HandleTypeClicked(Match3TileTypeDefinition tile)
         {
+            if (tile == null || tile == _selectedTile)
+                return;
+
+            Sfx.Play(SfxId.TileTypeSelect);
             _selectedTile = tile;
             RefreshSelection();
         }
@@ -232,6 +236,7 @@ namespace M3P
             if (slot < 0)
                 return;
 
+            Sfx.Play(SfxId.TileUpgradeSelect);
             _slotUpgrades[slot] = upgrade;
             _selectedSlot = -1;
             RefreshSelection();
@@ -245,12 +250,15 @@ namespace M3P
             if (_slotUpgrades[slot] != null)
             {
                 _slotUpgrades[slot] = null;
+                Sfx.Play(SfxId.TileUpgradeRemove);
                 if (_selectedSlot == slot)
                     _selectedSlot = -1;
             }
             else
             {
                 _selectedSlot = _selectedSlot == slot ? -1 : slot;
+                if (_selectedSlot == slot)
+                    Sfx.Play(SfxId.TileSlotSelect);
             }
 
             RefreshSelection();
@@ -426,6 +434,8 @@ namespace M3P
             int tileId = tileConfig.GetTileId(_selectedTile);
             if (!profile.TryCraftTile(tileId, _combinedCost, CollectSelectedUpgradeIds()))
                 return;
+
+            Sfx.Play(SfxId.TileCraftSuccess);
 
             Profiles.Save();
             RefreshSelection();

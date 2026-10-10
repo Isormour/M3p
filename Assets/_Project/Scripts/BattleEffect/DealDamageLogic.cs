@@ -22,6 +22,8 @@ namespace M3P
         public void AppendTooltipLines(BattleEffectContext preview, EEffectTarget target, List<TooltipLine> lines)
         {
             int amount = SkillCombat.ScaleAmount(preview, _amount * preview.StatusStacks, _physical);
+            if (preview.DirectHit && preview.Caster != null)
+                amount += preview.Caster.GetPersistentOutgoingBonus();
             if (amount <= 0)
                 return;
 

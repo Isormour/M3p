@@ -176,6 +176,10 @@ namespace M3P
 
         void HandleTypeClicked(BoardActionCardDefinition card)
         {
+            if (card == null || card == _selectedCard)
+                return;
+
+            Sfx.Play(SfxId.CardRecipeSelect);
             _selectedCard = card;
             RefreshSelection();
         }
@@ -305,6 +309,8 @@ namespace M3P
             int cardId = cardConfig.GetCardId(_selectedCard);
             if (!profile.TryCraftCard(cardId, _selectedCard.CraftCost))
                 return;
+
+            Sfx.Play(SfxId.CardCraftSuccess);
 
             Profiles.Save();
         }

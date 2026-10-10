@@ -98,6 +98,7 @@ namespace M3P
 
         void HandleCloseClicked()
         {
+            Sfx.Play(SfxId.RouteCancel);
             Action cancel = _onCancel;
             Hide();
             cancel?.Invoke();
@@ -105,6 +106,7 @@ namespace M3P
 
         void HandleConfirmClicked()
         {
+            Sfx.Play(SfxId.RouteConfirm);
             Action callback = _onConfirm;
             Hide();
             callback?.Invoke();
