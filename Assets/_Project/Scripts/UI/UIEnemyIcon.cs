@@ -74,11 +74,11 @@ namespace M3P
             if (_enemyShield != null)
             {
                 _enemyShield.Bind(
-                    () => softStats.CurrentShield,
-                    () => softStats.CurrentShield > 0 ? softStats.CurrentShield : 1,
+                    () => softStats.DefenseIndicatorValue,
+                    () => softStats.DefenseIndicatorValue > 0 ? softStats.DefenseIndicatorValue : 1,
                     handler => softStats.Changed += handler,
                     handler => softStats.Changed -= handler,
-                    (current, _) => current.ToString());
+                    (_, __) => softStats.FormatDefenseText());
             }
         }
 

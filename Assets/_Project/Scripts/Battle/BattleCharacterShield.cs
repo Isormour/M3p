@@ -91,7 +91,7 @@ public class BattleCharacterShield : MonoBehaviour
 
     void RefreshFromStats()
     {
-        SetVisible(_boundStats != null && _boundStats.CurrentShield > 0);
+        SetVisible(_boundStats != null && (_boundStats.CurrentShield > 0 || _boundStats.CurrentArmor > 0));
     }
 
         void SetVisible(bool visible)

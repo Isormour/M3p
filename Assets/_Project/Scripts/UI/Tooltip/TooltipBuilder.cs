@@ -111,6 +111,7 @@ namespace M3P
         static string BuildSkillMeta(SkillDefinition skill, BattleCharacter caster)
         {
             var parts = new List<string>(4);
+            parts.Add($"{SkillDefinition.DefaultActionPointCost} AP");
 
             string mana = FormatManaCosts(skill);
             if (!string.IsNullOrEmpty(mana))
@@ -149,6 +150,14 @@ namespace M3P
             {
                 if (builder.Length > 0)
                     builder.Append(", ");
+
+                int perColor = skill.ManaPerDistinctColor;
+                if (perColor > 1)
+                {
+                    builder.Append(perColor);
+                    builder.Append("×");
+                }
+
                 builder.Append(skill.DistinctColorManaCost);
                 builder.Append(" różnych kolorów");
             }

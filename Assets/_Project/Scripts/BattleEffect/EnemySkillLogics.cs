@@ -113,6 +113,8 @@ namespace M3P
         [SerializeField] StatusEffectDefinition _status;
         [SerializeField] int _duration = 1;
         [SerializeField] EnemyScaleAxis _durationAxis;
+        [Tooltip("Added after scaling. Use 1 when the status must still be active on the bearer's action after the start-of-turn tick.")]
+        [SerializeField] int _extraDuration;
         [SerializeField] int _magnitude;
         [SerializeField] EnemyScaleAxis _magnitudeAxis;
 
@@ -149,7 +151,8 @@ namespace M3P
 
         int Duration(BattleEffectContext context)
         {
-            return Mathf.Max(1, EnemySkillScale.Scale(Mathf.Max(1, _duration), _durationAxis, context.Caster));
+            int scaled = EnemySkillScale.Scale(Mathf.Max(1, _duration), _durationAxis, context.Caster);
+            return Mathf.Max(1, scaled + _extraDuration);
         }
 
         int Magnitude(BattleEffectContext context)

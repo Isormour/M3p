@@ -18,6 +18,8 @@ namespace M3P
         BattleCharacter _boundPlayer;
         BattleCharacter _boundEnemy;
 
+        [SerializeField] BattleEnviormentSettings[] Backgrounds;
+
         public Transform PlayerVfxPoint =>
             _playerVfxPoint != null
                 ? _playerVfxPoint
@@ -41,6 +43,57 @@ namespace M3P
         void Awake()
         {
             _playerCharacter = ResolveWorldCharacter(_playerObject);
+            SelectBackground();
+        }
+
+        void SelectBackground()
+        {
+            BattleEnviormentSettings chosen = PickBackground();
+            if (chosen == null)
+                return;
+
+            for (int i = 0; i < Backgrounds.Length; i++)
+            {
+                BattleEnviormentSettings background = Backgrounds[i];
+                if (background == null)
+                    continue;
+
+                bool active = background == chosen;
+                if (background.gameObject.activeSelf != active)
+                    background.gameObject.SetActive(active);
+            }
+
+            chosen.ApplyEnvironmentLighting();
+        }
+
+        BattleEnviormentSettings PickBackground()
+        {
+            if (Backgrounds == null || Backgrounds.Length == 0)
+                return null;
+
+            int count = 0;
+            for (int i = 0; i < Backgrounds.Length; i++)
+            {
+                if (Backgrounds[i] != null)
+                    count++;
+            }
+
+            if (count == 0)
+                return null;
+
+            int pick = Random.Range(0, count);
+            for (int i = 0; i < Backgrounds.Length; i++)
+            {
+                if (Backgrounds[i] == null)
+                    continue;
+
+                if (pick == 0)
+                    return Backgrounds[i];
+
+                pick--;
+            }
+
+            return null;
         }
 
         public void SpawnEnemyModel(GameObject prefab)

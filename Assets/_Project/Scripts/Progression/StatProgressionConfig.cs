@@ -20,7 +20,7 @@ namespace M3P
     {
         [Header("Base values")]
         [Min(1), SerializeField] int _baseBasicAttackDamage = 1;
-        [Min(1), SerializeField] int _baseMaxHp = 15;
+        [Min(1), SerializeField] int _baseMaxHp = 20;
         [Min(1), SerializeField] int _baseMaxActionPoints = 2;
         [Min(0), SerializeField] int _baseMaxHandSize = 3;
 

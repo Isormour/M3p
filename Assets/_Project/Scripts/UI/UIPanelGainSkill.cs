@@ -121,7 +121,7 @@ namespace M3P
             for (int i = 0; i < entries.Length; i++)
             {
                 SkillConfig.Entry entry = entries[i];
-                if (entry.Skill == null || entry.Id == SkillConfig.InvalidSkillId)
+                if (entry.Skill == null || entry.Id == SkillConfig.InvalidSkillId || entry.Skill.ExcludedFromUnlocks)
                     continue;
 
                 if (profile != null && profile.HasSkill(entry.Id))

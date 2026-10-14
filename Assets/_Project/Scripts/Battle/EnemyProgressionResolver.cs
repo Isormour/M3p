@@ -13,7 +13,6 @@ namespace M3P
         public const int EliteFloorBonus = 2;
         public const float EliteHealthMultiplier = 1.25f;
         public const float EliteExperienceMultiplier = 1.75f;
-        public const int BossFloorBonus = 4;
         public const float BossExperienceMultiplier = 3f;
         public const int MaxActiveSkills = 4;
 
@@ -24,6 +23,10 @@ namespace M3P
         {
             int floor = Mathf.Max(1, floorIndex);
             int effectiveFloor = GetEffectiveFloor(floor, encounterType);
+            // Bosses use the final authored rank and skill tier without inflating floor-scaled stats or effects.
+            int authoredProgressionFloor = encounterType == MapNodeType.Boss
+                ? int.MaxValue
+                : effectiveFloor;
             float healthMultiplier = GetHealthMultiplier(encounterType);
             float experienceMultiplier = GetExperienceMultiplier(encounterType);
 
@@ -42,10 +45,10 @@ namespace M3P
             }
 
             HardStats hardStats = GrowStats(definition.HardStats, definition.StatGrowthPerFloor, effectiveFloor);
-            SkillDefinition[] skills = BuildActiveSkills(definition, effectiveFloor);
+            SkillDefinition[] skills = BuildActiveSkills(definition, authoredProgressionFloor);
             int experience = ScaleExperience(definition.ExperienceReward, effectiveFloor, experienceMultiplier);
-            string displayName = BuildDisplayName(definition.Name, definition.RankThresholds, effectiveFloor);
-            int rank = ResolveRank(definition.RankThresholds, effectiveFloor);
+            string displayName = BuildDisplayName(definition.Name, definition.RankThresholds, authoredProgressionFloor);
+            int rank = ResolveRank(definition.RankThresholds, authoredProgressionFloor);
 
             return new EnemyRuntimeSpec(
                 definition,
@@ -87,8 +90,6 @@ namespace M3P
             {
                 case MapNodeType.Elite:
                     return floor + EliteFloorBonus;
-                case MapNodeType.Boss:
-                    return floor + BossFloorBonus;
                 default:
                     return floor;
             }

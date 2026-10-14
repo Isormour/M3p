@@ -82,7 +82,7 @@ namespace M3P
             {
                 UIPlayerPanelSkillsCostLabel label = Instantiate(_costLabelPrefab, _costContainer);
                 label.name = "CostLabel_DistinctColors";
-                label.Configure(null, skill.DistinctColorManaCost);
+                label.Configure(null, skill.DistinctColorManaCost * skill.ManaPerDistinctColor);
                 _costLabels.Add(label);
             }
 

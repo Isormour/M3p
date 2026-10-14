@@ -33,6 +33,12 @@ namespace M3P
         [SerializeField] bool _persistentIncomingReduction;
         [Tooltip("While active, add the instance magnitude to every outgoing direct hit. The status is not consumed.")]
         [SerializeField] bool _persistentOutgoingBonus;
+        [Tooltip("While active, subtract the instance magnitude from every outgoing direct hit. The status is not consumed.")]
+        [SerializeField] bool _persistentOutgoingPenalty;
+        [Tooltip("While active, direct hits against the bearer miss. Status ticks still land.")]
+        [SerializeField] bool _evadeDirectHits;
+        [Tooltip("Fired on the attacker when a direct hit connects with the bearer. Authored Effect Target is ignored; the attacker always receives the effect.")]
+        [SerializeField] BattleEffect[] _onDirectHitEffects = Array.Empty<BattleEffect>();
 
         public EStatusType StatusType => _statusType;
 
@@ -64,6 +70,12 @@ namespace M3P
 
         public bool PersistentOutgoingBonus => _persistentOutgoingBonus;
 
+        public bool PersistentOutgoingPenalty => _persistentOutgoingPenalty;
+
+        public bool EvadeDirectHits => _evadeDirectHits;
+
+        public BattleEffect[] OnDirectHitEffects => _onDirectHitEffects ?? Array.Empty<BattleEffect>();
+
         public void AppendIncomingGuardTooltip(List<TooltipLine> lines)
         {
             if (lines == null)
@@ -90,6 +102,27 @@ namespace M3P
 
             if (PersistentOutgoingBonus)
                 lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Ataki: +{magnitude}"));
+
+            if (PersistentOutgoingPenalty)
+                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Ataki: -{magnitude}"));
+        }
+
+        /// <summary>Runs on-hit effects against the attacker. Does not follow the authored effect target.</summary>
+        public void ApplyOnDirectHit(BattleCharacter bearer, BattleCharacter attacker)
+        {
+            BattleEffect[] effects = OnDirectHitEffects;
+            if (bearer == null || attacker == null || effects.Length == 0)
+                return;
+
+            var context = new BattleEffectContext(bearer, attacker, directHit: false);
+            for (int i = 0; i < effects.Length; i++)
+            {
+                BattleEffect effect = effects[i];
+                if (effect?.Logic == null)
+                    continue;
+
+                effect.Logic.Apply(context, EEffectTarget.Opponent);
+            }
         }
 
         public bool Matches(StatusEffectDefinition other)

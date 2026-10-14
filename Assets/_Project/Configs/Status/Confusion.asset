@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::M3P.StatusEffectDefinition
   _statusType: 3
   _displayName: Dezorientacja
-  _description: Na początku tury odbiera punkty akcji. Trwa 2 tury.
-  _icon: {fileID: 0}
-  _durationTurns: 2
+  _description: Na początku następnej tury, po odnowieniu AP, odbiera punkty akcji i znika.
+  _icon: {fileID: 21300000, guid: 511700b860c943d3b3b6387c6bb355c9, type: 3}
+  _durationTurns: 1
   _canStack: 0
   _statModifiers: []
   _onTurnEffects:

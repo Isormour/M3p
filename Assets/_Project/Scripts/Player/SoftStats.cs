@@ -24,6 +24,10 @@ namespace M3P
         public int MaxHP;
         public int CurrentHealth;
         public int CurrentShield;
+
+        /// <summary>Damage buffer stolen and spent by frenzy. Absorbed after flat reduction and before Shield.</summary>
+        public int CurrentArmor;
+
         public int MaxActionPoints;
         public int CurrentActionPoints;
         public int MaxHandSize;
@@ -32,7 +36,7 @@ namespace M3P
 
         public event Action Changed;
 
-        /// <summary>Health plus shield actually lost by the last <see cref="TakeDamage"/>.</summary>
+        /// <summary>Health, armor and shield actually lost by the last <see cref="TakeDamage"/>.</summary>
         public event Action<int> Damaged;
 
         /// <summary>Health actually gained by the last <see cref="Heal"/>.</summary>
@@ -52,6 +56,7 @@ namespace M3P
             MaxHP = calculated.MaxHP;
             CurrentHealth = MaxHP;
             CurrentShield = 0;
+            CurrentArmor = 0;
             CurrentSouls = 0;
             MaxActionPoints = calculated.MaxActionPoints;
             CurrentActionPoints = MaxActionPoints;
@@ -103,7 +108,16 @@ namespace M3P
                 return;
 
             int healthBefore = CurrentHealth;
+            int armorBefore = CurrentArmor;
             int shieldBefore = CurrentShield;
+
+            // Flat reduction is applied by the hit. Armor is spent before Shield.
+            if (CurrentArmor > 0)
+            {
+                int absorbed = Math.Min(CurrentArmor, amount);
+                CurrentArmor -= absorbed;
+                amount -= absorbed;
+            }
 
             if (CurrentShield > 0)
             {
@@ -117,7 +131,9 @@ namespace M3P
 
             NotifyChanged();
 
-            int dealt = (shieldBefore - CurrentShield) + (healthBefore - CurrentHealth);
+            int dealt = (armorBefore - CurrentArmor)
+                + (shieldBefore - CurrentShield)
+                + (healthBefore - CurrentHealth);
             if (dealt > 0)
                 Damaged?.Invoke(dealt);
         }
@@ -135,6 +151,51 @@ namespace M3P
             if (healed > 0)
                 Healed?.Invoke(healed);
         }
+
+        public void AddArmor(int amount)
+        {
+            if (amount <= 0)
+                return;
+
+            CurrentArmor += amount;
+            NotifyChanged();
+        }
+
+        public void ClearArmor()
+        {
+            if (CurrentArmor <= 0)
+                return;
+
+            CurrentArmor = 0;
+            NotifyChanged();
+        }
+
+        /// <summary>Removes up to <paramref name="amount"/> armor and returns how much was actually taken.</summary>
+        public int RemoveArmor(int amount)
+        {
+            if (amount <= 0 || CurrentArmor <= 0)
+                return 0;
+
+            int removed = Math.Min(CurrentArmor, amount);
+            CurrentArmor -= removed;
+            NotifyChanged();
+            return removed;
+        }
+
+        /// <summary>Shield, or armor marked with A when the character has armor.</summary>
+        public string FormatDefenseText()
+        {
+            if (CurrentShield > 0 && CurrentArmor > 0)
+                return $"{CurrentShield} {CurrentArmor}A";
+
+            if (CurrentArmor > 0)
+                return $"{CurrentArmor}A";
+
+            return CurrentShield.ToString();
+        }
+
+        /// <summary>Changes when either shield or armor changes, so one indicator can show both.</summary>
+        public int DefenseIndicatorValue => CurrentShield + CurrentArmor * 10000;
 
         public void AddShield(int amount)
         {
@@ -167,7 +228,7 @@ namespace M3P
         }
 
         /// <summary>
-        /// Direct HP loss that ignores Shield. Used by sacrifice skills. Never drops below
+        /// Direct HP loss that ignores Armor and Shield. Used by sacrifice skills. Never drops below
         /// <paramref name="minimumHealth"/>, so the skill cannot kill the bearer.
         /// </summary>
         public int LoseHealthIgnoringShield(int amount, int minimumHealth = 1)
@@ -240,6 +301,7 @@ namespace M3P
             MaxHP = calculated.MaxHP;
             CurrentHealth = MaxHP;
             CurrentShield = 0;
+            CurrentArmor = 0;
             CurrentSouls = 0;
             MaxHandSize = calculated.MaxHandSize;
             MaxActionPoints = calculated.MaxActionPoints;
@@ -303,6 +365,7 @@ namespace M3P
             {
                 CurrentHealth = CurrentHealth,
                 CurrentShield = CurrentShield,
+                CurrentArmor = CurrentArmor,
                 CurrentSouls = CurrentSouls,
                 CurrentActionPoints = CurrentActionPoints,
                 ManaByBrokenTileType = ManaByBrokenTileType != null

@@ -242,6 +242,69 @@ namespace M3P
             return total;
         }
 
+        /// <summary>Flat penalty subtracted from every outgoing direct hit by lasting statuses. Not consumed.</summary>
+        public int GetPersistentOutgoingPenalty()
+        {
+            int total = 0;
+            for (int i = 0; i < _statuses.Count; i++)
+            {
+                StatusInstance status = _statuses[i];
+                StatusEffectDefinition definition = status?.Definition;
+                if (definition == null || !definition.PersistentOutgoingPenalty || status.Magnitude <= 0)
+                    continue;
+
+                total += status.Magnitude * status.Stacks;
+            }
+
+            return total;
+        }
+
+        /// <summary>Magnitude stored on the matching status, or 0 when it is absent.</summary>
+        public int GetStatusMagnitude(StatusEffectDefinition definition)
+        {
+            if (definition == null)
+                return 0;
+
+            for (int i = 0; i < _statuses.Count; i++)
+            {
+                StatusInstance status = _statuses[i];
+                if (status != null && definition.Matches(status.Definition))
+                    return Mathf.Max(0, status.Magnitude);
+            }
+
+            return 0;
+        }
+
+        /// <summary>True while a status such as Zakopanie makes direct hits miss. Status ticks still land.</summary>
+        public bool EvadesDirectHits()
+        {
+            for (int i = 0; i < _statuses.Count; i++)
+            {
+                StatusEffectDefinition definition = _statuses[i]?.Definition;
+                if (definition != null && definition.EvadeDirectHits)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>Lets statuses such as Toxic Skin answer a direct hit that was not evaded.</summary>
+        public void NotifyDirectHitReceived(BattleCharacter attacker)
+        {
+            if (attacker == null || _statuses.Count == 0)
+                return;
+
+            var snapshot = new List<StatusInstance>(_statuses);
+            for (int i = 0; i < snapshot.Count; i++)
+            {
+                StatusEffectDefinition definition = snapshot[i]?.Definition;
+                if (definition == null || definition.OnDirectHitEffects.Length == 0)
+                    continue;
+
+                definition.ApplyOnDirectHit(this, attacker);
+            }
+        }
+
         /// <summary>
         /// Consumes one incoming-guard status on the next direct hit: reduction, then optional counter.
         /// Newest matching status wins. Stacked copies lose one stack per hit.
@@ -429,6 +492,7 @@ namespace M3P
             SoftStats soft = _characterStats != null ? _characterStats.Soft : null;
             int healthBefore = soft != null ? soft.CurrentHealth : 0;
             int shieldBefore = soft != null ? soft.CurrentShield : 0;
+            int armorBefore = soft != null ? soft.CurrentArmor : 0;
 
             definition.ApplyOnTurnEffects(this, status.Source, status.Stacks);
 
@@ -438,7 +502,7 @@ namespace M3P
             if (soft.CurrentHealth > healthBefore)
                 Sfx.Play(SfxId.RegenerationTick);
 
-            if (soft.CurrentHealth < healthBefore || soft.CurrentShield < shieldBefore)
+            if (soft.CurrentHealth < healthBefore || soft.CurrentShield < shieldBefore || soft.CurrentArmor < armorBefore)
             {
                 if (definition.StatusType == EStatusType.Burn)
                     Sfx.Play(SfxId.BurnTick);

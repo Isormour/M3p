@@ -15,14 +15,12 @@ MonoBehaviour:
   <_skillName>k__BackingField: Transmutacja Many
   _description: Zamienia maksymalnie 3 punkty zgromadzonej many jednego koloru na tyle samo many wybranego koloru. Raz na turę.
   _artwork: {fileID: 21300000, guid: 5aebf21bf3334fd4c8a81fa3337db07e, type: 3}
-  _manaCosts:
-  - TileType: {fileID: 11400000, guid: d2fc95fcf0bc7f94d903f81e8e26b5f1, type: 2}
-    Amount: 2
+  _manaCosts: []
   _effects:
   - {fileID: 11400000, guid: a788bb0892554a9ca3ce5442f734bd91, type: 2}
   _cooldown: 0
   _oncePerTurn: 1
-  _distinctColorManaCost: 0
+  _distinctColorManaCost: 4
   _castPrompt: 2
   _physicalSkill: 0
   _archetype: 2

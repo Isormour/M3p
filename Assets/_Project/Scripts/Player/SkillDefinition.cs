@@ -33,8 +33,12 @@ namespace M3P
         [Min(0), SerializeField] int _cooldown;
         [Tooltip("When true, the skill can be used only once during the caster's turn.")]
         [SerializeField] bool _oncePerTurn;
-        [Tooltip("Spend 1 mana from this many different colours, on top of any authored costs.")]
+        [Tooltip("Spend mana from this many different colours, on top of any authored costs.")]
         [Min(0), SerializeField] int _distinctColorManaCost;
+        [Tooltip("Mana taken from each colour counted by the distinct-colour cost.")]
+        [Min(1), SerializeField] int _manaPerDistinctColor = 1;
+        [Tooltip("Legacy and test skills stay registered, but bosses never offer them.")]
+        [SerializeField] bool _excludedFromUnlocks;
         [SerializeField] SkillCastPrompt _castPrompt;
         [Tooltip("When true, Unyielding-style buffs multiply this skill's damage.")]
         [SerializeField] bool _physicalSkill;
@@ -74,6 +78,10 @@ namespace M3P
         public bool OncePerTurn => _oncePerTurn;
 
         public int DistinctColorManaCost => Mathf.Max(0, _distinctColorManaCost);
+
+        public int ManaPerDistinctColor => Mathf.Max(1, _manaPerDistinctColor);
+
+        public bool ExcludedFromUnlocks => _excludedFromUnlocks;
 
         public SkillCastPrompt CastPrompt => _castPrompt;
 
@@ -153,10 +161,11 @@ namespace M3P
             if (!SkillCombat.TryCollectDistinctColorSpendOrder(softStats, this, spendOrder, subtractAuthoredCosts: false))
                 return false;
 
+            int perColor = ManaPerDistinctColor;
             for (int i = 0; i < spendOrder.Count; i++)
             {
                 int tileTypeId = spendOrder[i];
-                softStats.SetManaForTileType(tileTypeId, softStats.GetManaForTileType(tileTypeId) - 1);
+                softStats.SetManaForTileType(tileTypeId, softStats.GetManaForTileType(tileTypeId) - perColor);
             }
 
             return true;

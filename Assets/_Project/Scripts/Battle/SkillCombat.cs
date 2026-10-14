@@ -110,11 +110,15 @@ namespace M3P
                 return;
             }
 
+            if (defender.EvadesDirectHits())
+                return;
+
             BattleCharacter attacker = context.Caster;
             if (attacker != null)
             {
                 amount += attacker.Modifiers.ConsumeOutgoingHitBonus();
                 amount += attacker.GetPersistentOutgoingBonus();
+                amount = Mathf.Max(0, amount - attacker.GetPersistentOutgoingPenalty());
             }
 
             int reduction = 0;
@@ -128,6 +132,8 @@ namespace M3P
             if (amount > 0)
                 defender.Stats.Soft.TakeDamage(amount);
 
+            defender.NotifyDirectHitReceived(attacker);
+
             if (counterDamage <= 0 || attacker?.Stats?.Soft == null || attacker == defender)
                 return;
 
@@ -137,6 +143,25 @@ namespace M3P
                 counterPhysical);
             if (scaledCounter > 0)
                 attacker.Stats.Soft.TakeDamage(scaledCounter);
+        }
+
+        /// <summary>
+        /// Lands one board attack. Applies lasting outgoing penalties and incoming reduction,
+        /// then armor and shield inside <see cref="SoftStats.TakeDamage"/>.
+        /// </summary>
+        public static void ApplyBoardAttack(BattleCharacter attacker, BattleCharacter defender, int amount)
+        {
+            if (defender?.Stats?.Soft == null || defender.EvadesDirectHits())
+                return;
+
+            if (attacker != null)
+                amount = Mathf.Max(0, amount - attacker.GetPersistentOutgoingPenalty());
+
+            amount = Mathf.Max(0, amount - defender.GetPersistentIncomingReduction());
+            if (amount > 0)
+                defender.Stats.Soft.TakeDamage(amount);
+
+            defender.NotifyDirectHitReceived(attacker);
         }
 
         public static void DealScaledHits(
@@ -196,7 +221,7 @@ namespace M3P
                 int have = softStats.GetManaForTileType(i);
                 if (subtractAuthoredCosts)
                     have -= skill.GetManaCostForTileType(tileType);
-                if (have >= 1)
+                if (have >= skill.ManaPerDistinctColor)
                     remaining.Add((i, have));
             }
 

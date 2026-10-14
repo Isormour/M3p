@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
+  m_Name: ManaFeast
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
+  <_skillName>k__BackingField: ManaFeast
+  _description: Usuwa do 3 razy piętro many losowego koloru i leczy o faktycznie usuniętą ilość. Wymaga many.
+  _artwork: {fileID: 21300000, guid: cca6e3e35d1242c49be66b78bc97776d, type: 3}
+  _manaCosts: []
+  _effects:
+  - {fileID: 11400000, guid: 44ee0ae1b2c34d5e6f708192a3b4c50a, type: 2}
+  _cooldown: 3
+  _oncePerTurn: 0
+  _distinctColorManaCost: 0
+  _castPrompt: 0
+  _physicalSkill: 0
+  _archetype: 0
+  <_animationName>k__BackingField: BasicAttack

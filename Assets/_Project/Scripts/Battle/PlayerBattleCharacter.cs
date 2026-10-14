@@ -33,14 +33,15 @@ namespace M3P
 
         public override void OnTurnStarted()
         {
-            base.OnTurnStarted();
-
             CharacterStats stats = Stats;
             GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
             stats?.Soft?.ResetActionPoints(
                 stats.Hard,
                 config != null ? config.StatProgression : null,
                 stats.TalentBonuses);
+
+            // Confusion drains the AP that was just restored, then expires.
+            base.OnTurnStarted();
         }
 
         /// <summary>Spends 1 action point to reduce a skill's remaining cooldown by 1.</summary>

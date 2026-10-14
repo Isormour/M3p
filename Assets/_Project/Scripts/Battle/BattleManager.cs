@@ -183,10 +183,10 @@ namespace M3P
             if (_battleResolved || skill == null || target == null)
                 return;
 
-            SnapshotVitals(target, out int health, out int shield);
+            SnapshotVitals(target, out int health, out int shield, out int armor);
             skill.UseSkill(caster, target, choice);
             Sfx.PlaySkill(skill, caster != null && !caster.IsPlayerControlled);
-            LastOpponentHitDamage = MeasureDamageTaken(target, health, shield);
+            LastOpponentHitDamage = MeasureDamageTaken(target, health, shield, armor);
             LastOpponentHitHadShield = LastOpponentHitDamage > 0
                 && target.Stats?.Soft != null
                 && target.Stats.Soft.CurrentShield > 0;
@@ -206,19 +206,20 @@ namespace M3P
                 _battleWorld.NotifyEnemySkillUsed(skill);
         }
 
-        static void SnapshotVitals(BattleCharacter character, out int health, out int shield)
+        static void SnapshotVitals(BattleCharacter character, out int health, out int shield, out int armor)
         {
             SoftStats soft = character?.Stats?.Soft;
             health = soft != null ? soft.CurrentHealth : 0;
             shield = soft != null ? soft.CurrentShield : 0;
+            armor = soft != null ? soft.CurrentArmor : 0;
         }
 
-        void NotifyHitReaction(BattleCharacter character, int healthBefore, int shieldBefore)
+        void NotifyHitReaction(BattleCharacter character, int healthBefore, int shieldBefore, int armorBefore)
         {
             if (_battleWorld == null || character == null)
                 return;
 
-            int damage = MeasureDamageTaken(character, healthBefore, shieldBefore);
+            int damage = MeasureDamageTaken(character, healthBefore, shieldBefore, armorBefore);
             if (damage <= 0)
                 return;
 
@@ -230,14 +231,15 @@ namespace M3P
                 _battleWorld.NotifyEnemyHit(died, damage, shielded);
         }
 
-        static int MeasureDamageTaken(BattleCharacter character, int healthBefore, int shieldBefore)
+        static int MeasureDamageTaken(BattleCharacter character, int healthBefore, int shieldBefore, int armorBefore)
         {
             SoftStats soft = character?.Stats?.Soft;
             if (soft == null)
                 return 0;
 
             return Mathf.Max(0, healthBefore - soft.CurrentHealth)
-                + Mathf.Max(0, shieldBefore - soft.CurrentShield);
+                + Mathf.Max(0, shieldBefore - soft.CurrentShield)
+                + Mathf.Max(0, armorBefore - soft.CurrentArmor);
         }
 
         public bool TryExecuteSkill(SkillDefinition skill, BattleCharacter caster, BattleCharacter target)
@@ -312,6 +314,7 @@ namespace M3P
             }
 
             EndBattle();
+            BattleRoll.Reset();
 
             _battleResolved = false;
             HideEndBattlePanel();
@@ -629,7 +632,7 @@ namespace M3P
                 if (_battleResolved || _activeEnemy == null || !_activeEnemy.IsAlive)
                     break;
 
-                _activeEnemy.Stats?.Soft?.TakeDamage(attack.Damage);
+                SkillCombat.ApplyBoardAttack(_player, _activeEnemy, attack.Damage);
 
                 bool lethal = !_activeEnemy.IsAlive;
                 BasicAttackLaunched?.Invoke(attack.WithLethal(lethal));
@@ -749,10 +752,10 @@ namespace M3P
             if (_activeBoard != null)
                 _activeBoard.AllowPlayerInput = true;
 
-            SnapshotVitals(_player, out int playerHealth, out int playerShield);
+            SnapshotVitals(_player, out int playerHealth, out int playerShield, out int playerArmor);
             _player?.OnTurnStarted();
             _activeEnemy?.RefreshTelegraph();
-            NotifyHitReaction(_player, playerHealth, playerShield);
+            NotifyHitReaction(_player, playerHealth, playerShield, playerArmor);
             TryResolveBattleOutcome();
 
             if (_battleResolved)
@@ -792,9 +795,9 @@ namespace M3P
         IEnumerator RunEnemyTurnRoutine()
         {
             Sfx.Play(SfxId.EnemyTurnStart);
-            SnapshotVitals(_activeEnemy, out int enemyHealth, out int enemyShield);
+            SnapshotVitals(_activeEnemy, out int enemyHealth, out int enemyShield, out int enemyArmor);
             _activeEnemy?.OnTurnStarted();
-            NotifyHitReaction(_activeEnemy, enemyHealth, enemyShield);
+            NotifyHitReaction(_activeEnemy, enemyHealth, enemyShield, enemyArmor);
             TryResolveBattleOutcome();
 
             if (_battleResolved)

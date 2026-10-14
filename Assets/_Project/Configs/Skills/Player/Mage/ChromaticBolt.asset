@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ChromaticBolt
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
   <_skillName>k__BackingField: Chromatyczny Pocisk
-  _description: Zadaje 3 obrażenia za każdy kolor obecny w ostatnim Resolve. Maksymalnie 15 obrażeń. Koszt: mana trzech różnych kolorów.
+  _description: Zadaje 3 obrażenia za każdy kolor obecny w ostatnim Resolve. Maksymalnie 15 obrażeń. Koszt: 2 many z trzech różnych kolorów.
   _artwork: {fileID: 21300000, guid: 6634fbb5f7741354c8beda261ad6b06b, type: 3}
   _manaCosts: []
   _effects:
@@ -21,6 +21,7 @@ MonoBehaviour:
   _cooldown: 0
   _oncePerTurn: 0
   _distinctColorManaCost: 3
+  _manaPerDistinctColor: 2
   _castPrompt: 0
   _physicalSkill: 0
   _archetype: 2
