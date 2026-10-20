@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: IceWard
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
   <_skillName>k__BackingField: Lodowa Osłona
-  _description: Daje 8 Shield i zmniejsza obrażenia następnego ataku przeciwnika o 3. Cooldown: 2 tury.
+  _description: Daje 8 + 2 × Guard Shield. Następny atak przeciwnika zadaje o 10 × (1 + Guard) mniej obrażeń. Cooldown: 2 tury.
   _artwork: {fileID: 21300000, guid: 837546bc3b689c24cbe93327d8e231c3, type: 3}
   _manaCosts:
   - TileType: {fileID: 11400000, guid: d2fc95fcf0bc7f94d903f81e8e26b5f1, type: 2}
     Amount: 4
-  - TileType: {fileID: 11400000, guid: 88078226c0e3e49458326c6f5b431834, type: 2}
+  - TileType: {fileID: 11400000, guid: 3b3c19c61b9ce4a4ea680cbd46f909a6, type: 2}
     Amount: 2
   _effects:
   - {fileID: 11400000, guid: 5077a1d2bf4e4bb2be44579b4bf15aa5, type: 2}

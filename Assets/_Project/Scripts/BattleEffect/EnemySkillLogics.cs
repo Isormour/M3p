@@ -296,7 +296,7 @@ namespace M3P
         }
     }
 
-    /// <summary>Removes action points from the bearer. Confusion ticks use the source's floor.</summary>
+    /// <summary>Removes action points from the bearer. A stored status drain wins; otherwise the source's floor scales the amount.</summary>
     [Serializable]
     public class DrainActionPointsLogic : BattleEffectLogic, ITooltipPreview
     {
@@ -321,6 +321,9 @@ namespace M3P
 
         int DrainAmount(BattleEffectContext context)
         {
+            if (context.ActionPointDrain > 0)
+                return context.ActionPointDrain;
+
             return Mathf.Max(0, _perFloor) * EnemySkillScale.Floor(context.Caster);
         }
     }

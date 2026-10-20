@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: KillingSequence
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
   <_skillName>k__BackingField: Zabójcza Sekwencja
-  _description: Zadaje 4 obrażenia za każdą kartę wykonaną w ostatniej kolejce, maksymalnie 20. Jeśli kolejka utworzyła dokładnie jeden match bez kaskady, zadaje dodatkowe 5 obrażeń. Cooldown: 3 tury.
+  _description: Zadaje 6 × liczba kart + Precision + Tempo obrażeń fizycznych. Cooldown: 3 tury.
   _artwork: {fileID: 21300000, guid: a0f68b13f97d04e41850a06d55a44717, type: 3}
   _manaCosts:
-  - TileType: {fileID: 11400000, guid: 031c32cbcfb4a0f4e97c6bd265a1bb5d, type: 2}
+  - TileType: {fileID: 11400000, guid: fb0e43bb3e72afb43a017902700c99c4, type: 2}
     Amount: 6
   - TileType: {fileID: 11400000, guid: 3b3c19c61b9ce4a4ea680cbd46f909a6, type: 2}
     Amount: 4

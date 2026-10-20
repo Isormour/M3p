@@ -21,6 +21,12 @@ namespace M3P
         /// </summary>
         public int Magnitude { get; set; }
 
+        /// <summary>Scaled counter stored with an incoming-guard status such as Riposta. Zero uses the definition.</summary>
+        public int CounterMagnitude { get; set; }
+
+        /// <summary>Flat action points removed when this status ticks. Zero uses the tick's authored formula.</summary>
+        public int ActionPointDrain { get; set; }
+
         public StatusInstance(StatusEffectDefinition definition, BattleCharacter source, int remainingTurns, int stacks = 1)
         {
             Definition = definition;

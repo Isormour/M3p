@@ -11,6 +11,14 @@ namespace M3P
         public PerkDefinition Perk;
     }
 
+    /// <summary>Icon drawn beside one player property in the stats column.</summary>
+    [Serializable]
+    public struct PropertyIcon
+    {
+        public PlayerProperty Property;
+        public Sprite Icon;
+    }
+
     /// <summary>
     /// Applies every configured perk whose threshold has been reached in a perk tree.
     /// Hard stats for the player are derived from owned tree points.
@@ -24,6 +32,15 @@ namespace M3P
         [Min(1), SerializeField] int _baseMaxActionPoints = 2;
         [Min(0), SerializeField] int _baseMaxHandSize = 3;
 
+        [Header("Combat properties")]
+        [Tooltip("Power starts at 1 so a skill written as base + coefficient × Power still works on a new profile.")]
+        [Min(0), SerializeField] int _basePower = 1;
+        [Min(0), SerializeField] int _baseArcane;
+        [Min(0), SerializeField] int _baseGuard;
+        [Min(0), SerializeField] int _baseRecovery;
+        [Min(0), SerializeField] int _basePrecision;
+        [Min(0), SerializeField] int _baseTempo;
+
         [Header("Talents")]
         [Tooltip("Every N points in a perk tree that grants a hard stat offers a talent choice.")]
         [Min(1), SerializeField] int _talentMilestoneInterval = 5;
@@ -35,10 +52,17 @@ namespace M3P
         [Header("Perk trees")]
         [Tooltip("Catalog containing every perk referenced by the trees.")]
         [SerializeField] PerkConfig _perkConfig;
-        [Tooltip("Every spendable perk tree. New profiles receive these with their starting values.")]
+        [Tooltip("Every spendable perk tree. A new profile starts with none of them unlocked.")]
         [SerializeField] PerkTree[] _perkTrees = Array.Empty<PerkTree>();
+        [Tooltip("Burn status applied by the Żywioły Kindle perk.")]
+        [SerializeField] StatusEffectDefinition _burnStatus;
+
+        [Header("Property icons")]
+        [Tooltip("Sprite shown next to each player property in the stats column.")]
+        [SerializeField] PropertyIcon[] _propertyIcons = Array.Empty<PropertyIcon>();
 
         public PerkTree[] PerkTrees => _perkTrees ?? Array.Empty<PerkTree>();
+        public StatusEffectDefinition BurnStatus => _burnStatus;
         public PerkConfig Perks => _perkConfig;
         public int MilestoneInterval => Mathf.Max(1, _talentMilestoneInterval);
         public int MaxStatValue => Mathf.Max(1, _maxStatValue);
@@ -97,6 +121,18 @@ namespace M3P
             return tree != null ? tree.Icon : null;
         }
 
+        public Sprite GetPropertyIcon(PlayerProperty property)
+        {
+            PropertyIcon[] icons = _propertyIcons ?? Array.Empty<PropertyIcon>();
+            for (int i = 0; i < icons.Length; i++)
+            {
+                if (icons[i].Property == property)
+                    return icons[i].Icon;
+            }
+
+            return null;
+        }
+
         public static StatProgressionConfig CreateDefault()
         {
             StatProgressionConfig config = CreateInstance<StatProgressionConfig>();
@@ -150,6 +186,12 @@ namespace M3P
                 MaxHP = _baseMaxHp,
                 MaxActionPoints = _baseMaxActionPoints,
                 MaxHandSize = _baseMaxHandSize,
+                Power = _basePower,
+                Arcane = _baseArcane,
+                Guard = _baseGuard,
+                Recovery = _baseRecovery,
+                Precision = _basePrecision,
+                Tempo = _baseTempo,
             };
 
             PerkTree[] trees = PerkTrees;
@@ -171,7 +213,44 @@ namespace M3P
             stats.MaxHP = Mathf.Max(1, stats.MaxHP + talents.MaxHp);
             stats.MaxActionPoints = Mathf.Max(1, stats.MaxActionPoints + talents.MaxActionPoints);
             stats.MaxHandSize = Mathf.Max(0, stats.MaxHandSize + talents.MaxHandSize);
+            stats.Power = Mathf.Max(0, stats.Power);
+            stats.Arcane = Mathf.Max(0, stats.Arcane);
+            stats.Guard = Mathf.Max(0, stats.Guard);
+            stats.Recovery = Mathf.Max(0, stats.Recovery);
+            stats.Precision = Mathf.Max(0, stats.Precision);
+            stats.Tempo = Mathf.Max(0, stats.Tempo);
             return stats;
+        }
+
+        /// <summary>
+        /// Properties the profile would take into battle. <paramref name="pendingForTree"/> adds points
+        /// that are chosen on the stat panel but not written yet.
+        /// </summary>
+        public PlayerProperties CalculateProperties(
+            IReadOnlyList<PerkTreePoints> treePoints,
+            TalentBonuses talents = default,
+            Func<int, int> pendingForTree = null)
+        {
+            if (pendingForTree == null)
+                return CalculateSoftStats(treePoints, talents).ToProperties();
+
+            return CalculateSoftStats(WithPending(treePoints, pendingForTree), talents).ToProperties();
+        }
+
+        static List<PerkTreePoints> WithPending(
+            IReadOnlyList<PerkTreePoints> treePoints,
+            Func<int, int> pendingForTree)
+        {
+            int count = treePoints != null ? treePoints.Count : 0;
+            var displayed = new List<PerkTreePoints>(count);
+            for (int i = 0; i < count; i++)
+            {
+                PerkTreePoints entry = treePoints[i];
+                int pending = Mathf.Max(0, pendingForTree(entry.TreeId));
+                displayed.Add(new PerkTreePoints(entry.TreeId, Mathf.Max(0, entry.Value) + pending));
+            }
+
+            return displayed;
         }
 
         public int CalculateBasicAttackDamage(HardStats hard, TalentBonuses talents = default)

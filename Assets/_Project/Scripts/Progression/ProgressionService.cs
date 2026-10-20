@@ -167,6 +167,24 @@ namespace M3P
             return result;
         }
 
+        /// <summary>
+        /// Opens a perk tree at one point. The point is the tree's starting value, not a spent level-up point.
+        /// </summary>
+        public bool TryUnlockPerkTree(PerkTree tree)
+        {
+            if (tree == null || tree.Id == PerkTree.InvalidId || _profiles == null)
+                return false;
+
+            PlayerProfile profile = _profiles.CurrentProfile;
+            if (profile == null || profile.IsPerkTreeUnlocked(tree.Id))
+                return false;
+
+            profile.SetPerkTreePoints(tree.Id, 1);
+            profile.HardStats = StatProgression.CalculateHardStats(profile.PerkTreePoints);
+            _profiles.Save();
+            return true;
+        }
+
         public bool TryAllocateStatPoint(EStatType stat) => TryAllocateStatPoints(stat, 1);
 
         /// <summary>

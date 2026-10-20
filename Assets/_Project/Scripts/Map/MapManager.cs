@@ -63,6 +63,7 @@ namespace M3P
         UIPanelCardCrafting _cardShopPanel;
         UIPanelTileCrafting _forgePanel;
         UIPanelGainSkill _gainSkillPanel;
+        UIPerkTreeUnlockPanel _starterPerkTreePanel;
         Transform _visualRoot;
         MapNode _previewNode;
         bool _ownsRuntimeGraph;
@@ -107,6 +108,16 @@ namespace M3P
 
             // Returning from battle: run state already updated in BattleManager.
             TryPromptCurrentNodeIfNeeded();
+            TryOfferStarterPerkTree();
+        }
+
+        void OnDestroy()
+        {
+            if (_ownsRuntimeGraph && _activeGraph != null)
+                Destroy(_activeGraph);
+
+            if (_starterPerkTreePanel != null)
+                _starterPerkTreePanel.Closed -= HandleStarterPerkTreeClosed;
         }
 
         void Update()
@@ -153,12 +164,6 @@ namespace M3P
                 return eventSystem.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
 
             return false;
-        }
-
-        void OnDestroy()
-        {
-            if (_ownsRuntimeGraph && _activeGraph != null)
-                Destroy(_activeGraph);
         }
 
         void EnsureGraph()
@@ -521,6 +526,77 @@ namespace M3P
             RefreshNodeStates();
             PersistRun();
             ResolveNode(Run.CurrentNodeId, arrivedFresh: true);
+        }
+
+        /// <summary>
+        /// A profile with no perk tree must pick one before the map can be played.
+        /// </summary>
+        void TryOfferStarterPerkTree()
+        {
+            if (!ProfileNeedsStarterPerkTree())
+                return;
+
+            EnsurePerkTreePanel();
+            if (_starterPerkTreePanel == null)
+            {
+                Debug.LogError(
+                    $"{nameof(MapManager)}: no {nameof(UIPerkTreeUnlockPanel)} in the map scene, so a new profile cannot choose a perk tree.",
+                    this);
+                return;
+            }
+
+            if (!_starterPerkTreePanel.HasOffer)
+                return;
+
+            _starterPerkTreePanel.Closed -= HandleStarterPerkTreeClosed;
+            _starterPerkTreePanel.Closed += HandleStarterPerkTreeClosed;
+            _starterPerkTreePanel.Show();
+        }
+
+        void HandleStarterPerkTreeClosed()
+        {
+            if (!ProfileNeedsStarterPerkTree())
+            {
+                if (_starterPerkTreePanel != null)
+                    _starterPerkTreePanel.Closed -= HandleStarterPerkTreeClosed;
+                return;
+            }
+
+            TryOfferStarterPerkTree();
+        }
+
+        void EnsurePerkTreePanel()
+        {
+            if (_starterPerkTreePanel == null)
+                _starterPerkTreePanel = FindAnyObjectByType<UIPerkTreeUnlockPanel>(FindObjectsInactive.Include);
+        }
+
+        static bool ProfileNeedsStarterPerkTree()
+        {
+            GameManager game = GameManager.Instance;
+            PlayerProfile profile = game != null && game.ProfileManager != null
+                ? game.ProfileManager.CurrentProfile
+                : null;
+            StatProgressionConfig progression = game != null && game.Config != null
+                ? game.Config.StatProgression
+                : null;
+            if (profile == null || progression == null)
+                return false;
+
+            PerkTree[] trees = progression.PerkTrees;
+            bool hasTree = false;
+            for (int i = 0; i < trees.Length; i++)
+            {
+                PerkTree tree = trees[i];
+                if (tree == null || tree.Id == PerkTree.InvalidId)
+                    continue;
+
+                hasTree = true;
+                if (profile.IsPerkTreeUnlocked(tree.Id))
+                    return false;
+            }
+
+            return hasTree;
         }
 
         void TryPromptCurrentNodeIfNeeded()

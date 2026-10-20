@@ -21,6 +21,9 @@ MonoBehaviour:
     - rid: 1000
       type: {class: IncomingGuardLogic, ns: M3P, asm: Assembly-CSharp}
       data:
-        _reduction: 3
+        _reduction: 10
+        _reductionTerms:
+        - Property: 5
+          Coefficient: 10
         _counterDamage: 0
         _counterPhysical: 0

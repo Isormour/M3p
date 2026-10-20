@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25723ff7ec4d09240a43340a6c620ca8, type: 3}
+  m_Name: PerkTree_Tactic
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkTree
+  Nazwa: Tactic
+  _subtitle: "TEMPO I R\u0118KA"
+  _description: "Tempo i wi\u0119ksza pocz\u0105tkowa r\u0119ka."
+  id: 7
+  perks:
+  - StatLevel: 3
+    Perk: {fileID: 11400000, guid: 3b6b15cd285647428163ae5d7e159711, type: 2}
+  - StatLevel: 6
+    Perk: {fileID: 11400000, guid: 64bc0e75a1d64ea7a6d0881253acf980, type: 2}
+  - StatLevel: 9
+    Perk: {fileID: 11400000, guid: 3b6b15cd285647428163ae5d7e159711, type: 2}
+  - StatLevel: 12
+    Perk: {fileID: 11400000, guid: 3b6b15cd285647428163ae5d7e159711, type: 2}
+  - StatLevel: 15
+    Perk: {fileID: 11400000, guid: 961f0fea9cdb44b5ba56f522c50fad47, type: 2}
+  - StatLevel: 18
+    Perk: {fileID: 11400000, guid: 3b6b15cd285647428163ae5d7e159711, type: 2}
+  - StatLevel: 21
+    Perk: {fileID: 11400000, guid: 64bc0e75a1d64ea7a6d0881253acf980, type: 2}
+  - StatLevel: 24
+    Perk: {fileID: 11400000, guid: 3b6b15cd285647428163ae5d7e159711, type: 2}
+  - StatLevel: 27
+    Perk: {fileID: 11400000, guid: 3b6b15cd285647428163ae5d7e159711, type: 2}
+  - StatLevel: 30
+    Perk: {fileID: 11400000, guid: ae8e8b7d117346e588cc928e9ea2c13c, type: 2}
+  TreeStatBonusLogic:
+    rid: -2
+  _icon: {fileID: 21300000, guid: dfac88cfcb704c7392565e3357feabbf, type: 3}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

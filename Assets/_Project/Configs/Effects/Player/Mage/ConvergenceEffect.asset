@@ -22,7 +22,16 @@ MonoBehaviour:
       type: {class: ConvergenceLogic, ns: M3P, asm: Assembly-CSharp}
       data:
         _damage: 15
+        _damageTerms:
+        - Property: 4
+          Coefficient: 1
         _heal: 6
+        _healTerms:
+        - Property: 6
+          Coefficient: 1
         _shield: 6
+        _shieldTerms:
+        - Property: 5
+          Coefficient: 1
         _bonusColorCount: 4
         _bonusMultiplier: 1.5

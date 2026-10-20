@@ -17,6 +17,16 @@ namespace M3P
         public Sprite Artwork => _artwork;
         public PerkLogic Logic => _logic;
 
+        /// <summary>One short line for an unlock offer. Falls back to <see cref="Name"/> when the logic has no wording.</summary>
+        public string OfferText
+        {
+            get
+            {
+                string offer = _logic != null ? _logic.FormatOffer() : string.Empty;
+                return string.IsNullOrEmpty(offer) ? Name : offer;
+            }
+        }
+
         public void Apply(ref SoftStatValues stats)
         {
             _logic?.Apply(ref stats);

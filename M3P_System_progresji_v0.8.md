@@ -8,7 +8,7 @@ _Wersja robocza 0.8 · rozdzielona 11 października 2026 · dokument koncepcyjny
 
 Dokument opisuje przebieg walki w M3P: planowanie kolejki kart, Resolve, stan planszy, użycie skilli, intencje przeciwnika oraz techniczne reguły generowania grafu dungeonu.
 
-Progresja postaci, EXP, statystyki, kolekcje kart, run i tile’i, odblokowywanie skilli, crafting oraz nagrody między walkami zostały przeniesione do [PlayerProgression.md](PlayerProgression.md). Ten plik nie jest już źródłem prawdy dla tych zasad.
+Progresja postaci, EXP, statystyki oraz skille gracza zostały przeniesione do [PlayerSkillsAndStats.md](PlayerSkillsAndStats.md). Kolekcje kart, run i tile’i, crafting oraz nagrody między walkami opisuje [PlayerProgression.md](PlayerProgression.md). Ten plik nie jest już źródłem prawdy dla tych zasad.
 
 > Rdzeń walki: gracz układa z kart deterministyczną sekwencję manipulacji, wykonuje ją przez Resolve, a dopiero potem plansza sprawdza matche i kaskady. Po wypłacie efektów gracz może rozpocząć kolejną sekwencję, użyć skilla albo zakończyć turę.
 
@@ -22,13 +22,13 @@ Progresja postaci, EXP, statystyki, kolekcje kart, run i tile’i, odblokowywani
 
 | System | Główna rola w tym dokumencie |
 | --- | --- |
-| Karty | Tworzą kolejkę deterministycznych komend manipulujących planszą. Katalog i rozwój kolekcji opisuje PlayerProgression. |
+| Karty | Tworzą kolejkę deterministycznych komend manipulujących planszą. Katalog i rozwój kolekcji opisuje [PlayerProgression.md](PlayerProgression.md). |
 | Resolve | Wykonuje kolejkę kart, a następnie zniszczenia, opadanie, matche, kaskady i wypłaty. |
 | Plansza przewidywana | Symuluje pewny wynik zakolejkowanych komend bez obiecywania losowych refillów. |
-| Tile’e i runy | Dostarczają efektów rozliczanych podczas wypłaty; ich kolekcję i crafting opisuje PlayerProgression. |
-| Skille | Są aktywowane świadomie między sekwencjami i konsumują zasoby przygotowane w walce. |
+| Tile’e i runy | Dostarczają efektów rozliczanych podczas wypłaty; ich kolekcję i crafting opisuje [PlayerProgression.md](PlayerProgression.md). |
+| Skille | Są aktywowane świadomie między sekwencjami i konsumują zasoby przygotowane w walce. Katalog, koszty i loadout opisuje [PlayerSkillsAndStats.md](PlayerSkillsAndStats.md). |
 | AI | Planuje widoczną intencję i wykonuje ją bez ukrytej zmiany. |
-| Graf dungeonu | Buduje poprawne trasy i rozmieszczenie węzłów; ich nagrody opisuje PlayerProgression. |
+| Graf dungeonu | Buduje poprawne trasy i rozmieszczenie węzłów; ich nagrody opisuje [PlayerProgression.md](PlayerProgression.md). |
 
 ## 3. Zasoby bojowe
 
@@ -87,39 +87,13 @@ Undo można powtarzać krok po kroku aż do pustej kolejki. Nie wolno dowolnie w
 | Zakres | Zapamiętywane dane | Przykładowi odbiorcy |
 | --- | --- | --- |
 | Sekwencja / Resolve | Karty w kolejce, liczba grup, największy match, głębokość kaskady, kolory, zniszczenia kartami i aktywowane enchanty. | Runy kart, obrażenia bazowe, nagrody za jakość ruchu. |
-| Tura | Liczba Resolve, łączna liczba matchy, kolejność kolorów, odzyskana stamina i zużyte limity. | Talenty STR/AGI, Spektrum, Momentum i limity anty-loop. |
+| Tura | Liczba Resolve, łączna liczba matchy, kolejność kolorów, odzyskana stamina i zużyte limity. | Efekty zależne od statystyk lub profilu Resolve oraz limity anty-loop. |
 | Walka | Statusy, mana, Shield, Fire, EXP oczekujący, zużyte tile’e specjalne i limity nagród. | Skille, tile deck, ekonomia oraz rozliczenie zwycięstwa. |
 
-## 6. Skille
-Skille pozostają potrzebne, jeśli zapewniają mocny i kontrolowany efekt. Tile daje losową, małą premię, runa nagradza profil Resolve, natomiast skill działa wtedy, kiedy gracz świadomie konsumuje zgromadzony zasób, status albo przygotowaną sytuację.
-
-| Kategoria skilla | Przykłady |
-| --- | --- |
-| Ofensywa | Bezpośrednie obrażenia, przebicie, atak obszarowy, detonacja statusów |
-| Defensywa | Leczenie, tarcza, oczyszczenie, regeneracja |
-| Kontrola | Buffy, debuffy, osłabienie przeciwnika, zmiana reguł tury |
-| Ręka | Wymiana kart, dobieranie, odzyskiwanie kart z discardu |
-| Plansza — wyjątek | Silna manipulacja połączona z kosztem, np. Meteor niszczący obszar 3×3 |
-
-> Przykład synergii: czerwony tile Stack Burn nakłada 1 Burn (Podpalenie: 1 obrażenie/tura za stack, 2 tury, stackowalne), karta pozwala zbudować czerwony match, a skill Zapłon zużywa wszystkie stacki Burn i zadaje 4 obrażenia magiczne za każdy stack. Ognista Iskra używa osobnego statusu Iskra (2 obrażenia/tura przez 4 tury), nie globalnego Burn.
-
-### 6.1. Okno skilli między sekwencjami
+## 6. Użycie skilli w walce
 Po pełnej wypłacie Resolve gracz odzyskuje kontrolę. Może natychmiast użyć skilla wykorzystującego wygenerowaną manę, Shield, Fire albo inny zasób, a następnie — jeśli posiada staminę i karty — rozpocząć kolejną sekwencję. Użycie skilla nie musi automatycznie kończyć tury.
 
-### 6.2. Przykładowe silniki tile–skill
-
-| Silnik | Generowanie | Kontrolowana wypłata |
-| --- | --- | --- |
-| Bank Shield | Enchanty tile’i i Garda gracza (GuardStance) zwiększają Shield. | Shield Bash zadaje obrażenia równe Shield i zeruje zasób. |
-| Fire / Burn | Enchanty trafionych tile’i nakładają stacki Fire/Burn. | Explode lub Ignite konsumuje stacki i zadaje obrażenia. |
-| Combo / Focus | Osobne grupy, precyzyjny match albo kolejne Resolve budują zasób. | Flurry lub Execute konsumuje zasób na serię albo finisher. |
-| Reagenty | Matche różnych kolorów tworzą zestaw składników. | Skill wybiera recepturę zależną od kombinacji kolorów. |
-| Souls / Blood | Destroy, poświęcenie HP i enchanty Duszy na tile’ach generują zasób ryzyka. | Skill zużywa zasób ofensywnie, defensywnie albo do przywołania. |
-| Growth / Marks | Efekty tymczasowo pozostają na planszy i są grupowane kartami. | Harvest lub podobny skill konsumuje przygotowane oznaczenia. |
-Powyższe silniki są modułami, nie zamkniętymi klasami. Przykładowo build Shield może korzystać z multimatchy albo super matcha, a build Fire może specjalizować się w kaskadach, precyzji lub monokolorze.
-REKOMENDACJA: w pierwszym prototypie każdy skill gracza kosztuje 1 AP oraz dwukrotność wskazanej many kolorów. Mana i AP są podstawowym ograniczeniem częstotliwości, a cooldown pozostaje dodatkowym zabezpieczeniem dla leczenia, kontroli i efektów o wyjątkowo wysokiej mocy. Wartości liczbowe pozostają robocze.
-
-Koszty, loadout oraz kompletny katalog skilli gracza są utrzymywane w [PlayerProgression.md](PlayerProgression.md). Opis walki zakłada, że użycie skilla jest legalne wyłącznie wtedy, gdy gracz spełnia zdefiniowany tam koszt i ograniczenia.
+System pozwala użyć skilla wyłącznie wtedy, gdy gracz spełnia jego koszt, cooldown, limit użycia i pozostałe warunki. Drzewka statystyk, zasady odblokowywania, loadout, synergie oraz kompletny katalog skilli gracza są utrzymywane w [PlayerSkillsAndStats.md](PlayerSkillsAndStats.md).
 
 ## 7. Przeciwnicy i zachowania AI
 AI nie powinno próbować ukrycie kontrować każdej decyzji gracza. Jego zadaniem jest tworzenie czytelnej zagadki bojowej: przeciwnik przygotowuje zagrożenie, komunikuje je, a gracz wykorzystuje planszę, karty i skille do odpowiedzi. Skille przeciwnika korzystają z tego samego systemu efektów co skille gracza, lecz ich wybór i ekonomia są asymetryczne.
@@ -218,7 +192,7 @@ OTWARTE: wartości X i Y oraz użytkownicy Rage; koszty i cooldowny nowych skill
 | Plansza | 8×8, pięć kolorów i automatyczne przetasowanie przy braku ruchów. |
 | Kolejka / Resolve | Plansza przewidywana, wykonanie kart w kolejności, osobne Resolve i End Turn oraz Undo ostatniej karty przed Resolve. |
 | Raport Resolve | Grupy, największy match, głębokość kaskady, kolory, zniszczenia kartami i aktywowane efekty. |
-| Skille | Okno użycia między sekwencjami oraz rozliczenie kosztu, cooldownu i efektu zgodnie z PlayerProgression. |
+| Skille | Okno użycia między sekwencjami oraz rozliczenie kosztu, cooldownu i efektu zgodnie z [PlayerSkillsAndStats.md](PlayerSkillsAndStats.md). |
 | Przeciwnicy / AI | Jedna intencja na turę, planner warunków i priorytetów, Wojownik i Podpalacz jako zestawy testowe. |
 
 ### 9.1. Pytania dla playtestu
@@ -271,7 +245,7 @@ Dungeon jest generowanym grafem logicznym. Węzeł reprezentuje walkę, nagrodę
 
 ### A.3. Typy węzłów
 
-Generator obsługuje: Start, Walkę, Elitę, Skrzynię, Sklep kart, Kuźnię tile’i, opcjonalną Kapliczkę / wydarzenie oraz Bossa. Ich nagrody i wpływ na progresję są zdefiniowane w PlayerProgression.
+Generator obsługuje: Start, Walkę, Elitę, Skrzynię, Sklep kart, Kuźnię tile’i, opcjonalną Kapliczkę / wydarzenie oraz Bossa. Ich nagrody i wpływ na progresję są zdefiniowane w [PlayerProgression.md](PlayerProgression.md).
 
 ### A.4. Reguły topologii
 

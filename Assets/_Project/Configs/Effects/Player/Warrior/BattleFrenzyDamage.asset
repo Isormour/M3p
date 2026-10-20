@@ -25,6 +25,13 @@ MonoBehaviour:
         _amount: 4
         _bonus: 0
         _perStep: 3
-        _max: 13
+        _max: 0
         _threshold: 0
         _physical: 1
+        _propertyTerms:
+        - Property: 3
+          Coefficient: 1
+          Subtract: 1
+        - Property: 8
+          Coefficient: 1
+          Divisor: 2

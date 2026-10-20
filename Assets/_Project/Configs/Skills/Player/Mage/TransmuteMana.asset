@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: TransmuteMana
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
   <_skillName>k__BackingField: Transmutacja Many
-  _description: Zamienia maksymalnie 3 punkty zgromadzonej many jednego koloru na tyle samo many wybranego koloru. Raz na turę.
+  _description: Zamienia do min(6, 3 + floor(Tempo / 3)) many między dwoma kolorami. Raz na turę.
   _artwork: {fileID: 21300000, guid: 5aebf21bf3334fd4c8a81fa3337db07e, type: 3}
   _manaCosts: []
   _effects:

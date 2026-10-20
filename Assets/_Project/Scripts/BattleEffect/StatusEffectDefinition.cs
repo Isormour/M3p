@@ -39,6 +39,8 @@ namespace M3P
         [SerializeField] bool _evadeDirectHits;
         [Tooltip("Fired on the attacker when a direct hit connects with the bearer. Authored Effect Target is ignored; the attacker always receives the effect.")]
         [SerializeField] BattleEffect[] _onDirectHitEffects = Array.Empty<BattleEffect>();
+        [Tooltip("While active, each outgoing basic attack or skill hit grants the bearer one Soul. Status ticks do not.")]
+        [SerializeField] bool _grantSoulOnOutgoingHit;
 
         public EStatusType StatusType => _statusType;
 
@@ -76,20 +78,25 @@ namespace M3P
 
         public BattleEffect[] OnDirectHitEffects => _onDirectHitEffects ?? Array.Empty<BattleEffect>();
 
-        public void AppendIncomingGuardTooltip(List<TooltipLine> lines)
+        public bool GrantSoulOnOutgoingHit => _grantSoulOnOutgoingHit;
+
+        public void AppendIncomingGuardTooltip(List<TooltipLine> lines, int reduction = -1, int counter = -1)
         {
             if (lines == null)
                 return;
 
-            if (IncomingDamageReduction > 0)
+            int shownReduction = reduction >= 0 ? reduction : IncomingDamageReduction;
+            int shownCounter = counter >= 0 ? counter : IncomingCounterDamage;
+
+            if (shownReduction > 0)
                 lines.Add(new TooltipLine(
                     TooltipLineKind.Other,
-                    $"Następny atak: -{IncomingDamageReduction} obrażeń"));
+                    $"Następny atak: -{shownReduction} obrażeń"));
 
-            if (IncomingCounterDamage > 0)
+            if (shownCounter > 0)
                 lines.Add(new TooltipLine(
                     TooltipLineKind.Damage,
-                    $"Kontratak: {IncomingCounterDamage}"));
+                    $"Kontratak: {shownCounter}"));
         }
 
         public void AppendPersistentModifierTooltip(List<TooltipLine> lines, int magnitude)
@@ -137,14 +144,22 @@ namespace M3P
         }
 
         /// <summary>Runs on-turn effects against the bearer. <paramref name="source"/> scales magic effects when present.</summary>
-        public void ApplyOnTurnEffects(BattleCharacter bearer, BattleCharacter source, int stacks = 1)
+        public void ApplyOnTurnEffects(
+            BattleCharacter bearer,
+            BattleCharacter source,
+            int stacks = 1,
+            int actionPointDrain = 0)
         {
             BattleEffect[] effects = OnTurnEffects;
             if (bearer == null || effects.Length == 0)
                 return;
 
             BattleCharacter caster = source != null ? source : bearer;
-            var context = new BattleEffectContext(caster, bearer, statusStacks: stacks);
+            var context = new BattleEffectContext(
+                caster,
+                bearer,
+                statusStacks: stacks,
+                actionPointDrain: actionPointDrain);
 
             for (int i = 0; i < effects.Length; i++)
             {

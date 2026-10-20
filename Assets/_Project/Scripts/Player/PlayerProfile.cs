@@ -7,6 +7,9 @@ namespace M3P
     [Serializable]
     public class PlayerProfile
     {
+        /// <summary>Stable id for this save, so analytics can line up its creation and later fights.</summary>
+        public string ProfileId;
+
         public int Level = LevelProgressionConfig.FirstLevel;
 
         /// <summary>Lifetime experience. <see cref="Level"/> is what the curve has already paid out for it.</summary>
@@ -40,6 +43,14 @@ namespace M3P
         public List<int> UnlockedTalentIds = new List<int>();
         public PendingTalentChoice PendingTalent;
         public List<PerkTreePoints> PerkTreePoints = new List<PerkTreePoints>();
+
+        /// <summary>
+        /// True once this profile has decided which perk trees are unlocked.
+        /// A new profile starts true with none unlocked. Saves written before that
+        /// choice existed are false and receive the old starting trees once.
+        /// </summary>
+        public bool PerkTreeUnlocksInitialized;
+
         public HardStats HardStats;
 
         /// <summary>Current dungeon-map run: floor graph, player node and cleared encounters.</summary>
@@ -65,10 +76,34 @@ namespace M3P
             return stats;
         }
 
+        /// <summary>
+        /// Health, action points, hand size and combat stats earned by this profile's perk trees.
+        /// Pending points from the stat panel are included when <paramref name="pendingForTree"/> is set.
+        /// </summary>
+        public PlayerProperties CalculateProperties(
+            StatProgressionConfig progression,
+            TalentConfig talentConfig,
+            Func<int, int> pendingForTree = null)
+        {
+            if (progression == null)
+                return default;
+
+            TalentBonuses talents = talentConfig != null
+                ? talentConfig.BuildBonuses(UnlockedTalentIds)
+                : TalentBonuses.None;
+            return progression.CalculateProperties(PerkTreePoints, talents, pendingForTree);
+        }
+
         public int GetPerkTreePoints(int treeId)
         {
             int index = StatProgressionConfig.IndexOfTreePoints(PerkTreePoints, treeId);
             return index >= 0 ? Mathf.Max(0, PerkTreePoints[index].Value) : 0;
+        }
+
+        /// <summary>True when this profile has opened the perk tree. Missing entries stay locked.</summary>
+        public bool IsPerkTreeUnlocked(int treeId)
+        {
+            return StatProgressionConfig.IndexOfTreePoints(PerkTreePoints, treeId) >= 0;
         }
 
         public void SetPerkTreePoints(int treeId, int value)
@@ -387,6 +422,9 @@ namespace M3P
         /// <summary>Fills in fields a save written before levels or cards existed never stored.</summary>
         public void NormalizeAfterLoad()
         {
+            if (string.IsNullOrEmpty(ProfileId))
+                ProfileId = Guid.NewGuid().ToString();
+
             Level = Math.Max(LevelProgressionConfig.FirstLevel, Level);
             Experience = Math.Max(0, Experience);
             UnspentStatPoints = Math.Max(0, UnspentStatPoints);
@@ -432,6 +470,7 @@ namespace M3P
             if (source == null)
                 return;
 
+            ProfileId = source.ProfileId;
             Level = source.Level;
             Experience = source.Experience;
             UnspentStatPoints = source.UnspentStatPoints;
@@ -455,6 +494,7 @@ namespace M3P
             PerkTreePoints = source.PerkTreePoints != null
                 ? new List<PerkTreePoints>(source.PerkTreePoints)
                 : new List<PerkTreePoints>();
+            PerkTreeUnlocksInitialized = source.PerkTreeUnlocksInitialized;
             HardStats = source.HardStats;
             MapRun = source.MapRun != null ? source.MapRun.Clone() : null;
         }
@@ -462,6 +502,7 @@ namespace M3P
         [Serializable]
         struct PlayerProfileSaveData
         {
+            public string ProfileId;
             public int Level;
             public int Experience;
             public int UnspentStatPoints;
@@ -475,6 +516,7 @@ namespace M3P
             public int[] UnlockedTalentIds;
             public PendingTalentChoice PendingTalent;
             public PerkTreePoints[] PerkTreePoints;
+            public bool PerkTreeUnlocksInitialized;
             public HardStats HardStats;
             public MapRunSave MapRun;
 
@@ -482,6 +524,7 @@ namespace M3P
             {
                 return new PlayerProfileSaveData
                 {
+                    ProfileId = profile.ProfileId,
                     Level = profile.Level,
                     Experience = profile.Experience,
                     UnspentStatPoints = profile.UnspentStatPoints,
@@ -499,6 +542,7 @@ namespace M3P
                     PerkTreePoints = profile.PerkTreePoints != null
                         ? profile.PerkTreePoints.ToArray()
                         : Array.Empty<PerkTreePoints>(),
+                    PerkTreeUnlocksInitialized = profile.PerkTreeUnlocksInitialized,
                     HardStats = profile.HardStats,
                     MapRun = profile.MapRun != null ? profile.MapRun.Clone() : null,
                 };
@@ -508,6 +552,7 @@ namespace M3P
             {
                 return new PlayerProfile
                 {
+                    ProfileId = ProfileId,
                     Level = Level,
                     Experience = Experience,
                     UnspentStatPoints = UnspentStatPoints,
@@ -529,6 +574,7 @@ namespace M3P
                     PerkTreePoints = PerkTreePoints != null
                         ? new List<PerkTreePoints>(PerkTreePoints)
                         : new List<PerkTreePoints>(),
+                    PerkTreeUnlocksInitialized = PerkTreeUnlocksInitialized,
                     HardStats = HardStats,
                     MapRun = MapRun != null ? MapRun.Clone() : null,
                 };

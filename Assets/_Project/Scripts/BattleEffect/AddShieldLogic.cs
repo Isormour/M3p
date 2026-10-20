@@ -8,14 +8,13 @@ namespace M3P
     public class AddShieldLogic : BattleEffectLogic, ITooltipPreview
     {
         [SerializeField] int _amount;
+        [Tooltip("Added as coefficient × the caster's property, before the magic multiplier.")]
+        [SerializeField] SkillPropertyTerm[] _propertyTerms = Array.Empty<SkillPropertyTerm>();
 
         public int Amount => _amount;
 
         public override void Apply(BattleEffectContext context, EEffectTarget target)
         {
-            if (_amount <= 0)
-                return;
-
             BattleCharacter character = context.Resolve(target);
             SoftStats softStats = character?.Stats?.Soft;
             if (softStats == null)
@@ -25,13 +24,13 @@ namespace M3P
             if (amount <= 0)
                 return;
 
-            softStats.AddShield(amount);
+            softStats.AddShieldFromSkill(amount);
             Sfx.Play(SfxId.ShieldApply);
         }
 
         public void AppendTooltipLines(BattleEffectContext preview, EEffectTarget target, List<TooltipLine> lines)
         {
-            int amount = SkillCombat.ScaleHealOrShield(preview, _amount);
+            int amount = SkillCombat.ScaleHealOrShield(preview, RawAmount(preview));
             if (amount <= 0)
                 return;
 
@@ -49,7 +48,12 @@ namespace M3P
                 ? context.Caster.GetEffectiveHard()
                 : default;
             TalentBonuses talents = context.Caster?.Stats?.TalentBonuses ?? TalentBonuses.None;
-            return progression.ScaleMagicEffect(casterHard, _amount, talents);
+            return progression.ScaleMagicEffect(casterHard, RawAmount(context), talents);
+        }
+
+        int RawAmount(BattleEffectContext context)
+        {
+            return SkillPropertyScaling.Apply(_amount, _propertyTerms, SkillPropertyScaling.Read(context));
         }
     }
 }

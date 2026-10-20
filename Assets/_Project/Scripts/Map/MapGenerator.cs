@@ -114,7 +114,12 @@ namespace M3P
     public static class MapGenerator
     {
         public const string GeneratedGraphName = "GeneratedMap";
-        public const int DecisionLayerCount = 6;
+
+        /// <summary>Walkable stops after the start, including the boss at the end.</summary>
+        public const int RouteLength = 12;
+
+        /// <summary>Layers between the start and the boss. The boss is stop <see cref="RouteLength"/>.</summary>
+        public const int DecisionLayerCount = RouteLength - 1;
 
         enum RouteIdentity
         {
@@ -165,10 +170,9 @@ namespace M3P
             float layerSpacing,
             float nodeSpacing)
         {
-            List<List<DraftNode>> layers = BuildSkeleton(rng);
+            List<List<DraftNode>> layers = BuildSkeleton();
+            PlaceCraftStations(layers, rng);
             ConnectLayers(layers, rng);
-            AssignTypes(layers, rng);
-            Repair(layers);
             AssignEncounters(layers, pools, rng);
             if (!Validate(layers))
                 return null;
@@ -185,63 +189,81 @@ namespace M3P
             return graph;
         }
 
-        static List<List<DraftNode>> BuildSkeleton(System.Random rng)
+        static List<List<DraftNode>> BuildSkeleton()
         {
-            int[] widths = BuildLayerWidths(rng);
-            var layers = new List<List<DraftNode>>(DecisionLayerCount + 2);
+            var layers = new List<List<DraftNode>>(RouteLength + 1);
 
             layers.Add(new List<DraftNode>
             {
                 new DraftNode { Id = "start", Layer = 0, Slot = 0, Type = MapNodeType.Start }
             });
 
-            for (int layer = 1; layer <= DecisionLayerCount; layer++)
+            for (int step = 1; step <= RouteLength; step++)
             {
-                int width = widths[layer - 1];
+                bool boss = step == RouteLength;
+                int width = WidthForStep(step);
                 var row = new List<DraftNode>(width);
                 for (int slot = 0; slot < width; slot++)
                 {
                     row.Add(new DraftNode
                     {
-                        Id = $"n_{layer}_{slot}",
-                        Layer = layer,
+                        Id = boss ? "boss" : $"n_{step}_{slot}",
+                        Layer = step,
                         Slot = slot,
-                        Type = MapNodeType.Battle
+                        Type = TypeForStep(step)
                     });
                 }
 
                 layers.Add(row);
             }
 
-            layers.Add(new List<DraftNode>
-            {
-                new DraftNode
-                {
-                    Id = "boss",
-                    Layer = DecisionLayerCount + 1,
-                    Slot = 0,
-                    Type = MapNodeType.Boss
-                }
-            });
-
             return layers;
         }
 
-        /// <summary>
-        /// Six decision layers, about 12 nodes including start and boss. Extra nodes stay within 12–18.
-        /// </summary>
-        static int[] BuildLayerWidths(System.Random rng)
+        /// <summary>Elite rows stay a choice of elites. Other rows branch wider so the floor has several paths.</summary>
+        static int WidthForStep(int step)
         {
-            int[] widths = { 2, 2, 2, 2, 1, 1 };
-            int extra = rng.Next(0, 4);
-            for (int i = 0; i < extra; i++)
-            {
-                int layer = rng.Next(0, 5);
-                if (widths[layer] < 3)
-                    widths[layer]++;
-            }
+            if (step == RouteLength)
+                return 1;
 
-            return widths;
+            if (IsEliteStep(step))
+                return 2;
+
+            if (step == 2 || step == 4 || step == 7 || step == 10)
+                return 3;
+
+            return 2;
+        }
+
+        /// <summary>One card forge and one tile forge on the whole floor, on paths that are not the elite rows.</summary>
+        static void PlaceCraftStations(List<List<DraftNode>> layers, System.Random rng)
+        {
+            PlaceOne(layers, 5, MapNodeType.Shop, rng);
+            PlaceOne(layers, 8, MapNodeType.Forge, rng);
+        }
+
+        static void PlaceOne(List<List<DraftNode>> layers, int step, MapNodeType type, System.Random rng)
+        {
+            List<DraftNode> row = layers[step];
+            int slot = rng.Next(row.Count);
+            row[slot].Type = type;
+        }
+
+        /// <summary>Every third stop is an elite. The last stop is the floor boss.</summary>
+        public static bool IsEliteStep(int step)
+        {
+            return step > 0 && step < RouteLength && step % 3 == 0;
+        }
+
+        static MapNodeType TypeForStep(int step)
+        {
+            if (step == RouteLength)
+                return MapNodeType.Boss;
+
+            if (IsEliteStep(step))
+                return MapNodeType.Elite;
+
+            return MapNodeType.Battle;
         }
 
         static void ConnectLayers(List<List<DraftNode>> layers, System.Random rng)
@@ -544,10 +566,13 @@ namespace M3P
                 }
             }
 
-            if (!HasServiceOnPath(start, new HashSet<string>()))
+            if (!OpeningHasBattleBeforeService(start))
                 return false;
 
-            if (!OpeningHasBattleBeforeService(start))
+            if (!ElitesMatchCadence(layers))
+                return false;
+
+            if (!HasOneCraftOfEach(layers))
                 return false;
 
             if (boss.Encounter == null)
@@ -559,6 +584,58 @@ namespace M3P
             return true;
         }
 
+        static bool ElitesMatchCadence(List<List<DraftNode>> layers)
+        {
+            for (int step = 1; step <= RouteLength && step < layers.Count; step++)
+            {
+                List<DraftNode> row = layers[step];
+                if (row.Count != WidthForStep(step))
+                    return false;
+
+                if (step == RouteLength)
+                {
+                    if (row[0].Type != MapNodeType.Boss)
+                        return false;
+                    continue;
+                }
+
+                if (!IsEliteStep(step))
+                    continue;
+
+                for (int i = 0; i < row.Count; i++)
+                {
+                    if (row[i].Type != MapNodeType.Elite)
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        static bool HasOneCraftOfEach(List<List<DraftNode>> layers)
+        {
+            int shops = 0;
+            int forges = 0;
+            for (int layer = 0; layer < layers.Count; layer++)
+            {
+                List<DraftNode> row = layers[layer];
+                for (int i = 0; i < row.Count; i++)
+                {
+                    if (row[i].Type == MapNodeType.Shop)
+                        shops++;
+                    else if (row[i].Type == MapNodeType.Forge)
+                        forges++;
+                }
+            }
+
+            return shops == 1 && forges == 1;
+        }
+
+        static bool IsCraft(MapNodeType type)
+        {
+            return type == MapNodeType.Shop || type == MapNodeType.Forge || type == MapNodeType.Chest;
+        }
+
         static bool HasStackedMajorRewards(DraftNode node, HashSet<string> visiting)
         {
             if (!visiting.Add(node.Id))
@@ -568,8 +645,8 @@ namespace M3P
             {
                 DraftNode next = node.Next[i];
                 if (next.Type != MapNodeType.Boss &&
-                    node.Type.IsMajorReward() &&
-                    next.Type.IsMajorReward())
+                    IsCraft(node.Type) &&
+                    IsCraft(next.Type))
                     return true;
 
                 if (HasStackedMajorRewards(next, visiting))

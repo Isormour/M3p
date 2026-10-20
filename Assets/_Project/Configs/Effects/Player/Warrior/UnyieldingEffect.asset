@@ -22,6 +22,12 @@ MonoBehaviour:
       type: {class: UnyieldingLogic, ns: M3P, asm: Assembly-CSharp}
       data:
         _shield: 12
-        _nextPhysicalMultiplier: 1.5
+        _shieldTerms:
+        - Property: 5
+          Coefficient: 3
+        _bonusPercent: 25
+        _percentTerms:
+        - Property: 3
+          Coefficient: 5
         _lowHealthPercent: 30
         _actionPointsRestored: 1

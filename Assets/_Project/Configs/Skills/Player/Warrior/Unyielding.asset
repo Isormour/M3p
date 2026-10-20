@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: Unyielding
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
   <_skillName>k__BackingField: Nieugięty
-  _description: Daje 12 Shield i wzmacnia następny fizyczny skill o 50%. Jeśli Wojownik ma mniej niż 30% HP, odzyskuje również 1 AP. Cooldown: 4 tury.
+  _description: Daje 12 + 3 × Guard Shield i wzmacnia następny atak o (25 + 5 × Power)%. Poniżej 30% HP daje 1 AP. Cooldown: 4 tury.
   _artwork: {fileID: 21300000, guid: 73b1b5b631f951148a89c1c0059d6df7, type: 3}
   _manaCosts:
-  - TileType: {fileID: 11400000, guid: d2fc95fcf0bc7f94d903f81e8e26b5f1, type: 2}
-    Amount: 6
-  - TileType: {fileID: 11400000, guid: fb0e43bb3e72afb43a017902700c99c4, type: 2}
-    Amount: 2
   - TileType: {fileID: 11400000, guid: 031c32cbcfb4a0f4e97c6bd265a1bb5d, type: 2}
+    Amount: 6
+  - TileType: {fileID: 11400000, guid: d2fc95fcf0bc7f94d903f81e8e26b5f1, type: 2}
+    Amount: 2
+  - TileType: {fileID: 11400000, guid: 3b3c19c61b9ce4a4ea680cbd46f909a6, type: 2}
     Amount: 2
   _effects:
   - {fileID: 11400000, guid: 052ca031c7904b559f6179a59b1646fd, type: 2}

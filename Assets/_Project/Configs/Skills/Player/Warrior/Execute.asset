@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Execute
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
   <_skillName>k__BackingField: Egzekucja
-  _description: Zadaje 8 obrażeń. Jeśli przeciwnik ma mniej niż 25% HP, zadaje 16. Cooldown: 2 tury.
+  _description: Zadaje 8 + Power + 2 × Precision obrażeń. Poniżej 25% HP przeciwnika podwaja cały wynik. Cooldown: 2 tury.
   _artwork: {fileID: 21300000, guid: 4b64a177e808e84489ba1c0b5caf9e36, type: 3}
   _manaCosts:
   - TileType: {fileID: 11400000, guid: fb0e43bb3e72afb43a017902700c99c4, type: 2}

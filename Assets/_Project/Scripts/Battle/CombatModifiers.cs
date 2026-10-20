@@ -5,6 +5,7 @@ namespace M3P
     /// <summary>
     /// Pending combat buffs that live on a character until they are consumed by a hit or skill.
     /// Armed by skills such as Ice Ward, Expose Weakness and Unyielding. Riposte uses a status instead.
+    /// The next-attack multiplier applies to the next skill that deals damage, physical or magical.
     /// </summary>
     public sealed class CombatModifiers
     {
@@ -16,7 +17,7 @@ namespace M3P
         public int OutgoingHitBonus { get; private set; }
         public int OutgoingHitBonusHits { get; private set; }
 
-        public float NextPhysicalSkillMultiplier { get; private set; } = 1f;
+        public float NextAttackMultiplier { get; private set; } = 1f;
 
         public void ArmIncomingReduction(int reduction, int hits = 1, int counterDamage = 0, bool counterPhysical = true)
         {
@@ -68,15 +69,20 @@ namespace M3P
             return bonus;
         }
 
-        public void ArmNextPhysicalSkillBonus(float multiplier)
+        public void ArmNextAttackBonus(float multiplier)
         {
-            NextPhysicalSkillMultiplier = Mathf.Max(1f, multiplier);
+            NextAttackMultiplier = Mathf.Max(1f, multiplier);
         }
 
-        public float ConsumeNextPhysicalSkillMultiplier()
+        public float PeekNextAttackBonus()
         {
-            float multiplier = NextPhysicalSkillMultiplier > 0f ? NextPhysicalSkillMultiplier : 1f;
-            NextPhysicalSkillMultiplier = 1f;
+            return NextAttackMultiplier > 0f ? NextAttackMultiplier : 1f;
+        }
+
+        public float ConsumeNextAttackBonus()
+        {
+            float multiplier = PeekNextAttackBonus();
+            NextAttackMultiplier = 1f;
             return multiplier;
         }
 
@@ -88,7 +94,7 @@ namespace M3P
             CounterPhysical = false;
             OutgoingHitBonus = 0;
             OutgoingHitBonusHits = 0;
-            NextPhysicalSkillMultiplier = 1f;
+            NextAttackMultiplier = 1f;
         }
     }
 }

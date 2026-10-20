@@ -207,6 +207,13 @@ namespace M3P.Editor
                 EditorGUILayout.IntField("Max HP", battleStats.MaxHealth);
                 EditorGUILayout.IntField("Max Action Points", battleStats.Soft != null ? battleStats.Soft.MaxActionPoints : 0);
                 EditorGUILayout.IntField("Max Hand Size", battleStats.Soft != null ? battleStats.Soft.MaxHandSize : 0);
+                PlayerProperties properties = battleStats.Soft != null ? battleStats.Soft.Properties : default;
+                EditorGUILayout.IntField("Power", properties.Power);
+                EditorGUILayout.IntField("Arcane", properties.Arcane);
+                EditorGUILayout.IntField("Guard", properties.Guard);
+                EditorGUILayout.IntField("Recovery", properties.Recovery);
+                EditorGUILayout.IntField("Precision", properties.Precision);
+                EditorGUILayout.IntField("Tempo", properties.Tempo);
             }
         }
 

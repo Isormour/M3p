@@ -40,7 +40,7 @@ namespace M3P
         [Tooltip("Legacy and test skills stay registered, but bosses never offer them.")]
         [SerializeField] bool _excludedFromUnlocks;
         [SerializeField] SkillCastPrompt _castPrompt;
-        [Tooltip("When true, Unyielding-style buffs multiply this skill's damage.")]
+        [Tooltip("Marks a skill whose damage is physical.")]
         [SerializeField] bool _physicalSkill;
         [SerializeField] SkillArchetype _archetype;
         [field: SerializeField] public string _animationName { private set; get; } = "BasicAttack";
@@ -66,6 +66,26 @@ namespace M3P
             {
                 BattleEffect effect = effects[i];
                 if (effect != null && effect.Target == EEffectTarget.Opponent)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>True when casting this skill should consume a pending next-attack damage bonus.</summary>
+        public bool DealsDamage()
+        {
+            BattleEffect[] effects = Effects;
+            for (int i = 0; i < effects.Length; i++)
+            {
+                BattleEffectLogic logic = effects[i]?.Logic;
+                if (logic is DealDamageLogic
+                    || logic is ResolveScaledDamageLogic
+                    || logic is MultiHitDamageLogic
+                    || logic is ConsumeStatusDamageLogic
+                    || logic is ConsumeShieldDamageLogic
+                    || logic is SpendSoulsHitsLogic
+                    || logic is ConvergenceLogic)
                     return true;
             }
 
@@ -235,8 +255,8 @@ namespace M3P
                 return;
 
             float multiplier = 1f;
-            if (PhysicalSkill && caster != null)
-                multiplier = caster.Modifiers.ConsumeNextPhysicalSkillMultiplier();
+            if (DealsDamage() && caster != null)
+                multiplier = caster.Modifiers.ConsumeNextAttackBonus();
 
             var context = new BattleEffectContext(
                 caster,

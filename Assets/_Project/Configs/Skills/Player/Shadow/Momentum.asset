@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Momentum
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
   <_skillName>k__BackingField: Impet
-  _description: Dobiera jedną kartę. Jeśli ostatni Resolve utworzył co najmniej dwie grupy, dobiera drugą. Raz na turę.
+  _description: Dobiera 1 kartę, 2 przy co najmniej 2 grupach, oraz jeszcze jedną przy Tempo ≥ 6. Maksymalnie 3. Raz na turę.
   _artwork: {fileID: 21300000, guid: c6b1f773a7052f6489e6441e381ef786, type: 3}
   _manaCosts:
   - TileType: {fileID: 11400000, guid: 031c32cbcfb4a0f4e97c6bd265a1bb5d, type: 2}

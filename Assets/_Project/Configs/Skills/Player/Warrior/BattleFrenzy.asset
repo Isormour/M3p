@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: BattleFrenzy
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
   <_skillName>k__BackingField: Szał Bitewny
-  _description: Zadaje 4 obrażenia oraz dodatkowe 3 za każdy wcześniejszy Resolve wykonany w tej turze. Maksymalnie 13 obrażeń.
+  _description: Zadaje 4 + 3 × wcześniejsze sekwencje + (Power − 1) + floor(Tempo / 2) obrażeń fizycznych.
   _artwork: {fileID: 21300000, guid: 461dea54e6feaee44ad12dcd68e8f7db, type: 3}
   _manaCosts:
   - TileType: {fileID: 11400000, guid: fb0e43bb3e72afb43a017902700c99c4, type: 2}

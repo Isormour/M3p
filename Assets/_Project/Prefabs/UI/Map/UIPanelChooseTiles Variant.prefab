@@ -159,6 +159,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9b2434f4eec3db444a883c450bce0761, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  _panelRoot: {fileID: 8905557158390485451}
+  _closeButton: {fileID: 0}
 --- !u!1001 &3405468239863480902
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -250,6 +252,14 @@ PrefabInstance:
     - target: {fileID: 3215023330730911458, guid: 1b1170e6c52b49f4ebd7ec872ffce2b3, type: 3}
       propertyPath: m_Name
       value: UIPanelChooseTiles Variant
+      objectReference: {fileID: 0}
+    - target: {fileID: 4586530062402353630, guid: 1b1170e6c52b49f4ebd7ec872ffce2b3, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -21.599976
+      objectReference: {fileID: 0}
+    - target: {fileID: 4586530062402353630, guid: 1b1170e6c52b49f4ebd7ec872ffce2b3, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -23.700012
       objectReference: {fileID: 0}
     - target: {fileID: 7171922386922349234, guid: 1b1170e6c52b49f4ebd7ec872ffce2b3, type: 3}
       propertyPath: m_text

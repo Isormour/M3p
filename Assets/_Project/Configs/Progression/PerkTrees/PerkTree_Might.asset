@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25723ff7ec4d09240a43340a6c620ca8, type: 3}
+  m_Name: PerkTree_Might
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkTree
+  Nazwa: Might
+  _subtitle: "POWER I WYTRWA\u0141O\u015A\u0106"
+  _description: "Power i maksymalne HP, z premi\u0105 do walki przy niskim zdrowiu."
+  id: 6
+  perks:
+  - StatLevel: 3
+    Perk: {fileID: 11400000, guid: 0da4afce3c8f4720973ec8494985bdf2, type: 2}
+  - StatLevel: 6
+    Perk: {fileID: 11400000, guid: cd3b4d185bcd4cc6b7ed8bbf0a1f5280, type: 2}
+  - StatLevel: 9
+    Perk: {fileID: 11400000, guid: 0da4afce3c8f4720973ec8494985bdf2, type: 2}
+  - StatLevel: 12
+    Perk: {fileID: 11400000, guid: cd3b4d185bcd4cc6b7ed8bbf0a1f5280, type: 2}
+  - StatLevel: 15
+    Perk: {fileID: 11400000, guid: d4e61d1f86bf40bea3ef1b5933c6d90b, type: 2}
+  - StatLevel: 18
+    Perk: {fileID: 11400000, guid: 0da4afce3c8f4720973ec8494985bdf2, type: 2}
+  - StatLevel: 21
+    Perk: {fileID: 11400000, guid: cd3b4d185bcd4cc6b7ed8bbf0a1f5280, type: 2}
+  - StatLevel: 24
+    Perk: {fileID: 11400000, guid: 0da4afce3c8f4720973ec8494985bdf2, type: 2}
+  - StatLevel: 27
+    Perk: {fileID: 11400000, guid: cd3b4d185bcd4cc6b7ed8bbf0a1f5280, type: 2}
+  - StatLevel: 30
+    Perk: {fileID: 11400000, guid: 9e84cf7b80b7442ba09057a4727c477b, type: 2}
+  TreeStatBonusLogic:
+    rid: -2
+  _icon: {fileID: 21300000, guid: 628540a2fb6149988d41d078010a4457, type: 3}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

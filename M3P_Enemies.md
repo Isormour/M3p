@@ -58,7 +58,7 @@ Poniższe liczby odpowiadają obecnym assetom w `Configs/Skills/Enemies` i powi�
 
 Guard oznacza efekt obronny przyznający Shield, zgodnie z obecnym `GuardUp`; nie wprowadza osobnego zasobu. Armor (pancerz) jest zasobem używanym przez `Corrosion`, `IronWall` i `ArmorBash` frenzy.
 
-Confusion jest statusem nakładanym na gracza. Na początku jego następnej tury, po odnowieniu AP, odejmuje `L` AP (minimum do 0), po czym znika. Dotyczy zarówno `Scream` RudoBata, jak i `KonarHit` Entona.
+Confusion jest statusem nakładanym na gracza. Na początku jego następnej tury, po odnowieniu AP, odejmuje punkty akcji (minimum do 0), po czym znika. `Scream` RudoBata odbiera `L` AP. `KonarHit` Entona odbiera zawsze 1 AP.
 
 ### 5.1. Leszinio
 
@@ -122,7 +122,7 @@ Zestaw Miniootaura nie zawiera `EnemyGuard` ani `EnemyEmber`. Usunięcie dotyczy
 | Skill | Efekt | Czas / skalowanie |
 | --- | --- | --- |
 | `Entail` | Zakorzenia losowe kafelki. Zakorzeniony kafelek pozostaje w miejscu, dopóki nie zostanie zniszczony. | `3 × level` kafelków. |
-| `KonarHit` | Zadaje obrażenia i nakłada na gracza Confusion. | `5 × L` obrażeń; status odbiera `L` AP po odnowieniu AP na początku następnej tury gracza, po czym znika. |
+| `KonarHit` | Zadaje obrażenia i nakłada na gracza Confusion. | `5 × L` obrażeń; status odbiera 1 AP po odnowieniu AP na początku następnej tury gracza, po czym znika. |
 | `ThrowBeeHive` | Nakłada na gracza Poison, który zadaje 2 obrażenia na turę. | `2 × level × rank` tur. |
 
 ### 5.8. Minioluch

@@ -13,12 +13,19 @@ namespace M3P
         public const int InvalidId = 0;
 
         [SerializeField] string Nazwa;
+        [Tooltip("Short line under the name on the unlock offer, such as the stat the tree grows.")]
+        [SerializeField] string _subtitle;
+        [TextArea(2, 4)]
+        [Tooltip("What this tree is for, shown on the unlock offer.")]
+        [SerializeField] string _description;
         [SerializeField] int id;
         [SerializeField] StatPerk[] perks = Array.Empty<StatPerk>();
         [SerializeReference] TreeStatBonusLogic TreeStatBonusLogic;
         [SerializeField] Sprite _icon;
 
         public string DisplayName => string.IsNullOrEmpty(Nazwa) ? name : Nazwa;
+        public string Subtitle => _subtitle ?? string.Empty;
+        public string Description => _description ?? string.Empty;
         public int Id => id;
         public StatPerk[] Perks => perks ?? Array.Empty<StatPerk>();
         public TreeStatBonusLogic StatBonus => TreeStatBonusLogic;

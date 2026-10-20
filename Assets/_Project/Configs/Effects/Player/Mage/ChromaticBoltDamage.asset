@@ -22,9 +22,11 @@ MonoBehaviour:
       type: {class: ResolveScaledDamageLogic, ns: M3P, asm: Assembly-CSharp}
       data:
         _formula: 5
-        _amount: 0
+        _amount: 1
         _bonus: 0
-        _perStep: 3
+        _perStep: 1
         _max: 15
         _threshold: 0
         _physical: 0
+        _scalePerStepByProperty: 1
+        _perStepProperty: 4

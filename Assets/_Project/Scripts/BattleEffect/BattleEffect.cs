@@ -33,6 +33,9 @@ namespace M3P
         /// <summary>How many stacked copies a status tick represents. Skills leave this at 1.</summary>
         public int StatusStacks { get; }
 
+        /// <summary>Flat action points a status tick should remove. Zero uses the effect's authored formula.</summary>
+        public int ActionPointDrain { get; }
+
         public BattleEffectContext(
             BattleCharacter caster,
             BattleCharacter target,
@@ -40,7 +43,8 @@ namespace M3P
             float skillDamageMultiplier = 1f,
             int choicePrimary = 0,
             int choiceSecondary = 0,
-            int statusStacks = 1)
+            int statusStacks = 1,
+            int actionPointDrain = 0)
         {
             Caster = caster;
             Target = target;
@@ -50,6 +54,7 @@ namespace M3P
             ChoicePrimary = choicePrimary;
             ChoiceSecondary = choiceSecondary;
             StatusStacks = Mathf.Max(1, statusStacks);
+            ActionPointDrain = Mathf.Max(0, actionPointDrain);
         }
 
         public BattleCharacter Resolve(EEffectTarget effectTarget)

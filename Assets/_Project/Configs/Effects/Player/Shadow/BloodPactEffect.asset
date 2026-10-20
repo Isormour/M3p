@@ -22,4 +22,12 @@ MonoBehaviour:
       type: {class: SacrificeHealthForApLogic, ns: M3P, asm: Assembly-CSharp}
       data:
         _healthLost: 5
+        _healthTerms:
+        - Property: 4
+          Coefficient: 1
+          Divisor: 4
         _actionPointsGained: 2
+        _actionPointTerms:
+        - Property: 8
+          Coefficient: 1
+          Divisor: 4

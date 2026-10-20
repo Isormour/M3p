@@ -50,20 +50,26 @@ namespace M3P
                 ? PlayerProfile.FromJson(File.ReadAllText(SavePath))
                 : CreateStartingProfile();
 
+            bool missingProfileId = string.IsNullOrEmpty(profile.ProfileId);
             profile.NormalizeAfterLoad();
             int cardsBeforeSeed = profile.Cards.Count;
             int tilesBeforeSeed = profile.Tiles.Count;
             int treesBeforeSeed = profile.PerkTreePoints != null ? profile.PerkTreePoints.Count : 0;
             _config?.PlayerStart?.EnsureStarterCards(profile, _config.Cards);
             _config?.PlayerStart?.EnsureStarterTiles(profile, _config.Tiles);
-            _config?.PlayerStart?.EnsureDefaultPerkTrees(profile, _config.StatProgression);
+            bool seededUnlocks = _config?.PlayerStart != null &&
+                _config.PlayerStart.EnsureDefaultPerkTrees(profile, _config.StatProgression);
             SetCurrentProfile(profile);
 
             bool seededCards = profile.Cards.Count > cardsBeforeSeed;
             bool seededTiles = profile.Tiles.Count > tilesBeforeSeed;
-            bool seededTrees = (profile.PerkTreePoints != null ? profile.PerkTreePoints.Count : 0) > treesBeforeSeed;
-            if (!hadSave || seededCards || seededTiles || seededTrees)
+            bool seededTrees = seededUnlocks ||
+                (profile.PerkTreePoints != null ? profile.PerkTreePoints.Count : 0) > treesBeforeSeed;
+            if (!hadSave || missingProfileId || seededCards || seededTiles || seededTrees)
                 Save();
+
+            if (!hadSave)
+                GameAnalytics.RecordProfileCreated(profile.ProfileId);
 
             return profile;
         }

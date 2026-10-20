@@ -58,6 +58,34 @@ namespace M3P
             }
         }
 
+        /// <summary>True when the fight the Battle scene is resolving is an elite.</summary>
+        public bool IsPendingEliteBattle
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(PendingBattleNodeId) || IsPendingBossBattle)
+                    return false;
+
+                if (PendingEncounterType == MapNodeType.Elite)
+                    return true;
+
+                if (PendingEncounter != null && PendingEncounter.Type == MapNodeType.Elite)
+                    return true;
+
+                if (GraphSnapshot?.Nodes == null)
+                    return false;
+
+                for (int i = 0; i < GraphSnapshot.Nodes.Length; i++)
+                {
+                    MapGraphSnapshot.Node node = GraphSnapshot.Nodes[i];
+                    if (node != null && node.Id == PendingBattleNodeId)
+                        return node.Type == MapNodeType.Elite;
+                }
+
+                return false;
+            }
+        }
+
         /// <summary>Enemy picked from the pending battle encounter, if any.</summary>
         public EnemyDefinition PendingEnemy { get; private set; }
 

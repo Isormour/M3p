@@ -31,8 +31,16 @@ namespace M3P
         public int MaxActionPoints;
         public int CurrentActionPoints;
         public int MaxHandSize;
+
+        public int Power;
+        public int Arcane;
+        public int Guard;
+        public int Recovery;
+        public int Precision;
+        public int Tempo;
         public int CurrentSouls;
         public List<TileTypeMana> ManaByBrokenTileType = new List<TileTypeMana>();
+        public PerkBattleRules PerkRules = new PerkBattleRules();
 
         public event Action Changed;
 
@@ -57,10 +65,37 @@ namespace M3P
             CurrentHealth = MaxHP;
             CurrentShield = 0;
             CurrentArmor = 0;
-            CurrentSouls = 0;
+            CurrentSouls = Mathf.Max(0, calculated.StartingSouls);
             MaxActionPoints = calculated.MaxActionPoints;
             CurrentActionPoints = MaxActionPoints;
             MaxHandSize = calculated.MaxHandSize;
+            CopyCombatProperties(calculated);
+            PerkRules ??= new PerkBattleRules();
+            PerkRules.CopyFrom(calculated);
+        }
+
+        /// <summary>Capacities and combat stats a skill formula reads. Current health is not one of them.</summary>
+        public PlayerProperties Properties => new PlayerProperties
+        {
+            Health = MaxHP,
+            ActionPoints = MaxActionPoints,
+            HandSize = MaxHandSize,
+            Power = Power + (PerkRules != null ? PerkRules.PowerBonus(CurrentHealth, MaxHP) : 0),
+            Arcane = Arcane,
+            Guard = Guard,
+            Recovery = Recovery,
+            Precision = Precision,
+            Tempo = Tempo,
+        };
+
+        void CopyCombatProperties(SoftStatValues calculated)
+        {
+            Power = calculated.Power;
+            Arcane = calculated.Arcane;
+            Guard = calculated.Guard;
+            Recovery = calculated.Recovery;
+            Precision = calculated.Precision;
+            Tempo = calculated.Tempo;
         }
 
         public int GetManaForTileType(int tileTypeId)
@@ -263,6 +298,7 @@ namespace M3P
 
             int spent = Mathf.Min(amount, CurrentSouls);
             CurrentSouls -= spent;
+            PerkRules?.OnSoulsSpent(spent);
             NotifyChanged();
             return spent;
         }
@@ -302,11 +338,45 @@ namespace M3P
             CurrentHealth = MaxHP;
             CurrentShield = 0;
             CurrentArmor = 0;
-            CurrentSouls = 0;
+            CurrentSouls = Mathf.Max(0, calculated.StartingSouls);
             MaxHandSize = calculated.MaxHandSize;
             MaxActionPoints = calculated.MaxActionPoints;
             CurrentActionPoints = MaxActionPoints;
+            CopyCombatProperties(calculated);
+            PerkRules ??= new PerkBattleRules();
+            PerkRules.CopyFrom(calculated);
             ResetMana();
+        }
+
+        public void HealFromSkill(int amount)
+        {
+            if (PerkRules != null)
+                amount = PerkRules.ModifySkillHeal(amount);
+
+            Heal(amount);
+        }
+
+        public void AddShieldFromSkill(int amount)
+        {
+            if (PerkRules != null)
+                amount = PerkRules.ModifySkillShield(amount);
+
+            AddShield(amount);
+        }
+
+        public void NotifyPerkSkillHit(BattleCharacter defender, bool physical, bool dealtDamage, bool defenderHadBurn)
+        {
+            PerkRules?.OnSkillHit(this, defender, physical, dealtDamage, defenderHadBurn);
+        }
+
+        public void NotifyPerkSkillFinished()
+        {
+            PerkRules?.OnSkillFinished();
+        }
+
+        public void NotifyPerkTurnStarted()
+        {
+            PerkRules?.OnPlayerTurnStarted(this);
         }
 
         public void ResetActionPoints(HardStats hard, StatProgressionConfig progression, TalentBonuses talents = default)
@@ -368,6 +438,12 @@ namespace M3P
                 CurrentArmor = CurrentArmor,
                 CurrentSouls = CurrentSouls,
                 CurrentActionPoints = CurrentActionPoints,
+                Power = Power,
+                Arcane = Arcane,
+                Guard = Guard,
+                Recovery = Recovery,
+                Precision = Precision,
+                Tempo = Tempo,
                 ManaByBrokenTileType = ManaByBrokenTileType != null
                     ? new List<TileTypeMana>(ManaByBrokenTileType)
                     : new List<TileTypeMana>(),

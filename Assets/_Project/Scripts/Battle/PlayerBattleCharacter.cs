@@ -40,6 +40,8 @@ namespace M3P
                 config != null ? config.StatProgression : null,
                 stats.TalentBonuses);
 
+            stats?.Soft?.NotifyPerkTurnStarted();
+
             // Confusion drains the AP that was just restored, then expires.
             base.OnTurnStarted();
         }

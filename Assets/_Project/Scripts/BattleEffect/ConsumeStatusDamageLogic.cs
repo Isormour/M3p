@@ -14,6 +14,8 @@ namespace M3P
         [SerializeField] StatusEffectDefinition _status;
         [Min(1), SerializeField] int _damagePerStack = 4;
         [SerializeField] bool _physical;
+        [Tooltip("Added after damage per stack. Zapłon adds Arcane.")]
+        [SerializeField] SkillPropertyTerm[] _propertyTerms = Array.Empty<SkillPropertyTerm>();
         [Tooltip("When true, the skill is illegal unless the target already has at least one stack.")]
         [SerializeField] bool _requireStacks;
 
@@ -36,7 +38,15 @@ namespace M3P
                 return;
 
             int stacks = character.ConsumeStatus(_status);
-            SkillCombat.DealScaledDamage(context, target, stacks * DamagePerStack, _physical);
+            if (stacks <= 0)
+                return;
+
+            if (_status.StatusType == EStatusType.Burn)
+                context.Caster?.Stats?.Soft?.PerkRules?.OnBurnStacksConsumed(stacks);
+
+            int damage = stacks * DamagePerStack;
+            damage = SkillPropertyScaling.Apply(damage, _propertyTerms, SkillPropertyScaling.Read(context));
+            SkillCombat.DealScaledDamage(context, target, damage, _physical);
         }
 
         public void AppendTooltipLines(BattleEffectContext preview, EEffectTarget target, List<TooltipLine> lines)
@@ -46,15 +56,17 @@ namespace M3P
 
             string statusName = _status.DisplayName;
             int stacks = preview.Resolve(target)?.CountStatus(_status) ?? 0;
+            PlayerProperties properties = SkillPropertyScaling.Read(preview);
             if (stacks > 0)
             {
-                int damage = SkillCombat.ScaleAmount(preview, stacks * DamagePerStack, _physical);
+                int raw = SkillPropertyScaling.Apply(stacks * DamagePerStack, _propertyTerms, properties);
+                int damage = SkillCombat.ScaleAmount(preview, raw, _physical, includeAttackBonus: true);
                 if (damage > 0)
                     lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {damage} obrażeń ({stacks} × {statusName})"));
                 return;
             }
 
-            int perStack = SkillCombat.ScaleAmount(preview, DamagePerStack, _physical);
+            int perStack = SkillCombat.ScaleAmount(preview, DamagePerStack, _physical, includeAttackBonus: true);
             if (perStack > 0)
                 lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {perStack} obrażeń za każdy stack: {statusName}"));
         }

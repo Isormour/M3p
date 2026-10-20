@@ -23,8 +23,13 @@ MonoBehaviour:
       data:
         _formula: 3
         _amount: 8
-        _bonus: 16
+        _bonus: 0
         _perStep: 0
         _max: 0
         _threshold: 25
         _physical: 1
+        _propertyTerms:
+        - Property: 3
+          Coefficient: 1
+        - Property: 7
+          Coefficient: 2

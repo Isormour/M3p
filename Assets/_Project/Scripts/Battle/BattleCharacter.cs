@@ -22,6 +22,14 @@ namespace M3P
 
         public CharacterStats Stats => _characterStats;
 
+        /// <summary>Properties skill formulas scale with. Comes from the profile's perks, not from a tree level.</summary>
+        public PlayerProperties GetPlayerProperties()
+        {
+            return _characterStats != null && _characterStats.Soft != null
+                ? _characterStats.Soft.Properties
+                : default;
+        }
+
         public bool IsAlive => _characterStats != null && _characterStats.IsAlive;
 
         public IReadOnlyList<StatusInstance> Statuses => _statuses;
@@ -322,8 +330,10 @@ namespace M3P
                 if (definition == null || !definition.HasIncomingGuard)
                     continue;
 
-                reduction = definition.IncomingDamageReduction;
-                counterDamage = definition.IncomingCounterDamage;
+                reduction = status.Magnitude > 0 ? status.Magnitude : definition.IncomingDamageReduction;
+                counterDamage = status.CounterMagnitude > 0
+                    ? status.CounterMagnitude
+                    : definition.IncomingCounterDamage;
                 counterPhysical = definition.IncomingCounterPhysical;
 
                 status.Stacks--;
@@ -369,6 +379,27 @@ namespace M3P
             ApplyStatusStacks(definition, source, 1, 0, 0);
         }
 
+        /// <summary>One soul per outgoing attack or skill hit while Duchowe naznaczenie is active.</summary>
+        public void GrantSoulsForOutgoingHit()
+        {
+            if (_characterStats?.Soft == null)
+                return;
+
+            int souls = 0;
+            for (int i = 0; i < _statuses.Count; i++)
+            {
+                StatusEffectDefinition definition = _statuses[i]?.Definition;
+                if (definition != null && definition.GrantSoulOnOutgoingHit)
+                    souls++;
+            }
+
+            if (souls <= 0)
+                return;
+
+            _characterStats.Soft.AddSouls(souls);
+            Sfx.Play(SfxId.SoulCollect);
+        }
+
         /// <summary>
         /// Adds <paramref name="stacks"/> copies at once.
         /// <paramref name="durationOverride"/> and <paramref name="magnitude"/> replace the authored
@@ -379,7 +410,9 @@ namespace M3P
             BattleCharacter source,
             int stacks,
             int durationOverride,
-            int magnitude)
+            int magnitude,
+            int counterMagnitude = 0,
+            int actionPointDrain = 0)
         {
             if (definition == null || stacks <= 0)
                 return;
@@ -406,6 +439,10 @@ namespace M3P
                 existing.Source = source;
                 if (magnitude > 0)
                     existing.Magnitude = magnitude;
+                if (counterMagnitude > 0)
+                    existing.CounterMagnitude = counterMagnitude;
+                if (actionPointDrain > 0)
+                    existing.ActionPointDrain = actionPointDrain;
                 RaiseStatusesChanged();
                 return;
             }
@@ -413,6 +450,10 @@ namespace M3P
             StatusInstance created = new StatusInstance(definition, source, duration, stacks);
             if (magnitude > 0)
                 created.Magnitude = magnitude;
+            if (counterMagnitude > 0)
+                created.CounterMagnitude = counterMagnitude;
+            if (actionPointDrain > 0)
+                created.ActionPointDrain = actionPointDrain;
             _statuses.Add(created);
             Sfx.Play(SfxId.StatusApply);
             RaiseStatusesChanged();
@@ -494,7 +535,7 @@ namespace M3P
             int shieldBefore = soft != null ? soft.CurrentShield : 0;
             int armorBefore = soft != null ? soft.CurrentArmor : 0;
 
-            definition.ApplyOnTurnEffects(this, status.Source, status.Stacks);
+            definition.ApplyOnTurnEffects(this, status.Source, status.Stacks, status.ActionPointDrain);
 
             if (soft == null)
                 return;

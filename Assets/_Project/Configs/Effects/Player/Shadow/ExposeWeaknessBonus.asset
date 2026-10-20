@@ -22,4 +22,11 @@ MonoBehaviour:
       type: {class: OutgoingHitBonusLogic, ns: M3P, asm: Assembly-CSharp}
       data:
         _bonus: 3
-        _hits: 3
+        _bonusTerms:
+        - Property: 7
+          Coefficient: 2
+        _hits: 2
+        _hitTerms:
+        - Property: 8
+          Coefficient: 1
+          Divisor: 2

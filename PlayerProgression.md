@@ -162,6 +162,8 @@ REKOMENDACJA: limitować moc efektów. Dla 16 tile’i jednego koloru można prz
 
 ## 7. Kolekcja i odblokowywanie skilli
 
+ZAŁOŻENIE: gracz może posiadać **maksymalnie 4 drzewka skilli**, ale rozpoczyna rozgrywkę z **jednym drzewkiem**. Na początku rozgrywki pojawia się ekran wyboru **1 z 3 oferowanych drzewek skilli**. Wybrane drzewko staje się pierwszym drzewkiem gracza. Limit drzewek jest niezależny od liczby skilli w aktywnym loadoucie.
+
 Stan docelowy: profil przechowuje kolekcję odblokowanych skilli, a do walki gracz wybiera **maksymalnie 5**. Wyposażone i odblokowane skille są zawsze dostępne podczas walki i nie są dobierane losowo jak karty. Nowy profil odblokowuje wyłącznie trzy skille z §7.1.
 
 Źródło opisuje katalog 30 definicji gracza, pogrupowanych jako Mag, Wojownik i Cień — po 10 skilli. Są to grupy katalogu, a nie obowiązkowe klasy postaci ani ekskluzywne pule.

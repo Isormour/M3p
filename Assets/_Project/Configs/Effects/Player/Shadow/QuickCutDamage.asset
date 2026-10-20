@@ -21,6 +21,12 @@ MonoBehaviour:
     - rid: 1000
       type: {class: MultiHitDamageLogic, ns: M3P, asm: Assembly-CSharp}
       data:
-        _hits: 2
-        _damagePerHit: 4
+        _hits: 1
+        _hitTerms:
+        - Property: 8
+          Coefficient: 1
+        _damagePerHit: 2
+        _damageTerms:
+        - Property: 7
+          Coefficient: 1
         _physical: 1

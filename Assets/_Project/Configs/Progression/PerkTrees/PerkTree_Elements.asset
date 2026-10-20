@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 25723ff7ec4d09240a43340a6c620ca8, type: 3}
+  m_Name: PerkTree_Elements
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkTree
+  Nazwa: "\u017Bywio\u0142y"
+  _subtitle: "ARCANA I P\u0141OMIE\u0143"
+  _description: Arcane, Recovery i dodatkowy Burn na pierwszym magicznym trafieniu
+    w turze.
+  id: 5
+  perks:
+  - StatLevel: 3
+    Perk: {fileID: 11400000, guid: 7b410b4658cf4ac28d2847af05996bdc, type: 2}
+  - StatLevel: 6
+    Perk: {fileID: 11400000, guid: 8fd71645761e43e0a601d6dc5281d9a9, type: 2}
+  - StatLevel: 9
+    Perk: {fileID: 11400000, guid: 96dc1d879b8a4b4aaccad4cfa35e4347, type: 2}
+  - StatLevel: 12
+    Perk: {fileID: 11400000, guid: 7b410b4658cf4ac28d2847af05996bdc, type: 2}
+  - StatLevel: 15
+    Perk: {fileID: 11400000, guid: 0e4d6db7a7d644b6b36a9ed7a5b8dd56, type: 2}
+  - StatLevel: 18
+    Perk: {fileID: 11400000, guid: 7b410b4658cf4ac28d2847af05996bdc, type: 2}
+  - StatLevel: 21
+    Perk: {fileID: 11400000, guid: 8fd71645761e43e0a601d6dc5281d9a9, type: 2}
+  - StatLevel: 24
+    Perk: {fileID: 11400000, guid: 96dc1d879b8a4b4aaccad4cfa35e4347, type: 2}
+  - StatLevel: 27
+    Perk: {fileID: 11400000, guid: 7b410b4658cf4ac28d2847af05996bdc, type: 2}
+  - StatLevel: 30
+    Perk: {fileID: 11400000, guid: 54e86b861bc64706944eab0e845a092d, type: 2}
+  TreeStatBonusLogic:
+    rid: -2
+  _icon: {fileID: 21300000, guid: c58acee1d3634e6ea8efc52c9343f3d8, type: 3}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

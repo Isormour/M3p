@@ -34,6 +34,9 @@ namespace M3P
         [Header("UI")]
         [SerializeField] UIEndBattlePanel _endBattlePanel;
         [Tooltip("Shown after a boss win. Closing it generates the next floor and returns to Map.")]
+        [SerializeField] UIPerkTreeUnlockPanel _perkTreePanel;
+
+        [Tooltip("Shown after an elite win. The player picks one of three skills, then returns to the map.")]
         [SerializeField] UIPanelGainSkill _gainSkillPanel;
 
         [SerializeField] CameraShake _camerShake;
@@ -67,7 +70,8 @@ namespace M3P
         bool _isPlayerTurn = true;
         bool _battleResolved;
         bool _awaitingSkillChoice;
-        bool _awaitingBossSkillReward;
+        bool _awaitingBossReward;
+        bool _awaitingEliteSkillReward;
         BattleOutcome _lastOutcome;
         MatchRewardRules _fallbackMatchRewards;
 
@@ -146,6 +150,9 @@ namespace M3P
             if (_endBattlePanel == null)
                 _endBattlePanel = FindAnyObjectByType<UIEndBattlePanel>(FindObjectsInactive.Include);
 
+            if (_perkTreePanel == null)
+                _perkTreePanel = FindAnyObjectByType<UIPerkTreeUnlockPanel>(FindObjectsInactive.Include);
+
             if (_gainSkillPanel == null)
                 _gainSkillPanel = FindAnyObjectByType<UIPanelGainSkill>(FindObjectsInactive.Include);
         }
@@ -164,7 +171,7 @@ namespace M3P
             if (Instance != this)
                 return;
 
-            UnsubscribeBossSkillPanel();
+            UnsubscribeRewardPanels();
             Instance = null;
             EndBattle(hideEndPanel: false);
         }
@@ -185,6 +192,7 @@ namespace M3P
 
             SnapshotVitals(target, out int health, out int shield, out int armor);
             skill.UseSkill(caster, target, choice);
+            caster?.Stats?.Soft?.NotifyPerkSkillFinished();
             Sfx.PlaySkill(skill, caster != null && !caster.IsPlayerControlled);
             LastOpponentHitDamage = MeasureDamageTaken(target, health, shield, armor);
             LastOpponentHitHadShield = LastOpponentHitDamage > 0
@@ -839,6 +847,7 @@ namespace M3P
 
             _battleResolved = true;
             _lastOutcome = outcome;
+            GameAnalytics.RecordBattleEnded(outcome, _activeEnemyDefinition);
             StopAllCoroutines();
             _isPlayingAttacks = false;
             _collectedAttacks.Clear();
@@ -879,6 +888,10 @@ namespace M3P
                            _lastOutcome == BattleOutcome.Win &&
                            mapRun.IsPendingBossBattle;
 
+            bool wonElite = returnToMap &&
+                            _lastOutcome == BattleOutcome.Win &&
+                            mapRun.IsPendingEliteBattle;
+
             if (returnToMap && !wonBoss)
                 mapRun.ResolveBattle(_lastOutcome == BattleOutcome.Win);
 
@@ -886,12 +899,15 @@ namespace M3P
 
             if (wonBoss)
             {
-                if (TryShowBossSkillReward())
+                if (TryShowBossPerkReward())
                     return;
 
                 AdvanceAfterBossVictory();
                 return;
             }
+
+            if (wonElite && TryShowEliteSkillReward())
+                return;
 
             if (returnToMap)
             {
@@ -901,39 +917,70 @@ namespace M3P
             }
         }
 
-        bool TryShowBossSkillReward()
+        bool TryShowEliteSkillReward()
         {
             if (_gainSkillPanel == null)
                 _gainSkillPanel = FindAnyObjectByType<UIPanelGainSkill>(FindObjectsInactive.Include);
 
             if (_gainSkillPanel == null)
             {
-                Debug.LogError($"{nameof(BattleManager)}: assign {nameof(_gainSkillPanel)} to offer a skill after a boss.", this);
+                Debug.LogError($"{nameof(BattleManager)}: assign {nameof(_gainSkillPanel)} to offer a skill after an elite.", this);
                 return false;
             }
 
-            _awaitingBossSkillReward = true;
-            _gainSkillPanel.Closed -= HandleBossSkillPanelClosed;
-            _gainSkillPanel.Closed += HandleBossSkillPanelClosed;
+            _awaitingEliteSkillReward = true;
+            _gainSkillPanel.Closed -= HandleEliteSkillPanelClosed;
+            _gainSkillPanel.Closed += HandleEliteSkillPanelClosed;
             _gainSkillPanel.Show();
             Sfx.Play(SfxId.BossRewardReveal);
             return true;
         }
 
-        void HandleBossSkillPanelClosed()
+        void HandleEliteSkillPanelClosed()
         {
-            UnsubscribeBossSkillPanel();
-            if (!_awaitingBossSkillReward)
+            UnsubscribeRewardPanels();
+            if (!_awaitingEliteSkillReward)
                 return;
 
-            _awaitingBossSkillReward = false;
+            _awaitingEliteSkillReward = false;
+            if (GameManager.Instance != null)
+                GameManager.Instance.PersistMapRun();
+            SceneFlow.LoadMap();
+        }
+
+        bool TryShowBossPerkReward()
+        {
+            if (_perkTreePanel == null)
+                _perkTreePanel = FindAnyObjectByType<UIPerkTreeUnlockPanel>(FindObjectsInactive.Include);
+
+            if (_perkTreePanel == null || !_perkTreePanel.HasOffer)
+                return false;
+
+            _awaitingBossReward = true;
+            _perkTreePanel.Closed -= HandleBossPerkPanelClosed;
+            _perkTreePanel.Closed += HandleBossPerkPanelClosed;
+            _perkTreePanel.Show();
+            Sfx.Play(SfxId.BossRewardReveal);
+            return true;
+        }
+
+        void HandleBossPerkPanelClosed()
+        {
+            UnsubscribeRewardPanels();
+            if (!_awaitingBossReward)
+                return;
+
+            _awaitingBossReward = false;
             AdvanceAfterBossVictory();
         }
 
-        void UnsubscribeBossSkillPanel()
+        void UnsubscribeRewardPanels()
         {
             if (_gainSkillPanel != null)
-                _gainSkillPanel.Closed -= HandleBossSkillPanelClosed;
+                _gainSkillPanel.Closed -= HandleEliteSkillPanelClosed;
+
+            if (_perkTreePanel != null)
+                _perkTreePanel.Closed -= HandleBossPerkPanelClosed;
         }
 
         void AdvanceAfterBossVictory()

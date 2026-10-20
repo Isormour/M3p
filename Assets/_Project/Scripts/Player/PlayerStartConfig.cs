@@ -38,8 +38,10 @@ namespace M3P
             TileConfig tileConfig,
             StatProgressionConfig statProgression = null)
         {
-            PlayerProfile profile = new PlayerProfile { HardStats = _hardStats };
-            statProgression?.EnsureDefaultTrees(profile, _hardStats);
+            PlayerProfile profile = new PlayerProfile { PerkTreeUnlocksInitialized = true };
+            if (statProgression != null)
+                profile.HardStats = statProgression.CalculateHardStats(profile.PerkTreePoints);
+
             CopyStartingSkills(profile, skillConfig);
             CopyStarterDeck(profile, cardConfig);
             CopyStarterTileDeck(profile, tileConfig);
@@ -47,11 +49,17 @@ namespace M3P
         }
 
         /// <summary>
-        /// Inserts every authored perk tree a save written before trees existed never stored.
+        /// Marks an old save as initialized without granting trees. Only trees the player chooses
+        /// are written into the profile.
         /// </summary>
-        public void EnsureDefaultPerkTrees(PlayerProfile profile, StatProgressionConfig statProgression)
+        public bool EnsureDefaultPerkTrees(PlayerProfile profile, StatProgressionConfig statProgression)
         {
-            statProgression?.EnsureDefaultTrees(profile, _hardStats);
+            if (profile == null || profile.PerkTreeUnlocksInitialized)
+                return false;
+
+            profile.PerkTreePoints ??= new List<PerkTreePoints>();
+            profile.PerkTreeUnlocksInitialized = true;
+            return true;
         }
 
         /// <summary>

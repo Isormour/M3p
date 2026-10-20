@@ -12,6 +12,8 @@ namespace M3P.Editor
         static Type[] s_logicTypes;
 
         SerializedProperty _nazwa;
+        SerializedProperty _subtitle;
+        SerializedProperty _description;
         SerializedProperty _id;
         SerializedProperty _perks;
         SerializedProperty _statBonus;
@@ -20,6 +22,8 @@ namespace M3P.Editor
         void OnEnable()
         {
             _nazwa = serializedObject.FindProperty("Nazwa");
+            _subtitle = serializedObject.FindProperty("_subtitle");
+            _description = serializedObject.FindProperty("_description");
             _id = serializedObject.FindProperty("id");
             _perks = serializedObject.FindProperty("perks");
             _statBonus = serializedObject.FindProperty("TreeStatBonusLogic");
@@ -31,6 +35,8 @@ namespace M3P.Editor
         {
             serializedObject.Update();
             EditorGUILayout.PropertyField(_nazwa, new GUIContent("Nazwa"));
+            EditorGUILayout.PropertyField(_subtitle, new GUIContent("Subtitle"));
+            EditorGUILayout.PropertyField(_description, new GUIContent("Description"));
             EditorGUILayout.PropertyField(_id);
             EditorGUILayout.PropertyField(_icon);
             EditorGUILayout.PropertyField(_perks, true);

@@ -17,10 +17,14 @@ namespace M3P
 
         [SerializeField] Button _confirmButton;
 
-        [Tooltip("One row per perk tree, top to bottom. Extra trees are ignored until more rows exist.")]
+        [Tooltip("One column per chosen perk tree, first chosen on the left. Empty columns stay locked.")]
         [SerializeField] UIPlayerStatControl[] _statControls = Array.Empty<UIPlayerStatControl>();
 
+        [Tooltip("Column that reads the profile's properties, including points not confirmed yet.")]
+        [SerializeField] UIPlayerPanelPlayerProperties _properties;
+
         readonly Dictionary<int, int> _pendingByTree = new Dictionary<int, int>();
+        readonly List<PerkTree> _chosenTrees = new List<PerkTree>();
 
         protected override void OnInitialize()
         {
@@ -114,6 +118,9 @@ namespace M3P
 
             if (_confirmButton == null)
                 _confirmButton = FindDescendantComponent<Button>("ConfirmButton");
+
+            if (_properties == null)
+                _properties = GetComponentInChildren<UIPlayerPanelPlayerProperties>(true);
         }
 
         static ProgressionService Progression => GameManager.Instance != null ? GameManager.Instance.Progression : null;
@@ -135,6 +142,12 @@ namespace M3P
             return _pendingByTree.TryGetValue(treeId, out int pending) ? pending : 0;
         }
 
+        /// <summary>Points chosen on a tree but not written. The properties column adds these before Confirm.</summary>
+        public int PendingPoints(int treeId)
+        {
+            return GetPending(treeId);
+        }
+
         void BindControls()
         {
             for (int i = 0; i < _statControls.Length; i++)
@@ -151,7 +164,10 @@ namespace M3P
         void HandleIncreaseClicked(int treeId)
         {
             PlayerProfile profile = Profiles?.CurrentProfile;
-            if (profile == null || treeId == PerkTree.InvalidId || profile.UnspentStatPoints - TotalPending <= 0)
+            if (profile == null || treeId == PerkTree.InvalidId || !profile.IsPerkTreeUnlocked(treeId))
+                return;
+
+            if (profile.UnspentStatPoints - TotalPending <= 0)
                 return;
 
             StatProgressionConfig progression = Progression?.StatProgression;
@@ -215,13 +231,17 @@ namespace M3P
         {
             PlayerProfile profile = Profiles?.CurrentProfile;
             if (profile == null)
+            {
+                _properties?.Show(default);
                 return;
+            }
 
             int remainingPoints = Mathf.Max(0, profile.UnspentStatPoints - TotalPending);
             int totalPending = TotalPending;
 
             StatProgressionConfig progression = Progression?.StatProgression;
-            PerkTree[] trees = progression != null ? progression.PerkTrees : Array.Empty<PerkTree>();
+            CollectChosenTrees(profile, progression);
+            RestoreAuthoredColumns();
             int maxStatValue = progression != null ? progression.MaxStatValue : int.MaxValue;
 
             if (_levelLabel != null)
@@ -239,10 +259,14 @@ namespace M3P
                 if (control == null)
                     continue;
 
-                PerkTree tree = i < trees.Length ? trees[i] : null;
+                PerkTree tree = i < _chosenTrees.Count ? _chosenTrees[i] : null;
                 control.Bind(tree);
 
-                if (tree == null)
+                bool unlocked = tree != null && profile.IsPerkTreeUnlocked(tree.Id);
+                if (control.IsLocked == unlocked)
+                    control.SetLocked(!unlocked);
+
+                if (tree == null || !unlocked)
                 {
                     control.Refresh(progression, 0, 0, false);
                     continue;
@@ -251,6 +275,71 @@ namespace M3P
                 int pending = GetPending(tree.Id);
                 int value = profile.GetPerkTreePoints(tree.Id) + pending;
                 control.Refresh(progression, value, pending, remainingPoints > 0 && value < maxStatValue);
+            }
+
+            if (_properties == null)
+                _properties = GetComponentInChildren<UIPlayerPanelPlayerProperties>(true);
+
+            _properties?.Refresh();
+        }
+
+        /// <summary>
+        /// Chosen trees in the order the player unlocked them. The first one fills the first column.
+        /// </summary>
+        void CollectChosenTrees(PlayerProfile profile, StatProgressionConfig progression)
+        {
+            _chosenTrees.Clear();
+            if (profile?.PerkTreePoints == null || progression == null || _statControls == null)
+                return;
+
+            int limit = _statControls.Length;
+            for (int i = 0; i < profile.PerkTreePoints.Count && _chosenTrees.Count < limit; i++)
+            {
+                PerkTree tree = progression.GetTree(profile.PerkTreePoints[i].TreeId);
+                if (tree != null)
+                    _chosenTrees.Add(tree);
+            }
+        }
+
+        /// <summary>
+        /// The four authored columns stay full size. Copies left in the layout from an older build stay hidden.
+        /// </summary>
+        void RestoreAuthoredColumns()
+        {
+            if (_statControls == null || _statControls.Length == 0 || _statControls[0] == null)
+                return;
+
+            Transform parent = _statControls[0].transform.parent;
+            HorizontalLayoutGroup layout = parent.GetComponent<HorizontalLayoutGroup>();
+            if (layout != null)
+            {
+                layout.childScaleWidth = false;
+                layout.childScaleHeight = false;
+                layout.childForceExpandWidth = true;
+            }
+
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                Transform child = parent.GetChild(i);
+                UIPlayerStatControl control = child.GetComponent<UIPlayerStatControl>();
+                if (control == null)
+                    continue;
+
+                if (child is RectTransform rect)
+                    rect.localScale = Vector3.one;
+
+                bool authored = false;
+                for (int slot = 0; slot < _statControls.Length; slot++)
+                {
+                    if (_statControls[slot] == control)
+                    {
+                        authored = true;
+                        break;
+                    }
+                }
+
+                if (control.gameObject.activeSelf != authored)
+                    control.gameObject.SetActive(authored);
             }
         }
     }

@@ -63,7 +63,12 @@ namespace M3P
             return enemy is EnemyBattleCharacter enemyCharacter && enemyCharacter.IsTelegraphingOffensive;
         }
 
-        public static int ScaleAmount(BattleEffectContext context, int amount, bool physical)
+        public static int ScaleAmount(
+            BattleEffectContext context,
+            int amount,
+            bool physical,
+            bool includeAttackBonus = false,
+            bool applyContextMultiplier = true)
         {
             if (amount <= 0)
                 return 0;
@@ -81,7 +86,15 @@ namespace M3P
                 ? progression.ScalePhysicalEffect(casterHard, amount, talents)
                 : progression.ScaleMagicEffect(casterHard, amount, talents);
 
-            float multiplier = context.SkillDamageMultiplier > 0f ? context.SkillDamageMultiplier : 1f;
+            float multiplier = 1f;
+            if (applyContextMultiplier)
+                multiplier = context.SkillDamageMultiplier > 0f ? context.SkillDamageMultiplier : 1f;
+            if (includeAttackBonus
+                && context.DirectHit
+                && context.Caster != null
+                && Mathf.Approximately(multiplier, 1f))
+                multiplier = context.Caster.Modifiers.PeekNextAttackBonus();
+
             if (!Mathf.Approximately(multiplier, 1f))
                 scaled = Mathf.Max(1, Mathf.RoundToInt(scaled * multiplier));
 
@@ -90,7 +103,7 @@ namespace M3P
 
         public static int ScaleHealOrShield(BattleEffectContext context, int amount)
         {
-            return ScaleAmount(context, amount, physical: false);
+            return ScaleAmount(context, amount, physical: false, applyContextMultiplier: false);
         }
 
         /// <summary>
@@ -129,9 +142,14 @@ namespace M3P
             amount = Mathf.Max(0, amount - reduction);
             amount = Mathf.Max(0, amount - defender.GetPersistentIncomingReduction());
 
+            bool hadBurn = PerkBattleRules.HasBurn(defender);
             if (amount > 0)
                 defender.Stats.Soft.TakeDamage(amount);
 
+            if (attacker != null && attacker.IsPlayerControlled)
+                attacker.Stats?.Soft?.NotifyPerkSkillHit(defender, physical, amount > 0, hadBurn);
+
+            attacker?.GrantSoulsForOutgoingHit();
             defender.NotifyDirectHitReceived(attacker);
 
             if (counterDamage <= 0 || attacker?.Stats?.Soft == null || attacker == defender)
@@ -161,6 +179,7 @@ namespace M3P
             if (amount > 0)
                 defender.Stats.Soft.TakeDamage(amount);
 
+            attacker?.GrantSoulsForOutgoingHit();
             defender.NotifyDirectHitReceived(attacker);
         }
 
@@ -175,7 +194,7 @@ namespace M3P
             if (defender == null || hits <= 0 || damagePerHit <= 0)
                 return;
 
-            int scaled = ScaleAmount(context, damagePerHit, physical);
+            int scaled = ScaleAmount(context, damagePerHit, physical, includeAttackBonus: true);
             for (int i = 0; i < hits; i++)
             {
                 if (i > 0)
@@ -194,7 +213,7 @@ namespace M3P
                 return;
 
             BattleCharacter defender = context.Resolve(target);
-            ApplyHit(context, defender, ScaleAmount(context, amount, physical), physical);
+            ApplyHit(context, defender, ScaleAmount(context, amount, physical, includeAttackBonus: true), physical);
         }
 
         public static bool TryCollectDistinctColorSpendOrder(

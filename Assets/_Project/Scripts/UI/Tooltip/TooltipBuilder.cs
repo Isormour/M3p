@@ -57,13 +57,17 @@ namespace M3P
             content.Meta = BuildStatusMeta(status, count);
 
             AppendStatModifiers(definition, count, content.Lines);
-            definition.AppendIncomingGuardTooltip(content.Lines);
+            definition.AppendIncomingGuardTooltip(
+                content.Lines,
+                status.Magnitude > 0 ? status.Magnitude : -1,
+                status.CounterMagnitude > 0 ? status.CounterMagnitude : -1);
             definition.AppendPersistentModifierTooltip(content.Lines, status.Magnitude);
 
             var context = new BattleEffectContext(
                 status.Source != null ? status.Source : bearer,
                 bearer,
-                statusStacks: count);
+                statusStacks: count,
+                actionPointDrain: status.ActionPointDrain);
             AppendEffects(definition.OnTurnEffects, context, content.Lines, forceTarget: EEffectTarget.Opponent);
             return content;
         }
