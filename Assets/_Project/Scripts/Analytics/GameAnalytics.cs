@@ -154,7 +154,7 @@ namespace M3P
         {
             try
             {
-                await UnityServices.InitializeAsync();
+                await RemoteConfig.UgsStartup.EnsureAsync(RemoteConfig.RemoteBalanceBootstrap.EnvironmentNameForServices());
 
                 ConsentState consent = EndUserConsent.GetConsentState();
                 consent.AnalyticsIntent = ConsentStatus.Granted;

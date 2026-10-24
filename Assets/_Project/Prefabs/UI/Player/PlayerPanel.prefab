@@ -404,22 +404,22 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 33de7576621894a4da755cf2596af099, type: 3}
---- !u!114 &579344889129223765 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5429024309651224052, guid: 33de7576621894a4da755cf2596af099, type: 3}
-  m_PrefabInstance: {fileID: 4854312788367307681}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 879fc293e32748143b1fff14ccb5aeba, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::M3P.UISimpleIndicator
 --- !u!224 &3687146703940886161 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8103835722410290480, guid: 33de7576621894a4da755cf2596af099, type: 3}
   m_PrefabInstance: {fileID: 4854312788367307681}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &4275824363290791983 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8650073865007686542, guid: 33de7576621894a4da755cf2596af099, type: 3}
+  m_PrefabInstance: {fileID: 4854312788367307681}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0298e9f13f2c5734bb9912086e437cf3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIHealthIndicator
 --- !u!1001 &5281664656007052360
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1052,7 +1052,7 @@ MonoBehaviour:
   _player: {fileID: 0}
   _playerManaPanel: {fileID: 2535231157113253649}
   _playerSkillsPanel: {fileID: 4298042328222826584}
-  _playerHP: {fileID: 579344889129223765}
+  _playerHP: {fileID: 4275824363290791983}
   _playerActionPoints: {fileID: 5491820280767913940}
   _playerShield: {fileID: 1385766958270163988}
   _statusList: {fileID: 2307026259023203438}

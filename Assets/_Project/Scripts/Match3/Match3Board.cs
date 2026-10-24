@@ -198,7 +198,7 @@ namespace Match3
             int locked = 0;
             while (locked < count && candidates.Count > 0)
             {
-                int index = UnityEngine.Random.Range(0, candidates.Count);
+                int index = NextRandom(candidates.Count);
                 candidates[index].SetLocked(true);
                 candidates.RemoveAt(index);
                 locked++;
@@ -256,7 +256,12 @@ namespace Match3
                 return;
             }
 
-            _rng ??= new System.Random(Environment.TickCount);
+            if (_rng == null)
+            {
+                Debug.LogWarning($"{nameof(Match3Board)} started without a battle seed. Using a fixed seed.", this);
+                _rng = new System.Random(0);
+            }
+
             _tiles = new Match3Tile[width, height];
             BuildInitialBoard();
             RaiseComboChanged(0);
@@ -267,8 +272,8 @@ namespace Match3
         }
 
         /// <summary>
-        /// Fixes the battle's random stream. Every refill and shuffle draws from it, so a battle can be
-        /// replayed and a queued random card can promise the preview the same board it will produce.
+        /// Fixes the board stream before the first tile is spawned. Refills and rooted-tile picks draw
+        /// from it. Call this before <see cref="Start"/> runs.
         /// </summary>
         public void SetRandomSeed(int seed)
         {
@@ -280,7 +285,7 @@ namespace Match3
             if (exclusiveMax <= 1)
                 return 0;
 
-            _rng ??= new System.Random(Environment.TickCount);
+            _rng ??= new System.Random(0);
             return _rng.Next(exclusiveMax);
         }
 

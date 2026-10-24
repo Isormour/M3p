@@ -25,6 +25,11 @@ namespace M3P
 
         public static TooltipContent FromCard(BoardActionCardDefinition card)
         {
+            return FromCard(card, card != null ? card.ActionPointCost : 0);
+        }
+
+        public static TooltipContent FromCard(BoardActionCardDefinition card, int actionPointCost)
+        {
             var content = new TooltipContent();
             if (card == null)
                 return content;
@@ -32,8 +37,8 @@ namespace M3P
             content.Title = card.DisplayName;
             content.Description = card.Description;
             content.Icon = card.Artwork;
-            content.Meta = card.ActionPointCost > 0
-                ? $"Koszt: {card.ActionPointCost} AP"
+            content.Meta = actionPointCost > 0
+                ? $"Koszt: {actionPointCost} AP"
                 : "Bez kosztu AP";
 
             string targeting = TargetingLabel(card.Targeting);

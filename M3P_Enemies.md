@@ -54,7 +54,7 @@ Poniższe liczby odpowiadają obecnym assetom w `Configs/Skills/Enemies` i powi�
 
 ## 5. Zestawy przeciwników
 
-`level` oznacza poziom dungeona (piętro), a `rank` rangę przeciwnika. W poniższych formułach `L = level`, `R = rank`. Skille wymienione poniżej są specyfikacją zestawów do implementacji i playtestu; wartości bez osobnego mnożnika zachowują aktualny efekt wspólnego assetu, dopóki nie zostaną nadpisane osobnym efektem. Nowe współczynniki są punktem startowym do testów balansu.
+`level` oznacza piętro efektywne przeciwnika (z uwzględnieniem premii elity opisanej w sekcji 8.2), a `rank` rangę przeciwnika. W poniższych formułach `L = level`, `R = rank`. Skille wymienione poniżej są specyfikacją zestawów do implementacji i playtestu; wartości bez osobnego mnożnika zachowują aktualny efekt wspólnego assetu, dopóki nie zostaną nadpisane osobnym efektem. Nowe współczynniki są punktem startowym do testów balansu.
 
 Guard oznacza efekt obronny przyznający Shield, zgodnie z obecnym `GuardUp`; nie wprowadza osobnego zasobu. Armor (pancerz) jest zasobem używanym przez `Corrosion`, `IronWall` i `ArmorBash` frenzy.
 
@@ -73,7 +73,7 @@ Moment ticku, odświeżanie i stackowanie regeneracji wymagają decyzji przed im
 | Skill | Efekt | Czas / skalowanie |
 | --- | --- | --- |
 | `EnemyStrike` | Standardowy atak awaryjny. | Aktualnie 3 obrażenia fizyczne; CD 1. |
-| `HeadButt` | Zadaje obrażenia. | `10 × level × rank`. |
+| `HeadButt` | Zadaje obrażenia. | `10 × level × rank`; CD 3 tury. |
 | `DefensiveStance` | Nakłada na Miniootaura status redukcji obrażeń o stałą wartość, nie procent. | Redukcja `L` obrażeń, minimum do 0, przez `2 × L` tur. |
 | `LickWounds` | Nakłada na Miniootaura status regeneracji. | Leczy `2 × L` HP na tick przez `3 × R` tur. |
 
@@ -121,8 +121,9 @@ Zestaw Miniootaura nie zawiera `EnemyGuard` ani `EnemyEmber`. Usunięcie dotyczy
 
 | Skill | Efekt | Czas / skalowanie |
 | --- | --- | --- |
+| `EnemyStrike` | Standardowy atak awaryjny, dostępny od piętra 1. | 3 obrażenia fizyczne; CD 1. |
 | `Entail` | Zakorzenia losowe kafelki. Zakorzeniony kafelek pozostaje w miejscu, dopóki nie zostanie zniszczony. | `3 × level` kafelków. |
-| `KonarHit` | Zadaje obrażenia i nakłada na gracza Confusion. | `5 × L` obrażeń; status odbiera 1 AP po odnowieniu AP na początku następnej tury gracza, po czym znika. |
+| `KonarHit` | Zadaje obrażenia i nakłada na gracza Confusion. | `5 × L` obrażeń; CD 2 tury; status odbiera 1 AP po odnowieniu AP na początku następnej tury gracza, po czym znika. |
 | `ThrowBeeHive` | Nakłada na gracza Poison, który zadaje 2 obrażenia na turę. | `2 × level × rank` tur. |
 
 ### 5.8. Minioluch
@@ -215,7 +216,7 @@ Wartości są punktem startowym do playtestu i korzystają ze wspólnego `StatPr
 
 ### 8.2. Typ spotkania
 
-Typ spotkania modyfikuje piętro efektywne po wybraniu `EnemyDefinition`. Elita może korzystać z tej samej definicji i wcześniejszych progów skilli. Boss powinien mieć osobną definicję, gdy posiada unikalne fazy, model lub reguły zwycięstwa.
+Typ spotkania modyfikuje piętro efektywne po wybraniu `EnemyDefinition`. Numer piętra jest ograniczany do minimum 1, a elita otrzymuje premię +1: `piętro efektywne = max(1, piętro dungeona) + 1`. Premia wpływa na statystyki, progi rang i skilli, skalowane efekty oraz EXP. Elita może korzystać z tej samej definicji i wcześniejszych progów skilli. Boss powinien mieć osobną definicję, gdy posiada unikalne fazy, model lub reguły zwycięstwa.
 
 ## 9. Model techniczny
 

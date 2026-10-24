@@ -47,5 +47,42 @@ namespace M3P
                 default: return type.ToString();
             }
         }
+
+        /// <summary>Title on the walk-to-node panel when the stop is not a fight.</summary>
+        public static string PreviewTitle(this MapNodeType type)
+        {
+            switch (type)
+            {
+                case MapNodeType.Shop: return "SKLEP";
+                case MapNodeType.Forge: return "KUŹNIA";
+                case MapNodeType.Chest: return "SKRZYNIA";
+                case MapNodeType.Elite: return "ELITA";
+                case MapNodeType.Boss: return "BOSS";
+                case MapNodeType.Start: return "START";
+                default: return "WALKA";
+            }
+        }
+
+        /// <summary>Body copy when an encounter has no authored description.</summary>
+        public static string DefaultDescription(this MapNodeType type)
+        {
+            switch (type)
+            {
+                case MapNodeType.Forge:
+                    return "Kuźnia. Połóż kafelek na kowadle i wzmocnij go ulepszeniami.";
+                case MapNodeType.Shop:
+                    return "Sklep kart. Wydaj odłamki i wykuj nową kartę do talii.";
+                case MapNodeType.Chest:
+                    return "Zamknięta skrzynia. W środku czeka nagroda.";
+                case MapNodeType.Start:
+                    return "Początek drogi.";
+                case MapNodeType.Elite:
+                    return "Elitarny przeciwnik.";
+                case MapNodeType.Boss:
+                    return "Boss piętra.";
+                default:
+                    return "Walka z przeciwnikiem.";
+            }
+        }
     }
 }

@@ -54,6 +54,8 @@ namespace M3P
         [SerializeField] PerkConfig _perkConfig;
         [Tooltip("Every spendable perk tree. A new profile starts with none of them unlocked.")]
         [SerializeField] PerkTree[] _perkTrees = Array.Empty<PerkTree>();
+        [Tooltip("Trees a new profile may choose as its first tree. Trees left out stay locked until a later reward. An empty list offers every tree.")]
+        [SerializeField] PerkTree[] _starterPerkTrees = Array.Empty<PerkTree>();
         [Tooltip("Burn status applied by the Żywioły Kindle perk.")]
         [SerializeField] StatusEffectDefinition _burnStatus;
 
@@ -62,6 +64,22 @@ namespace M3P
         [SerializeField] PropertyIcon[] _propertyIcons = Array.Empty<PropertyIcon>();
 
         public PerkTree[] PerkTrees => _perkTrees ?? Array.Empty<PerkTree>();
+
+        /// <summary>
+        /// Trees offered on the opening choice. An empty authoring list means the whole catalog.
+        /// </summary>
+        public PerkTree[] StarterPerkTrees
+        {
+            get
+            {
+                PerkTree[] starter = _starterPerkTrees;
+                if (starter == null || starter.Length == 0)
+                    return PerkTrees;
+
+                return starter;
+            }
+        }
+
         public StatusEffectDefinition BurnStatus => _burnStatus;
         public PerkConfig Perks => _perkConfig;
         public int MilestoneInterval => Mathf.Max(1, _talentMilestoneInterval);
@@ -205,6 +223,10 @@ namespace M3P
                     ? GetTreeValue(treePoints, tree.Id)
                     : tree.GetProgressionLevel(hard);
                 ApplyUnlocked(tree.Perks, level, ref stats);
+                // Enemies have no perk-tree spend cap. Past the authored ladder, only max-HP
+                // perks repeat, so constitution keeps raising HP and other perks stay once.
+                if (treePoints == null)
+                    ApplyHealthBeyondLadder(tree.Perks, level, ref stats);
             }
 
             stats.BasicAttackDamage = Mathf.Max(
@@ -356,6 +378,46 @@ namespace M3P
             }
         }
 
+        /// <summary>
+        /// Repeats max-HP perks after the highest authored threshold. One extra ladder of 10
+        /// constitution grants the same +10 HP steps as levels 1, 3, 6 and 8.
+        /// </summary>
+        static void ApplyHealthBeyondLadder(StatPerk[] progression, int statLevel, ref SoftStatValues stats)
+        {
+            if (progression == null || progression.Length == 0 || statLevel <= 0)
+                return;
+
+            int ladder = 0;
+            for (int i = 0; i < progression.Length; i++)
+            {
+                if (progression[i].StatLevel > ladder)
+                    ladder = progression[i].StatLevel;
+            }
+
+            if (ladder <= 0 || statLevel <= ladder)
+                return;
+
+            int extra = statLevel - ladder;
+            int fullCycles = extra / ladder;
+            int remainder = extra % ladder;
+            for (int i = 0; i < progression.Length; i++)
+            {
+                StatPerk perk = progression[i];
+                if (perk.Perk == null || perk.Perk.Logic is not AddMaxHP)
+                    continue;
+
+                if (perk.StatLevel <= 0 || perk.StatLevel > ladder)
+                    continue;
+
+                int copies = fullCycles;
+                if (perk.StatLevel <= remainder)
+                    copies++;
+
+                for (int copy = 0; copy < copies; copy++)
+                    perk.Perk.Apply(ref stats);
+            }
+        }
+
         void OnValidate()
         {
             PerkTree[] trees = PerkTrees;
@@ -381,6 +443,16 @@ namespace M3P
                 }
 
                 ValidateProgression(tree.Perks, tree.name);
+            }
+
+            PerkTree[] starter = _starterPerkTrees ?? Array.Empty<PerkTree>();
+            for (int i = 0; i < starter.Length; i++)
+            {
+                PerkTree tree = starter[i];
+                if (tree != null && tree.Id != PerkTree.InvalidId && GetTree(tree.Id) == null)
+                    Debug.LogWarning(
+                        $"{nameof(StatProgressionConfig)} '{name}': starter tree '{tree.name}' is not in {nameof(_perkTrees)}.",
+                        this);
             }
         }
 

@@ -13,40 +13,30 @@ MonoBehaviour:
   m_Name: PerkTree_Constitution
   m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkTree
   Nazwa: Kondycja
-  _subtitle: MAKSYMALNE ZDROWIE
-  _description: Zwiększaj pulę HP i wytrzymałość postaci w dłuższych walkach.
+  _subtitle: HP I OBRONA
+  _description: Maksymalne HP, Guard, Recovery i przetrwanie przy niskim zdrowiu.
   id: 3
   perks:
+  - StatLevel: 1
+    Perk: {fileID: 11400000, guid: cd3b4d185bcd4cc6b7ed8bbf0a1f5280, type: 2}
   - StatLevel: 2
-    Perk: {fileID: 11400000, guid: 6e800675d99a7124caf3d6236d0cd04e, type: 2}
+    Perk: {fileID: 11400000, guid: 07d79fc60a5d445daed2fdd027c16400, type: 2}
   - StatLevel: 3
-    Perk: {fileID: 11400000, guid: c4e8f1a23b5d6e7091a2b3c4d5e6f708, type: 2}
+    Perk: {fileID: 11400000, guid: cd3b4d185bcd4cc6b7ed8bbf0a1f5280, type: 2}
+  - StatLevel: 4
+    Perk: {fileID: 11400000, guid: 8fd71645761e43e0a601d6dc5281d9a9, type: 2}
   - StatLevel: 5
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
+    Perk: {fileID: 11400000, guid: 9b3d6f2a7c4e4b35f6a8b0c2d4e65789, type: 2}
+  - StatLevel: 6
+    Perk: {fileID: 11400000, guid: cd3b4d185bcd4cc6b7ed8bbf0a1f5280, type: 2}
   - StatLevel: 7
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
+    Perk: {fileID: 11400000, guid: 07d79fc60a5d445daed2fdd027c16400, type: 2}
+  - StatLevel: 8
+    Perk: {fileID: 11400000, guid: cd3b4d185bcd4cc6b7ed8bbf0a1f5280, type: 2}
   - StatLevel: 9
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  - StatLevel: 11
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  - StatLevel: 13
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  - StatLevel: 15
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  - StatLevel: 17
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  - StatLevel: 19
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  - StatLevel: 21
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  - StatLevel: 23
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  - StatLevel: 25
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  - StatLevel: 27
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
-  - StatLevel: 29
-    Perk: {fileID: 11400000, guid: da571f23d291264478769bcfed2b13b7, type: 2}
+    Perk: {fileID: 11400000, guid: 8fd71645761e43e0a601d6dc5281d9a9, type: 2}
+  - StatLevel: 10
+    Perk: {fileID: 11400000, guid: ac4e7a3b8d5f4c4607b9c1d3e5f76890, type: 2}
   TreeStatBonusLogic:
     rid: 816005044332658840
   _icon: {fileID: 21300000, guid: 203e8f281a830a84cbed9d96beff3e8b, type: 3}

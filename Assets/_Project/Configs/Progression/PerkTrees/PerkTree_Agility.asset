@@ -13,40 +13,30 @@ MonoBehaviour:
   m_Name: PerkTree_Agility
   m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkTree
   Nazwa: Zręczność
-  _subtitle: PUNKTY AKCJI
-  _description: Zwiększaj maksymalną liczbę punktów akcji i tempo kolejnych ruchów.
+  _subtitle: PRECYZJA I AP
+  _description: Precision, Tempo i rzadkie premie do punktów akcji.
   id: 4
   perks:
+  - StatLevel: 1
+    Perk: {fileID: 11400000, guid: bd5f8b4c9e6a4d5718c0d2e4f6a87901, type: 2}
   - StatLevel: 2
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
+    Perk: {fileID: 11400000, guid: ce6a9c5d0f7b4e6829d1e3f5a7b98012, type: 2}
+  - StatLevel: 3
+    Perk: {fileID: 11400000, guid: 3b6b15cd285647428163ae5d7e159711, type: 2}
   - StatLevel: 4
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
+    Perk: {fileID: 11400000, guid: bd5f8b4c9e6a4d5718c0d2e4f6a87901, type: 2}
+  - StatLevel: 5
+    Perk: {fileID: 11400000, guid: df7bad6e1a8c4f7930e2f4a6b8c09123, type: 2}
   - StatLevel: 6
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
+    Perk: {fileID: 11400000, guid: 3b6b15cd285647428163ae5d7e159711, type: 2}
+  - StatLevel: 7
+    Perk: {fileID: 11400000, guid: bd5f8b4c9e6a4d5718c0d2e4f6a87901, type: 2}
   - StatLevel: 8
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
+    Perk: {fileID: 11400000, guid: ce6a9c5d0f7b4e6829d1e3f5a7b98012, type: 2}
+  - StatLevel: 9
+    Perk: {fileID: 11400000, guid: bd5f8b4c9e6a4d5718c0d2e4f6a87901, type: 2}
   - StatLevel: 10
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 12
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 14
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 16
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 18
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 20
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 22
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 24
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 26
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 28
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
-  - StatLevel: 30
-    Perk: {fileID: 11400000, guid: 47b6561ac2a14e146a3c58e4768caa13, type: 2}
+    Perk: {fileID: 11400000, guid: e08cbe7f2b9d408041f3a5b7c9d10234, type: 2}
   TreeStatBonusLogic:
     rid: 816005044332658842
   _icon: {fileID: 21300000, guid: 57959268c6295c24f8df689467f7b5d7, type: 3}

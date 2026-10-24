@@ -8,9 +8,10 @@ using Random = UnityEngine.Random;
 namespace M3P
 {
     /// <summary>
-    /// Offers a random handful of locked perk trees and unlocks the one the player confirms.
-    /// Names, icons, descriptions and the first thresholds are read from the perk trees and
-    /// <see cref="PerkConfig"/>, so a new perk shows up here without a layout change.
+    /// Unlocks the perk tree the player confirms.
+    /// A starter panel lists every tree in the starting pool. A reward panel shows a random
+    /// handful of the remaining locked trees. Names, icons, descriptions and the first
+    /// thresholds come from the trees and <see cref="PerkConfig"/>.
     /// </summary>
     public sealed class UIPerkTreeUnlockPanel : UIPanelClosable
     {
@@ -27,6 +28,8 @@ namespace M3P
         [SerializeField] TextMeshProUGUI _ownershipCount;
         [SerializeField] Button _confirmButton;
 
+        [Tooltip("Lists every tree in the starting pool. Reward panels leave this off and draw a random handful instead.")]
+        [SerializeField] bool _offerEntirePool;
         [SerializeField, Min(1)] int _offerCount = 3;
         [SerializeField, Min(1)] int _previewPerkCount = 3;
 
@@ -53,6 +56,23 @@ namespace M3P
         GameObject _overlayRoot;
         Transform _hostParent;
         int _hostSibling = -1;
+        ScrollRect _offerScroll;
+        RectTransform _offerViewport;
+        bool _offersLayoutCaptured;
+        bool _offersScrolling;
+        Vector2 _offersAnchorMin;
+        Vector2 _offersAnchorMax;
+        Vector2 _offersPivot;
+        Vector2 _offersAnchoredPosition;
+        Vector2 _offersSizeDelta;
+        TextAnchor _offersAlignment = TextAnchor.MiddleCenter;
+        int _offersPaddingLeft;
+        int _offersPaddingRight;
+        int _offersPaddingTop;
+        int _offersPaddingBottom;
+
+        /// <summary>True on the opening choice, which lists the whole starting pool.</summary>
+        public bool OffersEntirePool => _offerEntirePool;
 
         /// <summary>Raised when the panel closes after a confirmed unlock.</summary>
         public event Action Closed;
@@ -70,7 +90,7 @@ namespace M3P
                 if (progression == null)
                     return false;
 
-                PerkTree[] trees = progression.PerkTrees;
+                PerkTree[] trees = OfferSource(progression);
                 for (int i = 0; i < trees.Length; i++)
                 {
                     PerkTree tree = trees[i];
@@ -201,28 +221,46 @@ namespace M3P
             if (progression == null)
                 return;
 
-            int limit = Mathf.Max(1, _offerCount);
             var locked = new List<PerkTree>();
             int unlocked = 0;
             int max = 0;
-            PerkTree[] trees = progression.PerkTrees;
-            for (int i = 0; i < trees.Length; i++)
+            PerkTree[] catalog = progression.PerkTrees;
+            for (int i = 0; i < catalog.Length; i++)
             {
-                PerkTree tree = trees[i];
+                PerkTree tree = catalog[i];
                 if (tree == null || tree.Id == PerkTree.InvalidId)
                     continue;
 
                 max++;
                 if (profile != null && profile.IsPerkTreeUnlocked(tree.Id))
-                {
                     unlocked++;
+            }
+
+            PerkTree[] source = OfferSource(progression);
+            for (int i = 0; i < source.Length; i++)
+            {
+                PerkTree tree = source[i];
+                if (tree == null || tree.Id == PerkTree.InvalidId)
                     continue;
-                }
+
+                if (profile != null && profile.IsPerkTreeUnlocked(tree.Id))
+                    continue;
+
+                if (ContainsTree(locked, tree.Id))
+                    continue;
 
                 locked.Add(tree);
             }
 
-            Bind(TakeRandom(locked, limit), progression.Perks, -1, unlocked, max);
+            IReadOnlyList<PerkTree> offer = _offerEntirePool
+                ? locked
+                : TakeRandom(locked, Mathf.Max(1, _offerCount));
+            Bind(offer, progression.Perks, -1, unlocked, max);
+        }
+
+        PerkTree[] OfferSource(StatProgressionConfig progression)
+        {
+            return _offerEntirePool ? progression.StarterPerkTrees : progression.PerkTrees;
         }
 
         /// <summary>
@@ -253,6 +291,17 @@ namespace M3P
                 offer.Add(source[order[i]]);
 
             return offer;
+        }
+
+        static bool ContainsTree(List<PerkTree> trees, int treeId)
+        {
+            for (int i = 0; i < trees.Count; i++)
+            {
+                if (trees[i] != null && trees[i].Id == treeId)
+                    return true;
+            }
+
+            return false;
         }
 
         void HandleCardClicked(UIPerkTreeOfferCard card)
@@ -330,8 +379,12 @@ namespace M3P
                 _authoredPanelWidth = panel.sizeDelta.x;
 
             float cardWidth = 318f;
+            float cardHeight = 610f;
             if (_cardTemplate != null && _cardTemplate.transform is RectTransform card)
+            {
                 cardWidth = Mathf.Max(1f, card.sizeDelta.x);
+                cardHeight = Mathf.Max(1f, card.sizeDelta.y);
+            }
 
             float spacing = 16f;
             if (_cardParent != null)
@@ -342,13 +395,25 @@ namespace M3P
             }
 
             float inset = 56f;
-            if (_cardParent is RectTransform offers)
+            if (_cardParent is RectTransform offers && !_offersScrolling)
                 inset = Mathf.Max(0f, -offers.sizeDelta.x);
+            else if (_offersLayoutCaptured)
+                inset = Mathf.Max(0f, -_offersSizeDelta.x);
 
             float content = cardCount * cardWidth + Mathf.Max(0, cardCount - 1) * spacing;
-            const float maxWidth = 1760f;
-            float scale = 1f;
+            float maxWidth = _offerEntirePool ? 1840f : 1760f;
             float available = Mathf.Max(1f, maxWidth - inset);
+            bool scroll = _offerEntirePool && Application.isPlaying && content > available;
+            if (scroll)
+            {
+                panel.sizeDelta = new Vector2(Mathf.Max(_authoredPanelWidth, maxWidth), panel.sizeDelta.y);
+                SetCardScale(1f);
+                SetOfferScrolling(true, content, cardHeight);
+                return;
+            }
+
+            SetOfferScrolling(false);
+            float scale = 1f;
             if (content > available)
                 scale = available / content;
 
@@ -362,14 +427,161 @@ namespace M3P
                 }
             }
 
-            for (int i = 0; i < _cards.Count; i++)
-            {
-                if (_cards[i] != null)
-                    _cards[i].transform.localScale = new Vector3(scale, scale, 1f);
-            }
+            SetCardScale(scale);
 
             float needed = inset + content * scale;
             panel.sizeDelta = new Vector2(Mathf.Max(_authoredPanelWidth, Mathf.Min(maxWidth, needed)), panel.sizeDelta.y);
+        }
+
+        void SetCardScale(float scale)
+        {
+            var cardScale = new Vector3(scale, scale, 1f);
+            for (int i = 0; i < _cards.Count; i++)
+            {
+                if (_cards[i] != null)
+                    _cards[i].transform.localScale = cardScale;
+            }
+        }
+
+        /// <summary>
+        /// The opening row is wider than the panel, so the cards stay at full size and scroll
+        /// instead of shrinking until the text cannot be read.
+        /// </summary>
+        void SetOfferScrolling(bool scroll, float contentWidth = 0f, float cardHeight = 0f)
+        {
+            if (_cardParent is not RectTransform offers)
+                return;
+
+            if (!scroll)
+            {
+                if (_offersScrolling)
+                    RestoreOffersLayout();
+
+                _offersScrolling = false;
+                return;
+            }
+
+            EnsureOfferViewport(offers);
+            if (_offerViewport != null && !_offerViewport.gameObject.activeSelf)
+                _offerViewport.gameObject.SetActive(true);
+
+            if (!_offersScrolling && _offerViewport != null)
+            {
+                offers.SetParent(_offerViewport, false);
+                _offersScrolling = true;
+            }
+
+            HorizontalLayoutGroup layout = offers.GetComponent<HorizontalLayoutGroup>();
+            if (layout != null)
+            {
+                layout.childAlignment = TextAnchor.MiddleLeft;
+                layout.childScaleWidth = false;
+                layout.childScaleHeight = false;
+                layout.padding.left = 8;
+                layout.padding.right = 8;
+            }
+
+            offers.anchorMin = new Vector2(0f, 0.5f);
+            offers.anchorMax = new Vector2(0f, 0.5f);
+            offers.pivot = new Vector2(0f, 0.5f);
+            offers.anchoredPosition = Vector2.zero;
+            offers.localScale = Vector3.one;
+            offers.sizeDelta = new Vector2(contentWidth + 16f, cardHeight);
+
+            if (_offerScroll != null)
+            {
+                _offerScroll.content = offers;
+                Canvas.ForceUpdateCanvases();
+                LayoutRebuilder.ForceRebuildLayoutImmediate(offers);
+                _offerScroll.horizontalNormalizedPosition = 0f;
+            }
+        }
+
+        void EnsureOfferViewport(RectTransform offers)
+        {
+            CaptureOffersLayout(offers);
+            if (_offerViewport != null)
+                return;
+
+            var viewportObject = new GameObject("OfferViewport", typeof(RectTransform));
+            viewportObject.layer = offers.gameObject.layer;
+            _offerViewport = viewportObject.GetComponent<RectTransform>();
+            _offerViewport.SetParent(offers.parent, false);
+            _offerViewport.SetSiblingIndex(offers.GetSiblingIndex());
+            _offerViewport.anchorMin = _offersAnchorMin;
+            _offerViewport.anchorMax = _offersAnchorMax;
+            _offerViewport.pivot = _offersPivot;
+            _offerViewport.anchoredPosition = _offersAnchoredPosition;
+            _offerViewport.sizeDelta = _offersSizeDelta;
+
+            Image hit = viewportObject.AddComponent<Image>();
+            hit.color = new Color(0f, 0f, 0f, 0f);
+            hit.raycastTarget = true;
+            viewportObject.AddComponent<RectMask2D>();
+
+            _offerScroll = viewportObject.AddComponent<ScrollRect>();
+            _offerScroll.horizontal = true;
+            _offerScroll.vertical = false;
+            _offerScroll.movementType = ScrollRect.MovementType.Clamped;
+            _offerScroll.inertia = true;
+            _offerScroll.scrollSensitivity = 40f;
+            _offerScroll.viewport = _offerViewport;
+            _offerScroll.content = offers;
+        }
+
+        void CaptureOffersLayout(RectTransform offers)
+        {
+            if (_offersLayoutCaptured)
+                return;
+
+            _offersLayoutCaptured = true;
+            _offersAnchorMin = offers.anchorMin;
+            _offersAnchorMax = offers.anchorMax;
+            _offersPivot = offers.pivot;
+            _offersAnchoredPosition = offers.anchoredPosition;
+            _offersSizeDelta = offers.sizeDelta;
+
+            HorizontalLayoutGroup layout = offers.GetComponent<HorizontalLayoutGroup>();
+            if (layout == null)
+                return;
+
+            _offersAlignment = layout.childAlignment;
+            _offersPaddingLeft = layout.padding.left;
+            _offersPaddingRight = layout.padding.right;
+            _offersPaddingTop = layout.padding.top;
+            _offersPaddingBottom = layout.padding.bottom;
+        }
+
+        void RestoreOffersLayout()
+        {
+            if (!_offersLayoutCaptured || _cardParent is not RectTransform offers)
+                return;
+
+            if (_offerViewport != null && offers.parent == _offerViewport)
+            {
+                offers.SetParent(_offerViewport.parent, false);
+                offers.SetSiblingIndex(_offerViewport.GetSiblingIndex());
+            }
+
+            offers.anchorMin = _offersAnchorMin;
+            offers.anchorMax = _offersAnchorMax;
+            offers.pivot = _offersPivot;
+            offers.anchoredPosition = _offersAnchoredPosition;
+            offers.sizeDelta = _offersSizeDelta;
+            offers.localScale = Vector3.one;
+
+            HorizontalLayoutGroup layout = offers.GetComponent<HorizontalLayoutGroup>();
+            if (layout != null)
+            {
+                layout.childAlignment = _offersAlignment;
+                layout.padding.left = _offersPaddingLeft;
+                layout.padding.right = _offersPaddingRight;
+                layout.padding.top = _offersPaddingTop;
+                layout.padding.bottom = _offersPaddingBottom;
+            }
+
+            if (_offerViewport != null)
+                _offerViewport.gameObject.SetActive(false);
         }
 
         void RebuildPips(int filled)
@@ -456,8 +668,9 @@ namespace M3P
 
         void RaiseInteractive()
         {
-            if (_cardParent != null)
-                _cardParent.SetAsLastSibling();
+            Transform row = _offersScrolling && _offerViewport != null ? _offerViewport : _cardParent;
+            if (row != null)
+                row.SetAsLastSibling();
 
             if (_confirmButton != null)
                 _confirmButton.transform.SetAsLastSibling();

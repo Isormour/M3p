@@ -29,6 +29,8 @@ namespace M3P
 
         BoardActionCardDefinition _selectedCard;
 
+        public event Action Closed;
+
         protected override void OnInitialize()
         {
             HideTemplate(CardTypePrefab);
@@ -68,6 +70,14 @@ namespace M3P
         {
             base.Show();
             Refresh();
+        }
+
+        public override void Hide()
+        {
+            bool wasOpen = IsOpen;
+            base.Hide();
+            if (wasOpen)
+                Closed?.Invoke();
         }
 
         static ProfileManager Profiles => GameManager.Instance != null ? GameManager.Instance.ProfileManager : null;

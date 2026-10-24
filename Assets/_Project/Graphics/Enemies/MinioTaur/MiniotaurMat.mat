@@ -34,6 +34,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: 0734a10674d721648a75b41c50b00afb, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ColorMask:
+        m_Texture: {fileID: 2800000, guid: e4709c721a00464e93d813500d04a12d, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -129,10 +133,12 @@ Material:
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _ColorVariant: {r: 0.2264151, g: 0.2264151, b: 0.2264151, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _MSA: {r: 0, g: 0, b: 1, a: 0}
     - _OutlineHighColor: {r: 1, g: 0.8578303, b: 0, a: 1}
     - _OutlineMidColor: {r: 1, g: 0.053893566, b: 0, a: 1}
-    - _OutlineMultNPower: {r: 1, g: 10, b: 0, a: 0}
+    - _OutlineMultNPower: {r: 1, g: 0, b: 0, a: 0}
     - _OutlineTNO: {r: 2, g: 1, b: -0.1, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []

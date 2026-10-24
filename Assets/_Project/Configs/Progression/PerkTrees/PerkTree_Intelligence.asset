@@ -13,40 +13,30 @@ MonoBehaviour:
   m_Name: PerkTree_Intelligence
   m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkTree
   Nazwa: Inteligencja
-  _subtitle: POJEMNOŚĆ RĘKI
-  _description: Zwiększaj liczbę kart na ręce i liczbę dostępnych możliwości.
+  _subtitle: ARCANA I RĘKA
+  _description: Arcane, większa początkowa ręka i premie za jedno duże dopasowanie.
   id: 2
   perks:
+  - StatLevel: 1
+    Perk: {fileID: 11400000, guid: 7b410b4658cf4ac28d2847af05996bdc, type: 2}
   - StatLevel: 2
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
+    Perk: {fileID: 11400000, guid: 64bc0e75a1d64ea7a6d0881253acf980, type: 2}
+  - StatLevel: 3
+    Perk: {fileID: 11400000, guid: 7b410b4658cf4ac28d2847af05996bdc, type: 2}
   - StatLevel: 4
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
+    Perk: {fileID: 11400000, guid: 7b410b4658cf4ac28d2847af05996bdc, type: 2}
+  - StatLevel: 5
+    Perk: {fileID: 11400000, guid: 7f1b4d0e5a2c4913d4e6f8a0b2c43567, type: 2}
   - StatLevel: 6
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
+    Perk: {fileID: 11400000, guid: 7b410b4658cf4ac28d2847af05996bdc, type: 2}
+  - StatLevel: 7
+    Perk: {fileID: 11400000, guid: 64bc0e75a1d64ea7a6d0881253acf980, type: 2}
   - StatLevel: 8
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
+    Perk: {fileID: 11400000, guid: 7b410b4658cf4ac28d2847af05996bdc, type: 2}
+  - StatLevel: 9
+    Perk: {fileID: 11400000, guid: 7b410b4658cf4ac28d2847af05996bdc, type: 2}
   - StatLevel: 10
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 12
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 14
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 16
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 18
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 20
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 22
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 24
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 26
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 28
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
-  - StatLevel: 30
-    Perk: {fileID: 11400000, guid: 58ae3398f814e7f4f8088588a695ecb1, type: 2}
+    Perk: {fileID: 11400000, guid: 8a2c5e1f6b3d4a24e5f7a9b1c3d54678, type: 2}
   TreeStatBonusLogic:
     rid: 816005044332658841
   _icon: {fileID: 21300000, guid: 0ff88867e98d5b140a36c66b43f6e177, type: 3}

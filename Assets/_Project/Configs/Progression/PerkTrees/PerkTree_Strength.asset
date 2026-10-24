@@ -13,40 +13,30 @@ MonoBehaviour:
   m_Name: PerkTree_Strength
   m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkTree
   Nazwa: Siła
-  _subtitle: ATAK PODSTAWOWY
-  _description: Rozwijaj obrażenia fizyczne zadawane przez podstawowy atak.
+  _subtitle: OBRAŻENIA I POWER
+  _description: Obrażenia podstawowe, Power i premie za wiele dopasowań w jednej sekwencji.
   id: 1
   perks:
+  - StatLevel: 1
+    Perk: {fileID: 11400000, guid: 4c8e1a7b2d9f46e0a1b3c5d7e9f10234, type: 2}
   - StatLevel: 2
-    Perk: {fileID: 11400000, guid: e8290c3266f94474397a69a9d98467ec, type: 2}
+    Perk: {fileID: 11400000, guid: 0da4afce3c8f4720973ec8494985bdf2, type: 2}
   - StatLevel: 3
-    Perk: {fileID: 11400000, guid: 40a920d36fb22dc418a6d2603af906bc, type: 2}
+    Perk: {fileID: 11400000, guid: 4c8e1a7b2d9f46e0a1b3c5d7e9f10234, type: 2}
+  - StatLevel: 4
+    Perk: {fileID: 11400000, guid: 0da4afce3c8f4720973ec8494985bdf2, type: 2}
   - StatLevel: 5
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
+    Perk: {fileID: 11400000, guid: 5d9f2b8c3e0a47f1b2c4d6e8f0a21345, type: 2}
+  - StatLevel: 6
+    Perk: {fileID: 11400000, guid: 4c8e1a7b2d9f46e0a1b3c5d7e9f10234, type: 2}
   - StatLevel: 7
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
+    Perk: {fileID: 11400000, guid: 0da4afce3c8f4720973ec8494985bdf2, type: 2}
+  - StatLevel: 8
+    Perk: {fileID: 11400000, guid: 4c8e1a7b2d9f46e0a1b3c5d7e9f10234, type: 2}
   - StatLevel: 9
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  - StatLevel: 11
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  - StatLevel: 13
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  - StatLevel: 15
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  - StatLevel: 17
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  - StatLevel: 19
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  - StatLevel: 21
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  - StatLevel: 23
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  - StatLevel: 25
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  - StatLevel: 27
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
-  - StatLevel: 29
-    Perk: {fileID: 11400000, guid: e851d1ab23d890e49930ea3f6cb18d0e, type: 2}
+    Perk: {fileID: 11400000, guid: 0da4afce3c8f4720973ec8494985bdf2, type: 2}
+  - StatLevel: 10
+    Perk: {fileID: 11400000, guid: 6e0a3c9d4f1b4802c3d5e7f9a1b32456, type: 2}
   TreeStatBonusLogic:
     rid: 816005044332658839
   _icon: {fileID: 21300000, guid: 7de9a5fac157ac44d9eda001e7e05aa0, type: 3}

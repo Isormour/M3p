@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f95b2dfe14a960c4ea22f7e097d0f0fd, type: 3}
+  m_Name: Przelamanie
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkDefinition
+  _name: "Przełamanie"
+  _description: "Rozliczenie sekwencji z co najmniej 3 grupami nadaje Przełamanie. Raz na turę. Następny fizyczny skill zadaje +4 obrażenia i zużywa ten efekt. Nie kumuluje się i wygasa na koniec tury."
+  _artwork: {fileID: 21300000, guid: b93fb7b73b3048418b407171f1c1fbe1, type: 3}
+  _logic:
+    rid: 1
+  references:
+    version: 2
+    RefIds:
+    - rid: 1
+      type: {class: GrantPerkRule, ns: M3P, asm: Assembly-CSharp}
+      data:
+        _rule: 10

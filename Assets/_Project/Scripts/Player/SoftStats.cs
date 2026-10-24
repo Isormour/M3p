@@ -171,6 +171,8 @@ namespace M3P
                 + (healthBefore - CurrentHealth);
             if (dealt > 0)
                 Damaged?.Invoke(dealt);
+
+            PerkRules?.OnDamageTaken(this, healthBefore);
         }
 
         public void Heal(int amount)
@@ -323,6 +325,17 @@ namespace M3P
             NotifyChanged();
         }
 
+        /// <summary>Flat max HP on top of constitution perks and the encounter health multiplier.</summary>
+        public void AddBonusMaxHealth(int amount)
+        {
+            if (amount == 0)
+                return;
+
+            MaxHP = Mathf.Max(1, MaxHP + amount);
+            CurrentHealth = MaxHP;
+            NotifyChanged();
+        }
+
         public void RecalculateFromHard(
             HardStats hard,
             StatProgressionConfig progression,
@@ -385,6 +398,24 @@ namespace M3P
             MaxActionPoints = progression.CalculateMaxActionPoints(hard, talents);
             CurrentActionPoints = MaxActionPoints;
             NotifyChanged();
+        }
+
+        public int PreviewCardActionPointCost(int cost)
+        {
+            if (cost <= 0)
+                return 0;
+
+            return PerkRules != null ? PerkRules.PreviewCardCost(cost) : cost;
+        }
+
+        public void ConsumeCardCostDiscount(int baseCost)
+        {
+            PerkRules?.ConsumeCardCostDiscount(baseCost);
+        }
+
+        public void RestoreCardCostDiscount()
+        {
+            PerkRules?.RestoreCardCostDiscount();
         }
 
         public bool HasActionPoints(int cost = 1) => CurrentActionPoints >= cost;

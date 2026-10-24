@@ -3,16 +3,23 @@ using System;
 namespace M3P
 {
     /// <summary>
-    /// Deterministic index picks for enemy skills. The sequence restarts at the beginning of each battle
-    /// and follows the map-run seed.
+    /// Enemy stream for one battle: skill choice, mana-colour drains, and an off-map enemy pick.
+    /// <see cref="Begin"/> starts it from the enemy seed before the first of those rolls.
     /// </summary>
     public static class BattleRoll
     {
-        static int _cursor;
+        static System.Random _random = new System.Random(0);
 
-        public static void Reset()
+        public static System.Random Source => _random;
+
+        public static void Begin(int streamSeed)
         {
-            _cursor = 0;
+            _random = new System.Random(streamSeed);
+        }
+
+        public static void End()
+        {
+            _random = new System.Random(0);
         }
 
         public static int NextIndex(int count)
@@ -20,17 +27,7 @@ namespace M3P
             if (count <= 0)
                 return -1;
 
-            int seed = 1;
-            MapRunState run = MapRunState.Active;
-            if (run != null)
-            {
-                int graphSeed = run.GraphSnapshot != null ? run.GraphSnapshot.Seed : 0;
-                seed = unchecked(graphSeed + run.FloorIndex * 13);
-            }
-
-            _cursor++;
-            var rng = new Random(unchecked(seed + _cursor * 997));
-            return rng.Next(count);
+            return _random.Next(count);
         }
     }
 }

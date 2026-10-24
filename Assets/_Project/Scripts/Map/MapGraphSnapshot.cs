@@ -21,6 +21,7 @@ namespace M3P
             public string EncounterName;
             public MapNodeType Type;
             public Vector2 Position;
+            public MapBiome Biome;
         }
 
         [Serializable]
@@ -60,6 +61,7 @@ namespace M3P
                         EncounterName = node.EncounterName,
                         Type = node.Type,
                         Position = node.Position,
+                        Biome = node.Biome,
                     };
             }
 

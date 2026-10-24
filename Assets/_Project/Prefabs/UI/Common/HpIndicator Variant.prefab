@@ -116,8 +116,77 @@ PrefabInstance:
       propertyPath: m_Name
       value: HpIndicator Variant
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7286239176950647225, guid: 9040ce9064e9d4348b21b142ebc39ea8, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8785235025821023067, guid: 9040ce9064e9d4348b21b142ebc39ea8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8650073865007686542}
   m_SourcePrefab: {fileID: 100100000, guid: 9040ce9064e9d4348b21b142ebc39ea8, type: 3}
+--- !u!114 &2343450804534841300 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1067268596393194393, guid: 9040ce9064e9d4348b21b142ebc39ea8, type: 3}
+  m_PrefabInstance: {fileID: 3335530378954095693}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+--- !u!114 &2632632303043450564 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 775413071618943625, guid: 9040ce9064e9d4348b21b142ebc39ea8, type: 3}
+  m_PrefabInstance: {fileID: 3335530378954095693}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!198 &2926189713334311780 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 491390710472550185, guid: 9040ce9064e9d4348b21b142ebc39ea8, type: 3}
+  m_PrefabInstance: {fileID: 3335530378954095693}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4606178472332067241 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1271776372698824164, guid: 9040ce9064e9d4348b21b142ebc39ea8, type: 3}
+  m_PrefabInstance: {fileID: 3335530378954095693}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6314402372696442646}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42da092bfac0c064788c91ff8edafa78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Rotator
+--- !u!1 &6314402372696442646 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8785235025821023067, guid: 9040ce9064e9d4348b21b142ebc39ea8, type: 3}
+  m_PrefabInstance: {fileID: 3335530378954095693}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8650073865007686542
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6314402372696442646}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0298e9f13f2c5734bb9912086e437cf3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIHealthIndicator
+  _fill: {fileID: 2632632303043450564}
+  _valueText: {fileID: 2343450804534841300}
+  _increaseParticles: {fileID: 2926189713334311780}
+  _decreaseParticles: {fileID: 6509999775656329643}
+  _rotation: {fileID: 4606178472332067241}
+--- !u!198 &6509999775656329643 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 8363753475175841254, guid: 9040ce9064e9d4348b21b142ebc39ea8, type: 3}
+  m_PrefabInstance: {fileID: 3335530378954095693}
+  m_PrefabAsset: {fileID: 0}

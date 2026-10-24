@@ -64,11 +64,27 @@ namespace M3P
                 _visuals = GetComponentInChildren<UICardVisuals>(true);
 
             if (_visuals != null)
-                _visuals.SetCardData(card);
+                _visuals.SetCardData(card, DisplayedActionPointCost());
             else
                 Debug.LogError($"{nameof(UIBoardActionCard)}: assign {nameof(_visuals)} on the prefab.", this);
 
-            UITooltipTrigger.Ensure(gameObject, () => TooltipBuilder.FromCard(_card));
+            UITooltipTrigger.Ensure(gameObject, () => TooltipBuilder.FromCard(_card, DisplayedActionPointCost()));
+        }
+
+        public void RefreshDisplayedCost()
+        {
+            if (_visuals == null || _card == null)
+                return;
+
+            _visuals.SetCardData(_card, DisplayedActionPointCost());
+        }
+
+        int DisplayedActionPointCost()
+        {
+            if (_card == null)
+                return 0;
+
+            return _controller != null ? _controller.PreviewActionPointCost(_card) : _card.ActionPointCost;
         }
 
         public void SetInteractable(bool interactable)

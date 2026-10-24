@@ -60,10 +60,57 @@ namespace M3P
             _spawnedCharacter.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
             _spawnedCharacter.transform.rotation = Quaternion.Euler(0, 180, 0);
             ApplyFlyingMapHover(_spawnedCharacter);
-            // Marker collider handles clicks; character mesh must not steal raycasts.
+            // Prefab colliders are battle-sized and would cover neighbouring nodes.
             Collider[] colliders = _spawnedCharacter.GetComponentsInChildren<Collider>(true);
             for (int i = 0; i < colliders.Length; i++)
                 Destroy(colliders[i]);
+
+            AddClickVolume(_spawnedCharacter);
+        }
+
+        /// <summary>
+        /// The marker collider sits on the pedestal. A volume on the mesh lets a click on the enemy
+        /// select this node. The volume stays a child, so the raycast still resolves to <see cref="MapNode"/>.
+        /// </summary>
+        void AddClickVolume(GameObject root)
+        {
+            bool hasBounds = false;
+            Bounds world = default;
+            Renderer[] renderers = root.GetComponentsInChildren<Renderer>(true);
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                Renderer renderer = renderers[i];
+                if (!(renderer is MeshRenderer) && !(renderer is SkinnedMeshRenderer))
+                    continue;
+
+                if (!hasBounds)
+                {
+                    world = renderer.bounds;
+                    hasBounds = true;
+                }
+                else
+                {
+                    world.Encapsulate(renderer.bounds);
+                }
+            }
+
+            GameObject volumeObject = new GameObject("ClickVolume");
+            volumeObject.layer = gameObject.layer;
+            Transform volume = volumeObject.transform;
+            volume.SetParent(root.transform, false);
+            volume.rotation = Quaternion.identity;
+
+            BoxCollider box = volumeObject.AddComponent<BoxCollider>();
+            if (!hasBounds || world.size.sqrMagnitude < 0.0001f)
+            {
+                box.center = new Vector3(0f, 1f, 0f);
+                box.size = new Vector3(0.8f, 2f, 0.8f);
+                return;
+            }
+
+            box.center = volume.InverseTransformPoint(world.center);
+            Vector3 size = volume.InverseTransformVector(world.size);
+            box.size = new Vector3(Mathf.Abs(size.x), Mathf.Abs(size.y), Mathf.Abs(size.z));
         }
 
         static void ApplyFlyingMapHover(GameObject root)

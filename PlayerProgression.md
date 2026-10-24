@@ -42,18 +42,22 @@ OTWARTE: bazowy EXP za walkę, krzywa kosztu kolejnych poziomów, level cap oraz
 
 ## 3. Rozwój statystyk i drzewka perków
 
-Postać posiada cztery główne statystyki. Każdy wydany punkt podnosi odpowiadające drzewko o 1, do pułapu **30**. Perk odblokowany na danym poziomie zostaje i sumuje się z wcześniejszymi; wyższy próg nie zastępuje niższego.
+Katalog zawiera **8 drzewek po 10 perków**. Każdy punkt w drzewku odblokowuje kolejny perk: progi wynoszą **1, 2, 3, …, 10**, a maksymalna wartość jednego drzewka to **10 punktów**. Nie ma pustych poziomów między perkami. Odblokowane efekty zostają i sumują się z wcześniejszymi; kolejny perk nie zastępuje poprzedniego.
 
-Baza przed perkami: obrażenia bazowego ataku **1**, maksymalne HP **20**, ręka **3**, maksymalne AP **2**. Nowa postać zaczyna z 1 punktem w każdej statystyce. Skille nie dostają procentu od STR ani INT. Siła podnosi obrażenia ataku z matcha, kondycja maksymalne HP, inteligencja rozmiar ręki, a zręczność maksymalną liczbę AP.
+Baza przed perkami: obrażenia bazowego ataku **1**, maksymalne HP **20**, ręka **3**, maksymalne AP **2**. Nowy profil nie ma odblokowanych drzewek. Wybranie nowego drzewka przyznaje jego pierwszy punkt i pierwszy perk bez wydawania punktu za awans. Do pełnego rozwinięcia wybranego drzewka potrzeba następnie **9 wydanych punktów**.
 
-| Statystyka | Drzewko | Progi | Efekt progu |
-| --- | --- | --- | --- |
-| STR | `PerkTree_Strength` | 2; 3; potem każdy nieparzysty od 5 do 29 | +1, potem +4, potem +5 obrażeń bazowego ataku |
-| CON | `PerkTree_Constitution` | 2; 3; potem każdy nieparzysty od 5 do 29 | +5 HP, potem +10 HP, potem +25 HP |
-| INT | `PerkTree_Intelligence` | każdy parzysty od 2 do 30 | +1 karta na ręce |
-| AGI | `PerkTree_Agility` | każdy parzysty od 2 do 30 | +1 maksymalne AP |
+| Drzewko | Asset | Kierunek rozwoju |
+| --- | --- | --- |
+| Siła | `PerkTree_Strength` | Obrażenia podstawowe, Power i premie za wiele dopasowań w jednej sekwencji. |
+| Inteligencja | `PerkTree_Intelligence` | Arcane, początkowa ręka i premie za jedno duże dopasowanie. |
+| Kondycja | `PerkTree_Constitution` | Maksymalne HP, Guard, Recovery i przetrwanie przy niskim zdrowiu. |
+| Zręczność | `PerkTree_Agility` | Precision, Tempo i premie do punktów akcji. |
+| Żywioły | `PerkTree_Elements` | Arcane, Recovery i efekty związane z Burn. |
+| Might | `PerkTree_Might` | Power, maksymalne HP i walka przy niskim zdrowiu. |
+| Tactic | `PerkTree_Tactic` | Tempo, początkowa ręka i efekty taktyczne. |
+| Faith | `PerkTree_Faith` | Guard, Dusze na początku walki i efekty obronne. |
 
-Przy STR 1 bazowy atak ma 1 obrażenie, przy 2 ma 2, przy 3 ma 6, a od 5 rośnie o 5 na każdym nieparzystym progu. Przy 29 i 30 wynosi 71. Kondycja 1 daje 20 HP, 2 daje 25 HP, 3 daje 35 HP, a 29 i 30 dają 360 HP. Ręka wynosi `3 + floor(INT / 2)`, więc startowo 3, a przy 30 aż 18. Maksymalne AP wynoszą `2 + floor(AGI / 2)`, więc startowo 2, a przy 30 aż 17.
+Kolejność i efekty perków określają assety drzewek. Przejście z progów co 3 punkty na progi co 1 punkt zachowuje tę kolejność i wartości efektów; ostatni perk jest dostępny przy 10 punktach zamiast 30.
 
 Drzewka nie zawierają wyboru jednego z dwóch talentów. Katalog talentów jest pusty.
 

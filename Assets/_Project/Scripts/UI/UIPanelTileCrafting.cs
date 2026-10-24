@@ -21,6 +21,7 @@ namespace M3P
         [SerializeField] UIPanelPlayerManaBar CostPrefab;
         [SerializeField] UIPanelCraftTileShowTile _ShowTile;
         [SerializeField] Button ConfirmCraftButton;
+        [SerializeField] UIForgeHammerStrike _hammerStrike;
 
         [SerializeField] Transform ShardsParent;
         [SerializeField] UISimpleIndicator ShardsIndicatorPrefab;
@@ -127,6 +128,13 @@ namespace M3P
             if (ConfirmCraftButton == null)
                 ConfirmCraftButton = FindDescendantButton("ConfirmCraftButton")
                     ?? FindDescendantButton("CraftButton");
+
+            if (_hammerStrike == null)
+            {
+                Transform forge = FindDescendant("CenterForge");
+                if (forge != null)
+                    _hammerStrike = forge.GetComponent<UIForgeHammerStrike>();
+            }
         }
 
         void HandleProfileChanged()
@@ -435,7 +443,10 @@ namespace M3P
             if (!profile.TryCraftTile(tileId, _combinedCost, CollectSelectedUpgradeIds()))
                 return;
 
-            Sfx.Play(SfxId.TileCraftSuccess);
+            if (_hammerStrike != null)
+                _hammerStrike.Play();
+            else
+                Sfx.Play(SfxId.TileCraftSuccess);
 
             Profiles.Save();
             RefreshSelection();

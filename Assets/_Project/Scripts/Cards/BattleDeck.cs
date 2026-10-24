@@ -17,7 +17,7 @@ namespace M3P
         readonly List<BoardActionCardDefinition> _sequence = new List<BoardActionCardDefinition>();
         readonly List<BoardActionCardDefinition> _discardPile = new List<BoardActionCardDefinition>();
 
-        System.Random _random = new System.Random(Environment.TickCount);
+        System.Random _random = new System.Random(0);
 
         /// <summary>Raised whenever cards move between piles.</summary>
         public event Action Changed;
@@ -35,7 +35,7 @@ namespace M3P
 
         public int TotalCardCount => _drawPile.Count + _hand.Count + _sequence.Count + _discardPile.Count;
 
-        /// <summary>Fixes the shuffle stream so a battle can be replayed from a seed.</summary>
+        /// <summary>Fixes the shuffle stream. Call before the first shuffle of the battle.</summary>
         public void SetRandomSeed(int seed)
         {
             _random = new System.Random(seed);

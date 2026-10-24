@@ -14,6 +14,10 @@ namespace M3P
     {
         [SerializeField] MapNodeType _type = MapNodeType.Battle;
 
+        [TextArea(2, 4)]
+        [Tooltip("Walk-to-node copy for this encounter. Used when the map node type matches Type. Combat nodes show the enemy instead.")]
+        [SerializeField] string _description;
+
         [Tooltip("Enemies that may appear when Type is Battle, Elite or Boss. One is picked per node. Ignored for other types.")]
         [SerializeField] EnemyDefinition[] _enemies = Array.Empty<EnemyDefinition>();
 
@@ -21,6 +25,21 @@ namespace M3P
         [SerializeField] ChestConfig _chest;
 
         public MapNodeType Type => _type;
+
+        public string Description => _description ?? string.Empty;
+
+        /// <summary>
+        /// Copy for a non-combat stop. An authored description is used only when
+        /// <paramref name="nodeType"/> matches this asset, so a shop encounter reused
+        /// on a forge node does not show the shop text.
+        /// </summary>
+        public string ResolveDescription(MapNodeType nodeType)
+        {
+            if (!string.IsNullOrWhiteSpace(_description) && _type == nodeType)
+                return _description.Trim();
+
+            return nodeType.DefaultDescription();
+        }
 
         public IReadOnlyList<EnemyDefinition> Enemies => _enemies ?? Array.Empty<EnemyDefinition>();
 

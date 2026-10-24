@@ -53,9 +53,12 @@ namespace M3P
             return TryGetEnemy(enemyId, out EnemyDefinition enemy) ? enemy : null;
         }
 
-        /// <summary>A random registered enemy, or null when the registry is empty.</summary>
-        public EnemyDefinition PickRandom()
+        /// <summary>A random registered enemy, or null when the registry is empty or <paramref name="random"/> is missing.</summary>
+        public EnemyDefinition PickRandom(System.Random random)
         {
+            if (random == null)
+                return null;
+
             Entry[] entries = Entries;
             int seen = 0;
             EnemyDefinition pick = null;
@@ -66,7 +69,7 @@ namespace M3P
                     continue;
 
                 seen++;
-                if (UnityEngine.Random.Range(0, seen) == 0)
+                if (random.Next(seen) == 0)
                     pick = candidate;
             }
 

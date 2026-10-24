@@ -132,6 +132,7 @@ namespace M3P
                 amount += attacker.Modifiers.ConsumeOutgoingHitBonus();
                 amount += attacker.GetPersistentOutgoingBonus();
                 amount = Mathf.Max(0, amount - attacker.GetPersistentOutgoingPenalty());
+                amount += attacker.Stats?.Soft?.PerkRules?.ModifyOutgoingSkillHit() ?? 0;
             }
 
             int reduction = 0;
@@ -141,6 +142,9 @@ namespace M3P
                 defender.Modifiers.TryConsumeIncoming(out reduction, out counterDamage, out counterPhysical);
             amount = Mathf.Max(0, amount - reduction);
             amount = Mathf.Max(0, amount - defender.GetPersistentIncomingReduction());
+            amount = defender.Stats.Soft.PerkRules != null
+                ? defender.Stats.Soft.PerkRules.ApplyIncomingHitReduction(amount)
+                : amount;
 
             bool hadBurn = PerkBattleRules.HasBurn(defender);
             if (amount > 0)
@@ -159,6 +163,8 @@ namespace M3P
                 new BattleEffectContext(defender, attacker, directHit: false),
                 counterDamage,
                 counterPhysical);
+            if (attacker.Stats.Soft.PerkRules != null)
+                scaledCounter = attacker.Stats.Soft.PerkRules.ApplyIncomingHitReduction(scaledCounter);
             if (scaledCounter > 0)
                 attacker.Stats.Soft.TakeDamage(scaledCounter);
         }
@@ -176,6 +182,8 @@ namespace M3P
                 amount = Mathf.Max(0, amount - attacker.GetPersistentOutgoingPenalty());
 
             amount = Mathf.Max(0, amount - defender.GetPersistentIncomingReduction());
+            if (defender.Stats.Soft.PerkRules != null)
+                amount = defender.Stats.Soft.PerkRules.ApplyIncomingHitReduction(amount);
             if (amount > 0)
                 defender.Stats.Soft.TakeDamage(amount);
 

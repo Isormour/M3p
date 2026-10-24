@@ -23,6 +23,9 @@ namespace M3P
             [Tooltip("Position on the map plane (X/Z). Y is ignored at runtime.")]
             public Vector2 Position;
 
+            [Tooltip("Combat pedestal and battle background for this node.")]
+            public MapBiome Biome = MapBiome.Default;
+
             public MapNodeType ResolvedType => Type;
         }
 
@@ -85,6 +88,7 @@ namespace M3P
                         EncounterName = node.Encounter != null ? node.Encounter.name : null,
                         Type = node.ResolvedType,
                         Position = node.Position,
+                        Biome = node.Biome,
                     };
                 }
             }
@@ -141,6 +145,7 @@ namespace M3P
                         Encounter = encounter,
                         Type = saved.Type,
                         Position = saved.Position,
+                        Biome = saved.Biome,
                     });
                 }
             }
@@ -218,11 +223,11 @@ namespace M3P
             graph._nodes = new List<Node>
             {
                 new Node { Id = "start", Type = MapNodeType.Start, Position = new Vector2(0f, 0f) },
-                new Node { Id = "battle_a", Type = MapNodeType.Battle, Position = new Vector2(-3f, 3f) },
-                new Node { Id = "battle_b", Type = MapNodeType.Battle, Position = new Vector2(3f, 3f) },
+                new Node { Id = "battle_a", Type = MapNodeType.Battle, Position = new Vector2(-3f, 3f), Biome = MapBiome.Default },
+                new Node { Id = "battle_b", Type = MapNodeType.Battle, Position = new Vector2(3f, 3f), Biome = MapBiome.Lava },
                 new Node { Id = "chest_a", Type = MapNodeType.Chest, Position = new Vector2(-5f, 6f) },
                 new Node { Id = "shop_a", Type = MapNodeType.Shop, Position = new Vector2(5f, 6f) },
-                new Node { Id = "battle_c", Type = MapNodeType.Battle, Position = new Vector2(0f, 6f) },
+                new Node { Id = "battle_c", Type = MapNodeType.Battle, Position = new Vector2(0f, 6f), Biome = MapBiome.Frost },
                 new Node { Id = "chest_b", Type = MapNodeType.Chest, Position = new Vector2(-2f, 9f) },
                 new Node { Id = "shop_b", Type = MapNodeType.Shop, Position = new Vector2(2f, 9f) },
                 new Node { Id = "battle_boss", Type = MapNodeType.Boss, Position = new Vector2(0f, 12f) }

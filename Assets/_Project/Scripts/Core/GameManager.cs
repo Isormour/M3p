@@ -1,8 +1,11 @@
+using System.Collections;
+using M3P.RemoteConfig;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace M3P
 {
+    [DefaultExecutionOrder(-10000)]
     public class GameManager : MonoBehaviour
     {
         public static GameManager Instance { get; private set; }
@@ -78,14 +81,27 @@ namespace M3P
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            RemoteBalanceBootstrap.Install(this);
             MapRunState.Active = MapRun;
             SfxPlayer.Ensure(_config != null ? _config.Sfx : null);
         }
 
-        void Start()
+        /// <summary>
+        /// Points this session at memory copies. The source asset on disk is left unchanged.
+        /// </summary>
+        public void ApplyRuntimeConfig(GameConfig runtimeConfig)
+        {
+            if (runtimeConfig != null)
+                _config = runtimeConfig;
+        }
+
+        IEnumerator Start()
         {
             if (Instance != this)
-                return;
+                yield break;
+
+            while (!RemoteBalanceBootstrap.IsReady)
+                yield return null;
 
             if (_loadMenuOnStart && SceneManager.GetActiveScene().name == SceneFlow.BootScene)
                 SceneFlow.LoadMenu();

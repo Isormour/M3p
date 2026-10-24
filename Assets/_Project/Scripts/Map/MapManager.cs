@@ -21,7 +21,10 @@ namespace M3P
 
         [Header("Markers by node type")]
         [SerializeField] GameObject _startMarkerPrefab;
+        [Tooltip("Dungeon biome pedestal. Also the fallback when a biome prefab is missing.")]
         [SerializeField] GameObject _battleMarkerPrefab;
+        [SerializeField] GameObject _lavaBattleMarkerPrefab;
+        [SerializeField] GameObject _frostBattleMarkerPrefab;
         [SerializeField] GameObject _shopMarkerPrefab;
         [SerializeField] GameObject _chestMarkerPrefab;
         [SerializeField] GameObject _forgeMarkerPrefab;
@@ -118,6 +121,9 @@ namespace M3P
 
             if (_starterPerkTreePanel != null)
                 _starterPerkTreePanel.Closed -= HandleStarterPerkTreeClosed;
+
+            if (_cardShopPanel != null)
+                _cardShopPanel.Closed -= HandleCardShopClosed;
         }
 
         void Update()
@@ -326,7 +332,7 @@ namespace M3P
         GameObject SpawnNodeMarker(MapGraphDefinition.Node node, Transform parent, Vector3 worldPos)
         {
             MapNodeType type = node.ResolvedType;
-            GameObject markerPrefab = GetMarkerPrefab(type);
+            GameObject markerPrefab = GetMarkerPrefab(type, node.Biome);
             GameObject nodeObject;
 
             if (markerPrefab != null)
@@ -350,18 +356,32 @@ namespace M3P
             return nodeObject;
         }
 
-        GameObject GetMarkerPrefab(MapNodeType type)
+        GameObject GetMarkerPrefab(MapNodeType type, MapBiome biome)
         {
             switch (type)
             {
                 case MapNodeType.Start: return _startMarkerPrefab;
-                case MapNodeType.Battle: return _battleMarkerPrefab;
-                case MapNodeType.Elite: return _battleMarkerPrefab;
-                case MapNodeType.Boss: return _battleMarkerPrefab;
+                case MapNodeType.Battle:
+                case MapNodeType.Elite:
+                case MapNodeType.Boss:
+                    return MarkerForBiome(biome);
                 case MapNodeType.Shop: return _shopMarkerPrefab;
                 case MapNodeType.Forge: return _forgeMarkerPrefab != null ? _forgeMarkerPrefab : _shopMarkerPrefab;
                 case MapNodeType.Chest: return _chestMarkerPrefab;
                 default: return null;
+            }
+        }
+
+        GameObject MarkerForBiome(MapBiome biome)
+        {
+            switch (biome)
+            {
+                case MapBiome.Lava:
+                    return _lavaBattleMarkerPrefab != null ? _lavaBattleMarkerPrefab : _battleMarkerPrefab;
+                case MapBiome.Frost:
+                    return _frostBattleMarkerPrefab != null ? _frostBattleMarkerPrefab : _battleMarkerPrefab;
+                default:
+                    return _battleMarkerPrefab;
             }
         }
 
@@ -478,6 +498,7 @@ namespace M3P
 
             SetPreviewNode(node);
             _walkNodeConfirmPanel.Show(
+                node,
                 () => BeginWalkTo(nodeId, target),
                 () =>
                 {
@@ -540,7 +561,7 @@ namespace M3P
             if (_starterPerkTreePanel == null)
             {
                 Debug.LogError(
-                    $"{nameof(MapManager)}: no {nameof(UIPerkTreeUnlockPanel)} in the map scene, so a new profile cannot choose a perk tree.",
+                    $"{nameof(MapManager)}: no starter {nameof(UIPerkTreeUnlockPanel)} in the map scene, so a new profile cannot choose a perk tree.",
                     this);
                 return;
             }
@@ -567,8 +588,30 @@ namespace M3P
 
         void EnsurePerkTreePanel()
         {
-            if (_starterPerkTreePanel == null)
-                _starterPerkTreePanel = FindAnyObjectByType<UIPerkTreeUnlockPanel>(FindObjectsInactive.Include);
+            if (_starterPerkTreePanel != null)
+                return;
+
+            UIPerkTreeUnlockPanel[] panels = FindObjectsByType<UIPerkTreeUnlockPanel>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            UIPerkTreeUnlockPanel fallback = null;
+            for (int i = 0; i < panels.Length; i++)
+            {
+                UIPerkTreeUnlockPanel panel = panels[i];
+                if (panel == null)
+                    continue;
+
+                if (panel.OffersEntirePool)
+                {
+                    _starterPerkTreePanel = panel;
+                    return;
+                }
+
+                if (fallback == null)
+                    fallback = panel;
+            }
+
+            _starterPerkTreePanel = fallback;
         }
 
         static bool ProfileNeedsStarterPerkTree()
@@ -639,7 +682,7 @@ namespace M3P
                 case MapNodeType.Elite:
                 case MapNodeType.Boss:
                     if (!Run.IsCleared(nodeId))
-                        EnterBattle(nodeId, node.Encounter, node.ResolvedType);
+                        EnterBattle(nodeId, node.Encounter, node.ResolvedType, node.Biome);
                     break;
 
                 case MapNodeType.Shop:
@@ -662,7 +705,7 @@ namespace M3P
             }
         }
 
-        void EnterBattle(string nodeId, EncounterConfig encounter, MapNodeType encounterType)
+        void EnterBattle(string nodeId, EncounterConfig encounter, MapNodeType encounterType, MapBiome biome)
         {
             if (encounter != null && encounter.IsBattle && !encounter.HasEnemy)
             {
@@ -671,7 +714,7 @@ namespace M3P
                     encounter);
             }
 
-            Run.BeginBattle(nodeId, encounter, encounterType);
+            Run.BeginBattle(nodeId, encounter, encounterType, biome);
             _inputLocked = true;
             Sfx.Play(EncounterSfx(encounterType));
             SceneFlow.LoadBattle();
@@ -683,12 +726,22 @@ namespace M3P
             if (_cardShopPanel != null)
             {
                 Sfx.Play(SfxId.CardShopOpen);
+                _cardShopPanel.Closed -= HandleCardShopClosed;
+                _cardShopPanel.Closed += HandleCardShopClosed;
                 _cardShopPanel.Show();
                 MarkServiceVisited(nodeId);
                 return;
             }
 
             OpenServiceFallback(nodeId, "Card Shop", "A card merchant. Crafting panel is missing from the scene.");
+        }
+
+        void HandleCardShopClosed()
+        {
+            if (_cardShopPanel != null)
+                _cardShopPanel.Closed -= HandleCardShopClosed;
+
+            FrameCamera();
         }
 
         void OpenForge(string nodeId)
@@ -711,7 +764,11 @@ namespace M3P
                 title,
                 body,
                 "Leave",
-                () => MarkServiceVisited(nodeId));
+                () =>
+                {
+                    MarkServiceVisited(nodeId);
+                    FrameCamera();
+                });
         }
 
         void MarkServiceVisited(string nodeId)

@@ -45,7 +45,7 @@ namespace M3P.Editor
             using (new EditorGUI.DisabledScope(true))
             {
                 EditorGUILayout.IntField("Basic Attack Damage", stats.BasicAttackDamage);
-                EditorGUILayout.IntField("Max HP", stats.MaxHP);
+                EditorGUILayout.IntField("Max HP", stats.MaxHP + definition.BonusMaxHp);
                 EditorGUILayout.IntField("Max Action Points", stats.MaxActionPoints);
                 EditorGUILayout.IntField("Max Hand Size", stats.MaxHandSize);
             }

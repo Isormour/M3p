@@ -82,6 +82,33 @@ Undo można powtarzać krok po kroku aż do pustej kolejki. Nie wolno dowolnie w
 | Rewind | Wymaga przeprojektowania w modelu kolejki; nie wchodzi do pierwszego prototypu Resolve. |
 | End Turn z kolejką | REKOMENDACJA: wykonuje Resolve & End Turn. Stamina uzyskana z tej wypłaty nie jest już wydawana; UI komunikuje konsekwencję. |
 
+### 4.5. Ograniczanie losowych matchy przy uzupełnianiu planszy
+
+REKOMENDACJA: ograniczać długie serie przypadkowych matchy przez ponowne losowanie nowych kafelków, które od razu tworzą match. Siła ograniczenia rośnie z numerem uzupełnienia w ramach jednego Resolve. Jest to propozycja do testów balansu; mechanizm nie został jeszcze zaimplementowany.
+
+| Kolejne uzupełnienie w jednym Resolve | Maksymalna liczba dodatkowych losowań na puste pole | Maksymalna liczba losowań łącznie |
+| --- | --- | --- |
+| Pierwsze | 0 — zwykłe losowanie. | 1 |
+| Drugie | 1 | 2 |
+| Trzecie i każde następne | 2 | 3 |
+
+Licznik zeruje się na początku każdego Resolve. Zwiększa się raz na całe uzupełnienie, w którym powstaje co najmniej jeden nowy kafelek; samo sprawdzenie pełnej planszy nie zużywa pierwszego uzupełnienia. Wszystkie puste pola uzupełniane w tym samym kroku korzystają z tego samego limitu dodatkowych prób. Generowanie planszy startowej ma osobne zasady i nie zwiększa tego licznika.
+
+Reguła dla każdego pustego pola:
+
+1. Wylosuj kafelek z aktywnej talii gracza według zwykłych zasad, razem z jego ulepszeniami.
+2. Sprawdź, czy wstawienie go utworzy poziomy lub pionowy match co najmniej trzech kafelków. Uwzględnij obie strony każdej osi, kafelki obecne wcześniej oraz już zaakceptowane w bieżącym uzupełnieniu.
+3. Jeśli kandydat nie tworzy matcha, zaakceptuj go od razu. Jeśli tworzy match i pozostała dodatkowa próba, odrzuć kandydata i ponów losowanie z tej samej talii.
+4. Po wyczerpaniu dodatkowych prób zaakceptuj ostatniego kandydata również wtedy, gdy tworzy match. Odrzucony kandydat nie pojawia się na planszy ani nie uruchamia efektów.
+
+Ponowne losowanie jest etapem wyboru kandydata. Odrzucony egzemplarz zachowuje ulepszenia i pozostaje dostępny w puli dobierania; nie trafia do discardu. Dopiero zaakceptowany kafelek jest dobierany na planszę zgodnie z zasadami stosów opisanymi w [PlayerProgression.md](PlayerProgression.md), sekcja 14.3.2.
+
+Przykład: przy drugim uzupełnieniu obok dwóch czerwonych kafelków zostaje wylosowany trzeci czerwony. Generator wykonuje jedną dodatkową próbę. Inny kolor zapobiega temu matchowi, a ponownie wylosowany czerwony zostaje zaakceptowany i match rozlicza się normalnie.
+
+Reguła obejmuje wszystkie nowo losowane kafelki niezależnie od położenia i kierunku grawitacji. Matche utworzone przez komendy kart lub przesunięcie istniejących kafelków rozliczają się normalnie. Nie ma sztywnego limitu fal kaskady: plansza nadal rozlicza wszystkie powstałe matche.
+
+OTWARTE — balans: wartości 0 / 1 / 2 są punktem startowym do testów. Ograniczenie zmniejsza prawdopodobieństwo przedłużania serii, ale nie gwarantuje jej maksymalnej długości. Każda próba korzysta z talii gracza, jednak odrzucanie kandydatów zmienia końcową częstość kolorów i powiązanych ulepszeń. Należy sprawdzić długość kaskad, częstość aktywacji ulepszeń oraz wypłaty obrażeń i zasobów.
+
 ## 5. Raport Resolve i zakresy stanu
 
 | Zakres | Zapamiętywane dane | Przykładowi odbiorcy |

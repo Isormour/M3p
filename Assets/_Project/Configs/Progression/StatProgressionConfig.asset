@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::M3P.StatProgressionConfig
   _baseBasicAttackDamage: 1
   _baseMaxHp: 20
-  _baseMaxActionPoints: 2
+  _baseMaxActionPoints: 3
   _baseMaxHandSize: 3
   _basePower: 1
   _baseArcane: 0
@@ -23,13 +23,22 @@ MonoBehaviour:
   _basePrecision: 0
   _baseTempo: 0
   _talentMilestoneInterval: 5
-  _maxStatValue: 30
+  _maxStatValue: 10
   _perkConfig: {fileID: 11400000, guid: d058500a236da97448d5f19de4d5b60b, type: 2}
   _perkTrees:
+  - {fileID: 11400000, guid: 9099412e9ebb60d44bf4d388f11a6254, type: 2}
   - {fileID: 11400000, guid: 47e7f69e311ee19458f375d426a2759b, type: 2}
   - {fileID: 11400000, guid: 0aa10ed752ee7c344abbab58d1fd1862, type: 2}
   - {fileID: 11400000, guid: 6615e719c5e91e04db5c8e04d3b212f8, type: 2}
+  - {fileID: 11400000, guid: 97fe6c4faec84855bbcc29e402f30faf, type: 2}
+  - {fileID: 11400000, guid: 07adf71dd00349f2a009bd227413f924, type: 2}
+  - {fileID: 11400000, guid: 633bc31dbb4d4dfabe0739bd2bdacc1b, type: 2}
+  - {fileID: 11400000, guid: 54600d063d2d4f19a6e7a29941a2a712, type: 2}
+  _starterPerkTrees:
   - {fileID: 11400000, guid: 9099412e9ebb60d44bf4d388f11a6254, type: 2}
+  - {fileID: 11400000, guid: 47e7f69e311ee19458f375d426a2759b, type: 2}
+  - {fileID: 11400000, guid: 0aa10ed752ee7c344abbab58d1fd1862, type: 2}
+  - {fileID: 11400000, guid: 6615e719c5e91e04db5c8e04d3b212f8, type: 2}
   - {fileID: 11400000, guid: 97fe6c4faec84855bbcc29e402f30faf, type: 2}
   - {fileID: 11400000, guid: 07adf71dd00349f2a009bd227413f924, type: 2}
   - {fileID: 11400000, guid: 633bc31dbb4d4dfabe0739bd2bdacc1b, type: 2}

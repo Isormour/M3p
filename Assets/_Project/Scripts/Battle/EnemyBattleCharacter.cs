@@ -65,6 +65,7 @@ namespace M3P
                 config != null ? config.StatProgression : null);
             stats.RecalculateSoftStatsForBattle();
             stats.Soft?.ScaleMaxHealth(spec.HealthMultiplier);
+            stats.Soft?.AddBonusMaxHealth(spec.Definition.BonusMaxHp);
             SetCharacterStats(stats);
 
             string displayName = spec.DisplayName;
@@ -125,7 +126,7 @@ namespace M3P
 
             bool skipLastUsed = readyExceptLast > 0;
             int poolSize = skipLastUsed ? readyExceptLast : readyCount;
-            int pick = Random.Range(0, poolSize);
+            int pick = BattleRoll.NextIndex(poolSize);
             for (int i = 0; i < skills.Count; i++)
             {
                 SkillDefinition candidate = skills[i];

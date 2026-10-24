@@ -16,6 +16,11 @@ namespace M3P
 
         public HardStats HardStats => _hardStats;
 
+        [Tooltip("Flat max HP added after constitution perks and the encounter health multiplier.")]
+        [SerializeField] int _bonusMaxHp;
+
+        public int BonusMaxHp => Mathf.Max(0, _bonusMaxHp);
+
         [Tooltip("Experience the player banks for winning a floor-1 normal fight. Scaled at runtime.")]
         [Min(0), SerializeField] int _experienceReward = 50;
 

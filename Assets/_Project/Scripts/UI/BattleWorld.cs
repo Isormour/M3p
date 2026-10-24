@@ -71,26 +71,38 @@ namespace M3P
             if (Backgrounds == null || Backgrounds.Length == 0)
                 return null;
 
-            int count = 0;
+            MapBiome biome = MapBiome.Default;
+            MapRunState run = MapRunState.Active;
+            if (run != null && run.HasPendingBattle)
+                biome = run.PendingBiome;
+
+            BattleEnviormentSettings match = FindBackground(biome);
+            if (match != null)
+                return match;
+
+            if (biome != MapBiome.Default)
+            {
+                match = FindBackground(MapBiome.Default);
+                if (match != null)
+                    return match;
+            }
+
             for (int i = 0; i < Backgrounds.Length; i++)
             {
                 if (Backgrounds[i] != null)
-                    count++;
+                    return Backgrounds[i];
             }
 
-            if (count == 0)
-                return null;
+            return null;
+        }
 
-            int pick = Random.Range(0, count);
+        BattleEnviormentSettings FindBackground(MapBiome biome)
+        {
             for (int i = 0; i < Backgrounds.Length; i++)
             {
-                if (Backgrounds[i] == null)
-                    continue;
-
-                if (pick == 0)
-                    return Backgrounds[i];
-
-                pick--;
+                BattleEnviormentSettings background = Backgrounds[i];
+                if (background != null && background.Biome == biome)
+                    return background;
             }
 
             return null;

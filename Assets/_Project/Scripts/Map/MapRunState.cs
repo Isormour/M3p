@@ -19,6 +19,7 @@ namespace M3P
         public string PendingBattleNodeId { get; private set; }
         public EncounterConfig PendingEncounter { get; private set; }
         public MapNodeType PendingEncounterType { get; private set; } = MapNodeType.Battle;
+        public MapBiome PendingBiome { get; private set; } = MapBiome.Default;
         public bool IsActive { get; private set; }
         public bool IsGenerated { get; private set; }
         public MapGraphSnapshot GraphSnapshot { get; private set; }
@@ -113,6 +114,7 @@ namespace M3P
             PendingBattleNodeId = null;
             PendingEncounter = null;
             PendingEncounterType = MapNodeType.Battle;
+            PendingBiome = MapBiome.Default;
             PendingEnemy = null;
             _clearedNodeIds.Clear();
             _pathNodeIds.Clear();
@@ -148,6 +150,7 @@ namespace M3P
             PendingBattleNodeId = null;
             PendingEncounter = null;
             PendingEncounterType = MapNodeType.Battle;
+            PendingBiome = MapBiome.Default;
             PendingEnemy = null;
             _clearedNodeIds.Clear();
             _pathNodeIds.Clear();
@@ -251,11 +254,13 @@ namespace M3P
         public void BeginBattle(
             string nodeId,
             EncounterConfig encounter = null,
-            MapNodeType encounterType = MapNodeType.Battle)
+            MapNodeType encounterType = MapNodeType.Battle,
+            MapBiome biome = MapBiome.Default)
         {
             PendingBattleNodeId = nodeId;
             PendingEncounter = encounter;
             PendingEncounterType = encounterType;
+            PendingBiome = biome;
             PendingEnemy = PickEncounterEnemy(encounter, nodeId);
         }
 
@@ -265,6 +270,7 @@ namespace M3P
             PendingBattleNodeId = null;
             PendingEncounter = null;
             PendingEncounterType = MapNodeType.Battle;
+            PendingBiome = MapBiome.Default;
             PendingEnemy = null;
 
             if (string.IsNullOrEmpty(battleNodeId))
@@ -294,6 +300,7 @@ namespace M3P
             PendingBattleNodeId = null;
             PendingEncounter = null;
             PendingEncounterType = MapNodeType.Battle;
+            PendingBiome = MapBiome.Default;
             PendingEnemy = null;
             _clearedNodeIds.Clear();
             _pathNodeIds.Clear();

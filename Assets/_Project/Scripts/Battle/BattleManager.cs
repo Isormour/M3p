@@ -36,7 +36,7 @@ namespace M3P
         [Tooltip("Shown after a boss win. Closing it generates the next floor and returns to Map.")]
         [SerializeField] UIPerkTreeUnlockPanel _perkTreePanel;
 
-        [Tooltip("Shown after an elite win. The player picks one of three skills, then returns to the map.")]
+        [Tooltip("Shown after an elite win once four perk trees are open. The player picks one of three skills, then returns to the map.")]
         [SerializeField] UIPanelGainSkill _gainSkillPanel;
 
         [SerializeField] CameraShake _camerShake;
@@ -61,6 +61,7 @@ namespace M3P
         readonly List<PendingBasicAttack> _collectedAttacks = new List<PendingBasicAttack>();
         readonly List<PendingBasicAttack> _launchBuffer = new List<PendingBasicAttack>();
 
+        int _battleSeed;
         int _matchWaveIndex;
         bool _isPlayingAttacks;
         Match3Board _activeBoard;
@@ -72,11 +73,15 @@ namespace M3P
         bool _awaitingSkillChoice;
         bool _awaitingBossReward;
         bool _awaitingEliteSkillReward;
+        bool _awaitingElitePerkReward;
         BattleOutcome _lastOutcome;
         MatchRewardRules _fallbackMatchRewards;
 
         /// <summary>Board from the current battle, or null if no battle is running.</summary>
         public Match3Board ActiveBoard => _activeBoard;
+
+        /// <summary>Seed that opened the current battle. Zero when no battle is running.</summary>
+        public int BattleSeed => _battleSeed;
 
         /// <summary>True when the human player may swap tiles on the board.</summary>
         public bool IsPlayerTurn => _isPlayerTurn;
@@ -151,7 +156,7 @@ namespace M3P
                 _endBattlePanel = FindAnyObjectByType<UIEndBattlePanel>(FindObjectsInactive.Include);
 
             if (_perkTreePanel == null)
-                _perkTreePanel = FindAnyObjectByType<UIPerkTreeUnlockPanel>(FindObjectsInactive.Include);
+                _perkTreePanel = FindRewardPerkTreePanel();
 
             if (_gainSkillPanel == null)
                 _gainSkillPanel = FindAnyObjectByType<UIPanelGainSkill>(FindObjectsInactive.Include);
@@ -191,8 +196,14 @@ namespace M3P
                 return;
 
             SnapshotVitals(target, out int health, out int shield, out int armor);
+            bool physicalSkill = skill.PhysicalSkill;
+            PerkBattleRules perkRules = caster?.Stats?.Soft?.PerkRules;
+            perkRules?.OnSkillCastStarted(physicalSkill);
             skill.UseSkill(caster, target, choice);
+            bool drawFromInspiration = perkRules != null && perkRules.OnSkillCastFinished(physicalSkill);
             caster?.Stats?.Soft?.NotifyPerkSkillFinished();
+            if (drawFromInspiration && caster != null && caster.IsPlayerControlled)
+                _cardPlay?.DrawCards(1);
             Sfx.PlaySkill(skill, caster != null && !caster.IsPlayerControlled);
             LastOpponentHitDamage = MeasureDamageTaken(target, health, shield, armor);
             LastOpponentHitHadShield = LastOpponentHitDamage > 0
@@ -322,7 +333,10 @@ namespace M3P
             }
 
             EndBattle();
-            BattleRoll.Reset();
+
+            _battleSeed = BattleRandom.ResolveBattleSeed();
+            BattleRandom.Streams streams = BattleRandom.Create(_battleSeed);
+            BattleRoll.Begin(streams.Enemy);
 
             _battleResolved = false;
             HideEndBattlePanel();
@@ -347,9 +361,13 @@ namespace M3P
                 Debug.LogError($"{nameof(BattleManager)}: prefab must include {nameof(Match3Board)}.", this);
                 Destroy(instance);
                 ClearSpawnedEnemy();
+                BattleRoll.End();
+                _battleSeed = 0;
                 return;
             }
-            _cardPlay?.BeginBattle(_activeBoard, _player);
+
+            _activeBoard.SetRandomSeed(streams.Board);
+            _cardPlay?.BeginBattle(_activeBoard, _player, streams.Deck, streams.Commands);
             _battleWorld?.BindStatusVisuals(_player, _activeEnemy);
             Sfx.Play(SfxId.BattleStart);
             OnBattleStarted?.Invoke(_activeBoard);
@@ -392,7 +410,7 @@ namespace M3P
             if (enemies == null)
                 return;
 
-            _activeEnemyDefinition = enemies.PickRandom();
+            _activeEnemyDefinition = enemies.PickRandom(BattleRoll.Source);
         }
 
         void SpawnEnemyBattleCharacter()
@@ -633,6 +651,14 @@ namespace M3P
                     break;
 
                 PendingBasicAttack attack = _launchBuffer[i];
+                if (i == 0)
+                {
+                    ResolveReport report = _activeBoard != null ? _activeBoard.LastResolveReport : null;
+                    int openingBonus = _player?.Stats?.Soft?.PerkRules?.BasicAttackOpeningBonus(report) ?? 0;
+                    if (openingBonus > 0)
+                        attack = attack.WithDamage(attack.Damage + openingBonus);
+                }
+
                 _battleWorld?.NotifyBasicAttack();
                 Sfx.Play(SfxId.PlayerAttackWindup);
                 yield return WaitSeconds(_attackWindup);
@@ -686,6 +712,7 @@ namespace M3P
             if (_battleResolved)
                 return;
 
+            _player?.Stats?.Soft?.PerkRules?.OnSequenceResolved(report);
             _turnReport.AddResolve(report, _resolveLimits.StaminaRefunded);
         }
 
@@ -906,7 +933,7 @@ namespace M3P
                 return;
             }
 
-            if (wonElite && TryShowEliteSkillReward())
+            if (wonElite && TryShowEliteReward())
                 return;
 
             if (returnToMap)
@@ -915,6 +942,85 @@ namespace M3P
                     GameManager.Instance.PersistMapRun();
                 SceneFlow.LoadMap();
             }
+        }
+
+        /// <summary>
+        /// Reward panels draw a random handful. The opening choice lists the whole starting pool
+        /// and must not be used for an elite or boss reward when both panels are loaded.
+        /// </summary>
+        static UIPerkTreeUnlockPanel FindRewardPerkTreePanel()
+        {
+            UIPerkTreeUnlockPanel[] panels = FindObjectsByType<UIPerkTreeUnlockPanel>(
+                FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            UIPerkTreeUnlockPanel starter = null;
+            for (int i = 0; i < panels.Length; i++)
+            {
+                UIPerkTreeUnlockPanel panel = panels[i];
+                if (panel == null)
+                    continue;
+
+                if (!panel.OffersEntirePool)
+                    return panel;
+
+                if (starter == null)
+                    starter = panel;
+            }
+
+            return starter;
+        }
+
+        /// <summary>
+        /// A champion, the elite on floor 2 and later, offers a skill.
+        /// The floor 1 elite offers another perk tree until four trees are open, then a skill.
+        /// </summary>
+        bool TryShowEliteReward()
+        {
+            if (IsChampionFight() || ProfileSkillsUnlocked())
+                return TryShowEliteSkillReward();
+
+            return TryShowElitePerkReward();
+        }
+
+        static bool IsChampionFight()
+        {
+            MapRunState mapRun = MapRunState.Active;
+            return mapRun != null && MapGenerator.IsChampionFloor(mapRun.FloorIndex);
+        }
+
+        static bool ProfileSkillsUnlocked()
+        {
+            ProfileManager profiles = GameManager.Instance != null ? GameManager.Instance.ProfileManager : null;
+            PlayerProfile profile = profiles != null ? profiles.CurrentProfile : null;
+            return profile != null && profile.SkillsUnlocked;
+        }
+
+        bool TryShowElitePerkReward()
+        {
+            if (_perkTreePanel == null)
+                _perkTreePanel = FindRewardPerkTreePanel();
+
+            if (_perkTreePanel == null || !_perkTreePanel.HasOffer)
+                return false;
+
+            _awaitingElitePerkReward = true;
+            _perkTreePanel.Closed -= HandleElitePerkPanelClosed;
+            _perkTreePanel.Closed += HandleElitePerkPanelClosed;
+            _perkTreePanel.Show();
+            Sfx.Play(SfxId.BossRewardReveal);
+            return true;
+        }
+
+        void HandleElitePerkPanelClosed()
+        {
+            UnsubscribeRewardPanels();
+            if (!_awaitingElitePerkReward)
+                return;
+
+            _awaitingElitePerkReward = false;
+            if (GameManager.Instance != null)
+                GameManager.Instance.PersistMapRun();
+            SceneFlow.LoadMap();
         }
 
         bool TryShowEliteSkillReward()
@@ -951,7 +1057,7 @@ namespace M3P
         bool TryShowBossPerkReward()
         {
             if (_perkTreePanel == null)
-                _perkTreePanel = FindAnyObjectByType<UIPerkTreeUnlockPanel>(FindObjectsInactive.Include);
+                _perkTreePanel = FindRewardPerkTreePanel();
 
             if (_perkTreePanel == null || !_perkTreePanel.HasOffer)
                 return false;
@@ -980,7 +1086,10 @@ namespace M3P
                 _gainSkillPanel.Closed -= HandleEliteSkillPanelClosed;
 
             if (_perkTreePanel != null)
+            {
                 _perkTreePanel.Closed -= HandleBossPerkPanelClosed;
+                _perkTreePanel.Closed -= HandleElitePerkPanelClosed;
+            }
         }
 
         void AdvanceAfterBossVictory()
@@ -1010,6 +1119,9 @@ namespace M3P
 
             if (_cardPlay != null)
                 _cardPlay.EndBattle();
+
+            BattleRoll.End();
+            _battleSeed = 0;
 
             if (_activeBoard != null)
             {

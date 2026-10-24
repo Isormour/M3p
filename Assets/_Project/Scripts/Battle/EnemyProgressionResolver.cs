@@ -10,7 +10,7 @@ namespace M3P
     public static class EnemyProgressionResolver
     {
         public const float ExperiencePerEffectiveFloor = 0.20f;
-        public const int EliteFloorBonus = 2;
+        public const int EliteFloorBonus = 1;
         public const float EliteHealthMultiplier = 1.25f;
         public const float EliteExperienceMultiplier = 1.75f;
         public const float BossExperienceMultiplier = 3f;
@@ -178,7 +178,8 @@ namespace M3P
             return string.CompareOrdinal(leftName, rightName);
         }
 
-        static string BuildDisplayName(string speciesName, IReadOnlyList<EnemyRankThreshold> ranks, int effectiveFloor)
+        /// <summary>Highest rank label reached on <paramref name="effectiveFloor"/>, or empty when none qualify.</summary>
+        public static string ResolveRankName(IReadOnlyList<EnemyRankThreshold> ranks, int effectiveFloor)
         {
             string rank = null;
             int bestFloor = int.MinValue;
@@ -199,8 +200,15 @@ namespace M3P
                 }
             }
 
+            return rank ?? string.Empty;
+        }
+
+        static string BuildDisplayName(string speciesName, IReadOnlyList<EnemyRankThreshold> ranks, int effectiveFloor)
+        {
+            string rank = ResolveRankName(ranks, effectiveFloor);
+
             if (string.IsNullOrEmpty(speciesName))
-                return rank ?? string.Empty;
+                return rank;
 
             if (string.IsNullOrEmpty(rank))
                 return speciesName;

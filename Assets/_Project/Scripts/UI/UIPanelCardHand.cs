@@ -22,15 +22,28 @@ namespace M3P
         [SerializeField] float _cardSpacing = 8f;
         [SerializeField] float _sectionSpacing = 12f;
         [SerializeField] float _queueStripHeight = 26f;
+        [Header("Resolve pulse")]
+        [SerializeField] float _resolvePulseDelay = 2f;
+        [SerializeField] float _resolvePulseMin = 0f;
+        [SerializeField] float _resolvePulseMax = 40f;
+        [SerializeField] float _resolvePulsePeriod = 1.1f;
+
+        static readonly int ResolveMultNPowId = Shader.PropertyToID("_MultNPow");
 
         readonly List<UIBoardActionCard> _cardViews = new List<UIBoardActionCard>();
         readonly StringBuilder _queueText = new StringBuilder();
 
         CardPlayController _cardPlay;
         RectTransform _handContainer;
-        TextMeshProUGUI _staminaLabel;
         TextMeshProUGUI _queueLabel;
         Coroutine _watchRoutine;
+        Graphic _resolveGraphic;
+        Material _resolveMaterial;
+        Material _resolveSharedMaterial;
+        float _resolveMultX = 1f;
+        float _resolveRestY = 40f;
+        float _resolveReadySince = -1f;
+        bool _resolveGraphicMissing;
 
         void OnEnable()
         {
@@ -53,6 +66,7 @@ namespace M3P
             UnbindCommands();
             Unbind();
             ClearCardViews();
+            ReleaseResolveMaterial();
         }
 
         void OnValidate()
@@ -233,9 +247,6 @@ namespace M3P
         {
             if (_cardPlay == null)
             {
-                if (_staminaLabel != null)
-                    _staminaLabel.text = "Stamina -";
-
                 if (_queueLabel != null)
                     _queueLabel.text = string.Empty;
 
@@ -243,12 +254,6 @@ namespace M3P
                 return;
             }
 
-            if (_staminaLabel != null)
-            {
-                int max = _cardPlay.MaxHandSize;
-                _staminaLabel.text =
-                    $"Stamina {_cardPlay.CurrentStamina}\n<size=70%>ręka {_cardPlay.Deck.Hand.Count}/{max}";
-            }
 
             if (_queueLabel != null)
                 _queueLabel.text = BuildQueueText();
@@ -279,6 +284,7 @@ namespace M3P
 
                 BoardActionCardDefinition card = hand[i];
                 bool selected = _cardPlay.SelectedHandIndex == i;
+                view.RefreshDisplayedCost();
                 view.SetSelected(selected);
                 view.SetInteractable(playerActing && (selected || _cardPlay.CanQueue(card)));
                 view.SetFrameMaskEnabled(card != null && !_cardPlay.CanQueue(card) && !selected);
@@ -290,11 +296,131 @@ namespace M3P
             if (_resolveButton != null)
                 _resolveButton.interactable = resolve;
 
+            UpdateResolvePulse(resolve);
+
             if (_undoButton != null)
                 _undoButton.interactable = undo;
 
             if (_endTurnButton != null)
                 _endTurnButton.interactable = endTurn;
+        }
+
+        /// <summary>
+        /// Holds the authored highlight until Resolve has been clickable for <see cref="_resolvePulseDelay"/>,
+        /// then oscillates <c>_MultNPow.y</c> so the button reads as the next action.
+        /// </summary>
+        void UpdateResolvePulse(bool clickable)
+        {
+            if (!EnsureResolveMaterial())
+                return;
+
+            if (!clickable)
+            {
+                if (_resolveReadySince >= 0f)
+                {
+                    _resolveReadySince = -1f;
+                    ApplyResolvePower(_resolveRestY);
+                }
+
+                return;
+            }
+
+            if (_resolveReadySince < 0f)
+                _resolveReadySince = Time.unscaledTime;
+
+            float elapsed = Time.unscaledTime - _resolveReadySince;
+            if (elapsed < _resolvePulseDelay)
+                return;
+
+            float period = Mathf.Max(0.05f, _resolvePulsePeriod);
+            float cycle = (elapsed - _resolvePulseDelay) / period;
+            float wave = 0.5f + 0.5f * Mathf.Cos(cycle * Mathf.PI * 2f);
+            ApplyResolvePower(Mathf.Lerp(_resolvePulseMin, _resolvePulseMax, wave));
+        }
+
+        bool EnsureResolveMaterial()
+        {
+            if (_resolveMaterial != null)
+                return true;
+
+            if (_resolveGraphicMissing)
+                return false;
+
+            _resolveGraphic = FindResolveGraphic();
+            if (_resolveGraphic == null)
+            {
+                _resolveGraphicMissing = true;
+                return false;
+            }
+
+            Material source = _resolveGraphic.material;
+            Vector4 current = source.GetVector(ResolveMultNPowId);
+            _resolveSharedMaterial = source;
+            _resolveMultX = current.x;
+            _resolveRestY = current.y;
+            _resolveMaterial = new Material(source) { name = source.name + " (Resolve)" };
+            _resolveGraphic.material = _resolveMaterial;
+            return true;
+        }
+
+        Graphic FindResolveGraphic()
+        {
+            if (_resolveButton == null)
+                return null;
+
+            if (HasMultNPow(_resolveButton.targetGraphic))
+                return _resolveButton.targetGraphic;
+
+            Graphic[] graphics = _resolveButton.GetComponentsInChildren<Graphic>(true);
+            for (int i = 0; i < graphics.Length; i++)
+            {
+                if (HasMultNPow(graphics[i]))
+                    return graphics[i];
+            }
+
+            return null;
+        }
+
+        static bool HasMultNPow(Graphic graphic)
+        {
+            if (graphic == null || graphic is TMP_Text)
+                return false;
+
+            Material material = graphic.material;
+            return material != null && material.HasProperty(ResolveMultNPowId);
+        }
+
+        void ApplyResolvePower(float powerY)
+        {
+            Vector4 value = new Vector4(_resolveMultX, powerY, 0f, 0f);
+            if (_resolveMaterial != null)
+                _resolveMaterial.SetVector(ResolveMultNPowId, value);
+
+            if (_resolveGraphic == null)
+                return;
+
+            // A parent Mask draws a stencil copy. That copy is what shows on screen.
+            Material rendered = _resolveGraphic.materialForRendering;
+            if (rendered != null && rendered != _resolveMaterial && rendered.HasProperty(ResolveMultNPowId))
+                rendered.SetVector(ResolveMultNPowId, value);
+        }
+
+        void ReleaseResolveMaterial()
+        {
+            _resolveReadySince = -1f;
+            _resolveGraphicMissing = false;
+
+            if (_resolveGraphic != null && _resolveSharedMaterial != null)
+                _resolveGraphic.material = _resolveSharedMaterial;
+
+            if (_resolveMaterial != null)
+            {
+                Destroy(_resolveMaterial);
+                _resolveMaterial = null;
+            }
+
+            _resolveGraphic = null;
+            _resolveSharedMaterial = null;
         }
 
         /// <summary>
@@ -342,8 +468,6 @@ namespace M3P
             GameObject stamina = new GameObject("Stamina", typeof(RectTransform));
             stamina.transform.SetParent(transform, false);
             SetupSidePanel((RectTransform)stamina.transform, true);
-            _staminaLabel = CreateLabel(stamina.transform, "Stamina -");
-            _staminaLabel.alignment = TextAlignmentOptions.Center;
 
             GameObject hand = new GameObject("Hand", typeof(RectTransform));
             hand.transform.SetParent(transform, false);

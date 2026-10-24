@@ -26,6 +26,14 @@ namespace M3P
         public int Reserve;
         public int Faith;
         public int Sanctuary;
+        public int StrikeSeries;
+        public int Breakthrough;
+        public int Focus;
+        public int Inspiration;
+        public int Fortitude;
+        public int SecondWind;
+        public int Accuracy;
+        public int Sprint;
 
         public void AddRule(PerkRule rule)
         {
@@ -57,6 +65,30 @@ namespace M3P
                     break;
                 case PerkRule.Sanctuary:
                     Sanctuary++;
+                    break;
+                case PerkRule.StrikeSeries:
+                    StrikeSeries++;
+                    break;
+                case PerkRule.Breakthrough:
+                    Breakthrough++;
+                    break;
+                case PerkRule.Focus:
+                    Focus++;
+                    break;
+                case PerkRule.Inspiration:
+                    Inspiration++;
+                    break;
+                case PerkRule.Fortitude:
+                    Fortitude++;
+                    break;
+                case PerkRule.SecondWind:
+                    SecondWind++;
+                    break;
+                case PerkRule.Accuracy:
+                    Accuracy++;
+                    break;
+                case PerkRule.Sprint:
+                    Sprint++;
                     break;
             }
         }
@@ -329,6 +361,14 @@ namespace M3P
         Reserve = 6,
         Faith = 7,
         Sanctuary = 8,
+        StrikeSeries = 9,
+        Breakthrough = 10,
+        Focus = 11,
+        Inspiration = 12,
+        Fortitude = 13,
+        SecondWind = 14,
+        Accuracy = 15,
+        Sprint = 16,
     }
 
     [Serializable]

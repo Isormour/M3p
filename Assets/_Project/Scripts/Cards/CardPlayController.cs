@@ -72,7 +72,7 @@ namespace M3P
         /// <summary>Player-facing name for action points, which the design calls Stamina.</summary>
         public int CurrentStamina => _player?.Stats?.Soft?.CurrentActionPoints ?? 0;
 
-        public void BeginBattle(Match3Board board, PlayerBattleCharacter player)
+        public void BeginBattle(Match3Board board, PlayerBattleCharacter player, int deckSeed, int commandSeed)
         {
             UnbindBoard();
 
@@ -83,7 +83,8 @@ namespace M3P
             _pickedTargets.Clear();
             _highlightedTiles.Clear();
             _queue.Clear();
-            _seedSource = new System.Random(Environment.TickCount);
+            _deck.SetRandomSeed(deckSeed);
+            _seedSource = new System.Random(commandSeed);
 
             if (_board != null)
             {
@@ -158,6 +159,15 @@ namespace M3P
             Changed?.Invoke();
         }
 
+        public int PreviewActionPointCost(BoardActionCardDefinition card)
+        {
+            if (card == null)
+                return 0;
+
+            SoftStats soft = _player?.Stats?.Soft;
+            return soft != null ? soft.PreviewCardActionPointCost(card.ActionPointCost) : card.ActionPointCost;
+        }
+
         public bool CanQueue(BoardActionCardDefinition card)
         {
             if (card == null || card.Logic == null || _board == null || IsBusy || _board.IsResolving)
@@ -175,7 +185,7 @@ namespace M3P
             }
 
             SoftStats soft = _player?.Stats?.Soft;
-            return soft != null && soft.HasActionPoints(card.ActionPointCost);
+            return soft != null && soft.HasActionPoints(soft.PreviewCardActionPointCost(card.ActionPointCost));
         }
 
         /// <summary>True while at least one card in hand can still join the queue.</summary>
@@ -268,7 +278,10 @@ namespace M3P
             if (entry == null)
                 return false;
 
-            _player?.Stats?.Soft?.AddActionPoints(entry.StaminaPaid);
+            SoftStats soft = _player?.Stats?.Soft;
+            soft?.AddActionPoints(entry.StaminaPaid);
+            if (entry.Card != null && entry.StaminaPaid < entry.Card.ActionPointCost)
+                soft?.RestoreCardCostDiscount();
             _deck.ReturnFromSequenceToHand(entry.Card, entry.HandIndex);
             Sfx.Play(SfxId.CardQueueUndo);
             Changed?.Invoke();
@@ -404,7 +417,8 @@ namespace M3P
                 return;
 
             SoftStats soft = _player?.Stats?.Soft;
-            if (soft == null || !soft.TrySpendActionPoint(card.ActionPointCost))
+            int paid = soft != null ? soft.PreviewCardActionPointCost(card.ActionPointCost) : card.ActionPointCost;
+            if (soft == null || !soft.TrySpendActionPoint(paid))
                 return;
 
             int seed = card.Logic.NeedsSeed ? NextSeed() : 0;
@@ -413,16 +427,17 @@ namespace M3P
 
             if (_opsBuffer.Count == 0)
             {
-                soft.AddActionPoints(card.ActionPointCost);
+                soft.AddActionPoints(paid);
                 CancelSelection();
                 return;
             }
 
+            soft.ConsumeCardCostDiscount(card.ActionPointCost);
             _deck.MoveFromHandToSequence(handIndex);
             _queue.Enqueue(new QueuedCard(
                 card,
                 handIndex,
-                card.ActionPointCost,
+                paid,
                 targets.ToArray(),
                 extraChoice,
                 seed,
@@ -440,7 +455,7 @@ namespace M3P
 
         int NextSeed()
         {
-            _seedSource ??= new System.Random(Environment.TickCount);
+            _seedSource ??= new System.Random(0);
             return _seedSource.Next(int.MinValue, int.MaxValue);
         }
 

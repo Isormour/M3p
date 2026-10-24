@@ -89,9 +89,11 @@ namespace M3P
             RefreshDisplay(playParticles: true);
         }
 
-        int GetCurrentValue() => _getCurrent != null ? _getCurrent() : 0;
+        protected bool HasValueBinding => _getCurrent != null;
 
-        int GetMaxValue() => _getMax != null ? _getMax() : 0;
+        protected int GetCurrentValue() => _getCurrent != null ? _getCurrent() : 0;
+
+        protected int GetMaxValue() => _getMax != null ? _getMax() : 0;
 
         void ResetValueTracking()
         {

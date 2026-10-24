@@ -23,6 +23,11 @@ namespace M3P
 
         public void SetCardData(BoardActionCardDefinition card)
         {
+            SetCardData(card, card != null ? card.ActionPointCost : 0);
+        }
+
+        public void SetCardData(BoardActionCardDefinition card, int actionPointCost)
+        {
             if (descriptionLabel != null)
                 descriptionLabel.text = card != null ? card.Description : string.Empty;
             if (nameLabel != null)
@@ -35,7 +40,7 @@ namespace M3P
                 cardImage.enabled = artwork != null;
             }
 
-            BuildCostIndicators(card != null ? card.ActionPointCost : 0);
+            BuildCostIndicators(Mathf.Max(0, actionPointCost));
         }
 
         public void SetFrameMaskEnabled(bool enabled)

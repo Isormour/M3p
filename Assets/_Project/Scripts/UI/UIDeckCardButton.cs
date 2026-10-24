@@ -20,6 +20,7 @@ namespace M3P
         Action _addClicked;
 
         public BoardActionCardDefinition Card => _card;
+        public RectTransform IconRect => cardIcon != null ? cardIcon.rectTransform : transform as RectTransform;
 
         void Awake()
         {

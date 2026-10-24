@@ -37,5 +37,10 @@ namespace M3P
         {
             return new PendingBasicAttack(TypeId, MatchSize, Damage, WaveIndex, isLethal);
         }
+
+        public PendingBasicAttack WithDamage(int damage)
+        {
+            return new PendingBasicAttack(TypeId, MatchSize, damage, WaveIndex, IsLethal);
+        }
     }
 }

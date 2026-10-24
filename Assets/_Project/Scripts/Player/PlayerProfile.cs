@@ -100,11 +100,38 @@ namespace M3P
             return index >= 0 ? Mathf.Max(0, PerkTreePoints[index].Value) : 0;
         }
 
+        /// <summary>
+        /// Floor 1 elites offer a perk tree until this many trees are open, then a skill.
+        /// Champions on later floors always offer a skill.
+        /// </summary>
+        public const int SkillUnlockPerkTreeCount = 4;
+
         /// <summary>True when this profile has opened the perk tree. Missing entries stay locked.</summary>
         public bool IsPerkTreeUnlocked(int treeId)
         {
             return StatProgressionConfig.IndexOfTreePoints(PerkTreePoints, treeId) >= 0;
         }
+
+        public int UnlockedPerkTreeCount
+        {
+            get
+            {
+                if (PerkTreePoints == null)
+                    return 0;
+
+                int count = 0;
+                for (int i = 0; i < PerkTreePoints.Count; i++)
+                {
+                    if (PerkTreePoints[i].TreeId != PerkTree.InvalidId)
+                        count++;
+                }
+
+                return count;
+            }
+        }
+
+        /// <summary>True once four perk trees are open. The floor 1 elite then offers a skill, as champions already do.</summary>
+        public bool SkillsUnlocked => UnlockedPerkTreeCount >= SkillUnlockPerkTreeCount;
 
         public void SetPerkTreePoints(int treeId, int value)
         {

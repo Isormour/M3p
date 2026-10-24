@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f95b2dfe14a960c4ea22f7e097d0f0fd, type: 3}
+  m_Name: Natchnienie
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkDefinition
+  _name: "Natchnienie"
+  _description: "Dopasowanie co najmniej 7 kafelków nadaje Natchnienie. Raz na turę. Użycie następnego magicznego skilla dobiera 1 kartę i zużywa efekt. Nie kumuluje się i wygasa na koniec tury."
+  _artwork: {fileID: 21300000, guid: c1fbbc8109e34bb99f18359432da0a7c, type: 3}
+  _logic:
+    rid: 1
+  references:
+    version: 2
+    RefIds:
+    - rid: 1
+      type: {class: GrantPerkRule, ns: M3P, asm: Assembly-CSharp}
+      data:
+        _rule: 12
