@@ -252,6 +252,7 @@ namespace M3P
 
         /// <summary>
         /// One card shop and one tile forge. Floor 1 puts both on stop 5.
+        /// Floor 2 puts the forge on stop 3 and the shop on stop 5.
         /// Later floors keep them on stops 5 and 8, off the elite rows.
         /// </summary>
         static void PlaceCraftStations(List<List<DraftNode>> layers, System.Random rng, int floorIndex)
@@ -259,6 +260,13 @@ namespace M3P
             if (floorIndex <= 1)
             {
                 PlaceBothCrafts(layers, 5, rng);
+                return;
+            }
+
+            if (floorIndex == 2)
+            {
+                PlaceOne(layers, 3, MapNodeType.Forge, rng);
+                PlaceOne(layers, 5, MapNodeType.Shop, rng);
                 return;
             }
 
@@ -294,16 +302,8 @@ namespace M3P
         }
 
         /// <summary>
-        /// Floor 2 and later. Those elite rows are champions and award a skill.
-        /// Floor 1 still has one elite, which fills a perk tree until four trees are open.
-        /// </summary>
-        public static bool IsChampionFloor(int floorIndex)
-        {
-            return floorIndex >= 2;
-        }
-
-        /// <summary>
-        /// Floor 1: elite on stop 4. Floor 2 and later: a champion every third stop.
+        /// Floor 1: elite on stop 4. Floor 2: elite on stop 6.
+        /// Floor 3 and later: every third stop.
         /// The last stop is always the boss, so it is never an elite.
         /// </summary>
         public static bool IsEliteStep(int step, int floorIndex)
@@ -314,6 +314,9 @@ namespace M3P
 
             if (floorIndex <= 1)
                 return step == 4;
+
+            if (floorIndex == 2)
+                return step == 6;
 
             return step % 3 == 0;
         }

@@ -314,7 +314,7 @@ namespace M3P
             NotifyChanged();
         }
 
-        /// <summary>Scales max and current HP after CON has already been applied. Elite fights use 1.25.</summary>
+        /// <summary>Scales max and current HP after CON has already been applied. Elite and boss fights use 1.25.</summary>
         public void ScaleMaxHealth(float multiplier)
         {
             if (multiplier <= 0f || Mathf.Approximately(multiplier, 1f))

@@ -36,7 +36,7 @@ namespace M3P
         [Tooltip("Shown after a boss win. Closing it generates the next floor and returns to Map.")]
         [SerializeField] UIPerkTreeUnlockPanel _perkTreePanel;
 
-        [Tooltip("Shown after an elite win once four perk trees are open. The player picks one of three skills, then returns to the map.")]
+        [Tooltip("Shown after an elite win. The player picks one of three skills, then returns to the map.")]
         [SerializeField] UIPanelGainSkill _gainSkillPanel;
 
         [SerializeField] CameraShake _camerShake;
@@ -73,7 +73,6 @@ namespace M3P
         bool _awaitingSkillChoice;
         bool _awaitingBossReward;
         bool _awaitingEliteSkillReward;
-        bool _awaitingElitePerkReward;
         BattleOutcome _lastOutcome;
         MatchRewardRules _fallbackMatchRewards;
 
@@ -970,57 +969,10 @@ namespace M3P
             return starter;
         }
 
-        /// <summary>
-        /// A champion, the elite on floor 2 and later, offers a skill.
-        /// The floor 1 elite offers another perk tree until four trees are open, then a skill.
-        /// </summary>
+        /// <summary>An elite in the middle of the floor offers a skill. The boss offers a perk tree.</summary>
         bool TryShowEliteReward()
         {
-            if (IsChampionFight() || ProfileSkillsUnlocked())
-                return TryShowEliteSkillReward();
-
-            return TryShowElitePerkReward();
-        }
-
-        static bool IsChampionFight()
-        {
-            MapRunState mapRun = MapRunState.Active;
-            return mapRun != null && MapGenerator.IsChampionFloor(mapRun.FloorIndex);
-        }
-
-        static bool ProfileSkillsUnlocked()
-        {
-            ProfileManager profiles = GameManager.Instance != null ? GameManager.Instance.ProfileManager : null;
-            PlayerProfile profile = profiles != null ? profiles.CurrentProfile : null;
-            return profile != null && profile.SkillsUnlocked;
-        }
-
-        bool TryShowElitePerkReward()
-        {
-            if (_perkTreePanel == null)
-                _perkTreePanel = FindRewardPerkTreePanel();
-
-            if (_perkTreePanel == null || !_perkTreePanel.HasOffer)
-                return false;
-
-            _awaitingElitePerkReward = true;
-            _perkTreePanel.Closed -= HandleElitePerkPanelClosed;
-            _perkTreePanel.Closed += HandleElitePerkPanelClosed;
-            _perkTreePanel.Show();
-            Sfx.Play(SfxId.BossRewardReveal);
-            return true;
-        }
-
-        void HandleElitePerkPanelClosed()
-        {
-            UnsubscribeRewardPanels();
-            if (!_awaitingElitePerkReward)
-                return;
-
-            _awaitingElitePerkReward = false;
-            if (GameManager.Instance != null)
-                GameManager.Instance.PersistMapRun();
-            SceneFlow.LoadMap();
+            return TryShowEliteSkillReward();
         }
 
         bool TryShowEliteSkillReward()
@@ -1086,10 +1038,7 @@ namespace M3P
                 _gainSkillPanel.Closed -= HandleEliteSkillPanelClosed;
 
             if (_perkTreePanel != null)
-            {
                 _perkTreePanel.Closed -= HandleBossPerkPanelClosed;
-                _perkTreePanel.Closed -= HandleElitePerkPanelClosed;
-            }
         }
 
         void AdvanceAfterBossVictory()

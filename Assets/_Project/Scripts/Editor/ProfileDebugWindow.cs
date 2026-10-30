@@ -134,6 +134,14 @@ namespace M3P.Editor
 
             using (new EditorGUI.IndentLevelScope())
             {
+                string nextName = EditorGUILayout.TextField("Player Name", _working.PlayerName ?? string.Empty);
+                nextName = PlayerProfile.SanitizeName(nextName);
+                if (nextName != (_working.PlayerName ?? string.Empty))
+                {
+                    _working.PlayerName = nextName;
+                    MarkDirty();
+                }
+
                 DrawInt("Level", ref _working.Level, LevelProgressionConfig.FirstLevel);
                 DrawInt("Experience", ref _working.Experience, 0);
                 DrawInt("Unspent Stat Points", ref _working.UnspentStatPoints, 0);
@@ -1003,6 +1011,7 @@ namespace M3P.Editor
                 return;
 
             _working.NormalizeAfterLoad();
+            ProfileManager.RememberPlayerName(_working.PlayerName);
 
             ProfileManager live = LiveProfiles();
             if (live != null)

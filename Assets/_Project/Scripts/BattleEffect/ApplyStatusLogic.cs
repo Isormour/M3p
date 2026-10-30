@@ -60,12 +60,22 @@ namespace M3P
                 durationTurns = _status.DurationTurns;
 
             string name = _status.DisplayName;
-            string duration = _status.PersistUntilConsumed
-                ? "do następnego ataku"
-                : $"{durationTurns} tury";
-            string text = stacks > 1
-                ? $"Nakłada {stacks} stacki: {name} ({duration})"
-                : $"Nakłada {name} ({duration})";
+            string text;
+            if (_status.DecayOneStackPerTurn)
+            {
+                text = stacks > 1
+                    ? $"Nakłada {stacks} stacki: {name}. Co turę obrażenia równe stackom, potem −1 stack."
+                    : $"Nakłada {name}. Co turę obrażenia równe stackom, potem −1 stack.";
+            }
+            else
+            {
+                string duration = _status.PersistUntilConsumed
+                    ? "do następnego ataku"
+                    : $"{durationTurns} tury";
+                text = stacks > 1
+                    ? $"Nakłada {stacks} stacki: {name} ({duration})"
+                    : $"Nakłada {name} ({duration})";
+            }
             lines.Add(new TooltipLine(TooltipLineKind.Status, text));
             if (_actionPointDrain > 0)
                 lines.Add(new TooltipLine(TooltipLineKind.Other, $"Odbiera {_actionPointDrain} AP"));

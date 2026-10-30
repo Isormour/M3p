@@ -36,7 +36,7 @@ namespace M3P
 
         public HardStats HardStats { get; }
 
-        /// <summary>Applied to CON-derived max HP after stats are built. Elite uses 1.25.</summary>
+        /// <summary>Applied to CON-derived max HP after stats are built. Elite and boss use 1.25.</summary>
         public float HealthMultiplier { get; }
 
         public IReadOnlyList<SkillDefinition> ActiveSkills { get; }

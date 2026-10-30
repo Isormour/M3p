@@ -19,7 +19,12 @@ MonoBehaviour:
     version: 2
     RefIds:
     - rid: 1000
-      type: {class: DealDamageLogic, ns: M3P, asm: Assembly-CSharp}
+      type: {class: FloorScaledDamageLogic, ns: M3P, asm: Assembly-CSharp}
       data:
+        _baseAmount: 4
         _amount: 4
+        _scaleFloor: 1
+        _scaleRank: 0
+        _hitCount: 1
+        _scaleHitsByFloor: 0
         _physical: 1

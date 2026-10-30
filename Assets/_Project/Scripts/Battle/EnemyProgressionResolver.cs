@@ -97,7 +97,14 @@ namespace M3P
 
         public static float GetHealthMultiplier(MapNodeType encounterType)
         {
-            return encounterType == MapNodeType.Elite ? EliteHealthMultiplier : 1f;
+            switch (encounterType)
+            {
+                case MapNodeType.Elite:
+                case MapNodeType.Boss:
+                    return EliteHealthMultiplier;
+                default:
+                    return 1f;
+            }
         }
 
         public static float GetExperienceMultiplier(MapNodeType encounterType)

@@ -488,8 +488,9 @@ namespace M3P
         }
 
         /// <summary>
-        /// Fires per-turn status logics, then decrements duration unless the status persists
-        /// until consumed. Called from <see cref="OnTurnStarted"/>, so a timed status applied
+        /// Fires per-turn status logics, then advances the status. A decaying status loses one
+        /// stack and ends at zero. Otherwise duration counts down unless the status persists
+        /// until consumed. Called from <see cref="OnTurnStarted"/>, so a status applied
         /// mid-turn first ticks on the bearer's next turn.
         /// </summary>
         void TickStatuses()
@@ -510,6 +511,19 @@ namespace M3P
                 }
 
                 ApplyOnTurnEffectsAndNotify(status);
+
+                if (definition.DecayOneStackPerTurn)
+                {
+                    status.Stacks--;
+                    changed = true;
+                    if (status.Stacks <= 0)
+                    {
+                        Sfx.Play(SfxId.StatusExpire);
+                        _statuses.RemoveAt(i);
+                    }
+
+                    continue;
+                }
 
                 if (definition.PersistUntilConsumed)
                     continue;

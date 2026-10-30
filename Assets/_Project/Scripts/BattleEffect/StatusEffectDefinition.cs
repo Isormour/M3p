@@ -19,6 +19,8 @@ namespace M3P
         [Min(1), SerializeField] int _durationTurns = 1;
         [Tooltip("When false, re-applying refreshes remaining turns on the existing instance.")]
         [SerializeField] bool _canStack;
+        [Tooltip("Each of the bearer's turns fires on-turn effects, then removes one stack. Duration is ignored. The status ends at zero stacks.")]
+        [SerializeField] bool _decayOneStackPerTurn;
         [Tooltip("Constitution modifiers are ignored at runtime so MaxHP does not change mid-battle.")]
         [SerializeField] StatusStatModifier[] _statModifiers = Array.Empty<StatusStatModifier>();
         [Tooltip("Fired on the status bearer at the start of each of their turns. Authored Effect Target is ignored; the bearer always receives the effect.")]
@@ -53,6 +55,8 @@ namespace M3P
         public int DurationTurns => Mathf.Max(1, _durationTurns);
 
         public bool CanStack => _canStack;
+
+        public bool DecayOneStackPerTurn => _decayOneStackPerTurn;
 
         public StatusStatModifier[] StatModifiers => _statModifiers ?? Array.Empty<StatusStatModifier>();
 

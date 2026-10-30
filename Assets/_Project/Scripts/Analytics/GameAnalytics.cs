@@ -11,7 +11,7 @@ namespace M3P
 {
     /// <summary>
     /// Sends gameplay events through Unity Gaming Services Analytics.
-    /// A matching <c>battleEnded</c> schema has to exist in the dashboard or the event is dropped.
+    /// Matching event schemas, including the string parameter <c>playerName</c>, must exist in the dashboard.
     /// </summary>
     public static class GameAnalytics
     {
@@ -32,12 +32,12 @@ namespace M3P
             _ = InitializeAsync();
         }
 
-        /// <summary>Records a brand-new save. Later fights on that save carry the same <paramref name="profileId"/>.</summary>
-        public static void RecordProfileCreated(string profileId)
+        /// <summary>Records a brand-new save with the name stored on that profile.</summary>
+        public static void RecordProfileCreated(string playerName)
         {
             Enqueue(new CustomEvent(ProfileCreatedEvent)
             {
-                { "profileId", profileId ?? string.Empty },
+                { "playerName", playerName ?? string.Empty },
             });
         }
 
@@ -60,7 +60,9 @@ namespace M3P
 
             var analyticsEvent = new CustomEvent(BattleEndedEvent)
             {
-                { "profileId", CurrentProfileId() },
+                // Parameter names are case-sensitive; the battleEnded schema uses profileID.
+                { "profileID", CurrentProfileId() },
+                { "playerName", CurrentPlayerName() },
                 { "floor", floor },
                 { "enemy", enemyName },
                 { "won", won },
@@ -78,6 +80,14 @@ namespace M3P
             return profile != null && !string.IsNullOrEmpty(profile.ProfileId)
                 ? profile.ProfileId
                 : "none";
+        }
+
+        static string CurrentPlayerName()
+        {
+            PlayerProfile profile = GameManager.Instance != null
+                ? GameManager.Instance.ProfileManager.CurrentProfile
+                : null;
+            return profile?.PlayerName ?? string.Empty;
         }
 
         static string DescribePerkTrees()

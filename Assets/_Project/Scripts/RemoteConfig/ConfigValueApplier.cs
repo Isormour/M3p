@@ -12,6 +12,9 @@ namespace M3P.RemoteConfig
     /// </summary>
     public static class ConfigValueApplier
     {
+        static readonly MethodInfo CloneMemberwise = typeof(object).GetMethod(
+            "MemberwiseClone", BindingFlags.Instance | BindingFlags.NonPublic);
+
         public static bool Apply(object target, ConfigContract contract, JObject data, List<string> errors)
         {
             if (target == null || contract == null || data == null)
@@ -32,13 +35,28 @@ namespace M3P.RemoteConfig
             if (contract.fields == null)
                 return true;
 
+            var pending = new List<(FieldInfo member, object value)>();
             for (int i = 0; i < contract.fields.Count; i++)
             {
                 ConfigField field = contract.fields[i];
-                if (!TrySet(target, field, data[field.name], errors))
+                FieldInfo member = FindField(target.GetType(), field.memberName);
+                if (member == null)
+                {
+                    errors?.Add("Brak pola " + field.memberName + " w " + target.GetType().Name + ".");
                     return false;
+                }
+
+                if (!TryConvert(member.FieldType, field, data[field.name], member.GetValue(target), out object value, out string error))
+                {
+                    errors?.Add(field.name + ": " + error);
+                    return false;
+                }
+
+                pending.Add((member, value));
             }
 
+            for (int i = 0; i < pending.Count; i++)
+                pending[i].member.SetValue(target, pending[i].value);
             return true;
         }
 
@@ -55,26 +73,7 @@ namespace M3P.RemoteConfig
             return JsonConvert.SerializeObject(contract, Formatting.None);
         }
 
-        static bool TrySet(object target, ConfigField field, JToken token, List<string> errors)
-        {
-            FieldInfo member = FindField(target.GetType(), field.memberName);
-            if (member == null)
-            {
-                errors?.Add("Brak pola " + field.memberName + " w " + target.GetType().Name + ".");
-                return false;
-            }
-
-            if (!TryConvert(member.FieldType, field, token, out object value, out string error))
-            {
-                errors?.Add(field.name + ": " + error);
-                return false;
-            }
-
-            member.SetValue(target, value);
-            return true;
-        }
-
-        static bool TryConvert(Type type, ConfigField field, JToken token, out object value, out string error)
+        static bool TryConvert(Type type, ConfigField field, JToken token, object existing, out object value, out string error)
         {
             value = null;
             error = null;
@@ -131,9 +130,9 @@ namespace M3P.RemoteConfig
                     value = ReadRect((JObject)normalized);
                     return true;
                 case ConfigContracts.Array:
-                    return TryConvertArray(type, field, (JArray)normalized, out value, out error);
+                    return TryConvertArray(type, field, (JArray)normalized, existing, out value, out error);
                 case ConfigContracts.Object:
-                    return TryConvertObject(type, field, (JObject)normalized, out value, out error);
+                    return TryConvertObject(type, field, (JObject)normalized, existing, out value, out error);
                 default:
                     error = "Nieobsługiwany rodzaj pola.";
                     return false;
@@ -147,15 +146,23 @@ namespace M3P.RemoteConfig
             return number;
         }
 
-        static bool TryConvertArray(Type type, ConfigField field, JArray array, out object value, out string error)
+        static bool TryConvertArray(Type type, ConfigField field, JArray array, object existing, out object value, out string error)
         {
             value = null;
             error = null;
             Type elementType = type.IsArray ? type.GetElementType() : type.GetGenericArguments()[0];
+            var previous = existing as System.Collections.IList;
+            if (RequiresLocalFields(elementType, field.element) && array.Count != (previous?.Count ?? 0))
+            {
+                error = "Nie można zmieniać długości tablicy zawierającej lokalne pola lub referencje. Wymagany jest nowy katalog w buildzie.";
+                return false;
+            }
+
             Array created = Array.CreateInstance(elementType, array.Count);
             for (int i = 0; i < array.Count; i++)
             {
-                if (!TryConvert(elementType, field.element, array[i], out object element, out error))
+                object previousElement = previous != null && i < previous.Count ? previous[i] : null;
+                if (!TryConvert(elementType, field.element, array[i], previousElement, out object element, out error))
                     return false;
                 created.SetValue(element, i);
             }
@@ -174,14 +181,22 @@ namespace M3P.RemoteConfig
             return true;
         }
 
-        static bool TryConvertObject(Type type, ConfigField field, JObject data, out object value, out string error)
+        static bool TryConvertObject(Type type, ConfigField field, JObject data, object existing, out object value, out string error)
         {
             value = null;
             error = null;
             object instance;
             try
             {
-                instance = Activator.CreateInstance(type);
+                if (existing == null && RequiresLocalFields(type, field))
+                {
+                    error = "Brak lokalnego obiektu z polami lub referencjami pominiętymi w eksporcie.";
+                    return false;
+                }
+
+                // Merge onto a copy so omitted references survive, and a later failure cannot
+                // leave part of an existing object or collection modified.
+                instance = existing != null ? CloneMemberwise.Invoke(existing, null) : Activator.CreateInstance(type);
             }
             catch (Exception exception)
             {
@@ -201,7 +216,7 @@ namespace M3P.RemoteConfig
                         return false;
                     }
 
-                    if (!TryConvert(member.FieldType, child, data[child.name], out object childValue, out error))
+                    if (!TryConvert(member.FieldType, child, data[child.name], member.GetValue(instance), out object childValue, out error))
                         return false;
                     member.SetValue(instance, childValue);
                 }
@@ -209,6 +224,37 @@ namespace M3P.RemoteConfig
 
             value = instance;
             return true;
+        }
+
+        static bool RequiresLocalFields(Type type, ConfigField field)
+        {
+            if (field == null)
+                return true;
+            if (field.kind == ConfigContracts.Array)
+            {
+                Type elementType = type.IsArray ? type.GetElementType() : type.GetGenericArguments()[0];
+                return RequiresLocalFields(elementType, field.element);
+            }
+            if (field.kind != ConfigContracts.Object)
+                return false;
+
+            for (Type current = type; current != null && current != typeof(object); current = current.BaseType)
+            {
+                FieldInfo[] members = current.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+                for (int i = 0; i < members.Length; i++)
+                {
+                    FieldInfo member = members[i];
+                    if (member.IsStatic || member.IsInitOnly || member.IsNotSerialized ||
+                        (!member.IsPublic && !member.IsDefined(typeof(SerializeField), true) && !member.IsDefined(typeof(SerializeReference), true)))
+                        continue;
+
+                    ConfigField child = field.children?.Find(candidate => candidate.memberName == member.Name);
+                    if (child == null || RequiresLocalFields(member.FieldType, child))
+                        return true;
+                }
+            }
+
+            return false;
         }
 
         static FieldInfo FindField(Type type, string memberName)

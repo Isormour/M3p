@@ -36,6 +36,9 @@ namespace M3P
                 if (string.IsNullOrEmpty(PendingBattleNodeId))
                     return false;
 
+                if (PendingEncounterType == MapNodeType.Elite)
+                    return false;
+
                 if (PendingEncounterType == MapNodeType.Boss)
                     return true;
 

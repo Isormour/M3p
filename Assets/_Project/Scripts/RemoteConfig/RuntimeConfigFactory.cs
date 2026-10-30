@@ -80,6 +80,7 @@ namespace M3P.RemoteConfig
     {
         public GameConfig Config;
         public Dictionary<UnityEngine.Object, UnityEngine.Object> Copies = new Dictionary<UnityEngine.Object, UnityEngine.Object>();
+        internal readonly HashSet<UnityEngine.Object> RuntimeCopies = new HashSet<UnityEngine.Object>();
     }
 
     /// <summary>
@@ -101,19 +102,31 @@ namespace M3P.RemoteConfig
                     if (entry?.source == null || session.Copies.ContainsKey(entry.source))
                         continue;
 
-                    ScriptableObject copy = UnityEngine.Object.Instantiate(entry.source);
-                    copy.name = entry.source.name + " (Remote)";
-                    copy.hideFlags = HideFlags.HideAndDontSave;
-                    session.Copies.Add(entry.source, copy);
+                    CreateCopy(entry.source, session);
                 }
             }
 
-            GameConfig configCopy = UnityEngine.Object.Instantiate(source);
-            configCopy.name = source.name + " (Remote)";
-            configCopy.hideFlags = HideFlags.HideAndDontSave;
-            Rewire(configCopy, session.Copies);
-            session.Config = configCopy;
+            session.Config = (GameConfig)CreateCopy(source, session);
+            // Register every selected asset first, then include the owners that lead to it.
+            // A selected enemy can be reached through both a registry and a map encounter.
+            var initialCopies = new List<UnityEngine.Object>(session.Copies.Values);
+            for (int i = 0; i < initialCopies.Count; i++)
+                RewireOwner(initialCopies[i], session);
             return session;
+        }
+
+        static ScriptableObject CreateCopy(ScriptableObject source, RuntimeConfigSession session)
+        {
+            if (session.Copies.TryGetValue(source, out UnityEngine.Object existing))
+                return (ScriptableObject)existing;
+
+            ScriptableObject copy = UnityEngine.Object.Instantiate(source);
+            // Names are used as persistent keys for tiles, encounters and map graphs.
+            copy.name = source.name;
+            copy.hideFlags = HideFlags.HideAndDontSave;
+            session.Copies.Add(source, copy);
+            session.RuntimeCopies.Add(copy);
+            return copy;
         }
 
         public static bool ApplyDocument(RuntimeConfigSession session, RemoteConfigCatalogAsset catalog, JObject document, out string error)
@@ -204,84 +217,140 @@ namespace M3P.RemoteConfig
                 MonoBehaviour behaviour = behaviours[i];
                 if (behaviour == null || !behaviour.gameObject.scene.IsValid())
                     continue;
-                Rewire(behaviour, session.Copies);
+                RewireOwner(behaviour, session);
             }
         }
 
-        static void Rewire(object target, Dictionary<UnityEngine.Object, UnityEngine.Object> copies)
+        public static void RewireOwner(object target, RuntimeConfigSession session)
         {
-            var seen = new HashSet<object>();
-            RewireFields(target, copies, seen);
+            if (target == null || session == null || session.Copies.Count == 0)
+                return;
+
+            RewireFields(target, session, new HashSet<object>());
         }
 
-        static void RewireFields(object target, Dictionary<UnityEngine.Object, UnityEngine.Object> copies, HashSet<object> seen)
+        static void RewireFields(object target, RuntimeConfigSession session, HashSet<object> seen)
         {
             if (target == null || target is string || !seen.Add(target))
                 return;
 
-            Type type = target.GetType();
-            while (type != null && type != typeof(object))
+            foreach (var field in SerializedFields(target.GetType()))
             {
-                var fields = type.GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
-                for (int i = 0; i < fields.Length; i++)
+                object value = field.GetValue(target);
+                object replacement = RewireValue(value, session, seen);
+                if (field.FieldType.IsValueType || !ReferenceEquals(value, replacement))
+                    field.SetValue(target, replacement);
+            }
+        }
+
+        static object RewireValue(object value, RuntimeConfigSession session, HashSet<object> seen)
+        {
+            if (value == null)
+                return null;
+
+            if (value is UnityEngine.Object unityObject)
+            {
+                if (unityObject == null || session.RuntimeCopies.Contains(unityObject))
+                    return value;
+                if (session.Copies.TryGetValue(unityObject, out UnityEngine.Object replacement))
+                    return replacement;
+                if (unityObject is not ScriptableObject source ||
+                    !NeedsCopy(source, session, new HashSet<ScriptableObject>()))
+                    return value;
+
+                ScriptableObject copy = CreateCopy(source, session);
+                RewireFields(copy, session, seen);
+                return copy;
+            }
+
+            Type type = value.GetType();
+            if (type.IsPrimitive || type.IsEnum || value is string)
+                return value;
+
+            if (value is System.Collections.IList list)
+            {
+                if (!seen.Add(value) || list.IsReadOnly)
+                    return value;
+                for (int i = 0; i < list.Count; i++)
+                    list[i] = RewireValue(list[i], session, seen);
+                return value;
+            }
+
+            if (type.IsSerializable)
+                RewireFields(value, session, seen);
+            return value;
+        }
+
+        // Only clone owners of selected assets. Unrelated assets such as fonts stay shared.
+        // Keep the visited set local to a search: caching a negative result in a cyclic
+        // graph can otherwise hide a path to a selected config discovered later.
+        static bool NeedsCopy(ScriptableObject source, RuntimeConfigSession session, HashSet<ScriptableObject> visited)
+        {
+            if (source == null || session.RuntimeCopies.Contains(source))
+                return false;
+            if (session.Copies.ContainsKey(source))
+                return true;
+            if (!visited.Add(source))
+                return false;
+
+            foreach (ScriptableObject child in ScriptableReferences(source, new HashSet<object>()))
+                if (NeedsCopy(child, session, visited))
+                    return true;
+            return false;
+        }
+
+        static IEnumerable<ScriptableObject> ScriptableReferences(object target, HashSet<object> seen)
+        {
+            if (target == null || !seen.Add(target))
+                yield break;
+            foreach (var field in SerializedFields(target.GetType()))
+                foreach (ScriptableObject child in ReferencesInValue(field.GetValue(target), seen))
+                    yield return child;
+        }
+
+        static IEnumerable<ScriptableObject> ReferencesInValue(object value, HashSet<object> seen)
+        {
+            if (value == null)
+                yield break;
+            if (value is ScriptableObject config)
+            {
+                if (config != null)
+                    yield return config;
+                yield break;
+            }
+            Type type = value.GetType();
+            if (value is UnityEngine.Object || value is string || type.IsPrimitive || type.IsEnum)
+                yield break;
+            if (value is System.Collections.IList list)
+            {
+                if (!seen.Add(value))
+                    yield break;
+                foreach (object item in list)
+                    foreach (ScriptableObject child in ReferencesInValue(item, seen))
+                        yield return child;
+            }
+            else if (type.IsSerializable)
+            {
+                foreach (ScriptableObject child in ScriptableReferences(value, seen))
+                    yield return child;
+            }
+        }
+
+        static IEnumerable<System.Reflection.FieldInfo> SerializedFields(Type type)
+        {
+            while (type != null && type != typeof(object) && type != typeof(UnityEngine.Object))
+            {
+                var fields = type.GetFields(System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic |
+                    System.Reflection.BindingFlags.DeclaredOnly);
+                foreach (var field in fields)
                 {
-                    var field = fields[i];
-                    if (field.IsStatic || field.IsLiteral)
+                    if (field.IsStatic || field.IsLiteral || field.IsInitOnly || field.IsNotSerialized)
                         continue;
-                    if (field.IsNotSerialized && field.GetCustomAttributes(typeof(SerializeField), true).Length == 0 && !field.IsPublic)
-                        continue;
-
-                    Type fieldType = field.FieldType;
-                    if (typeof(UnityEngine.Object).IsAssignableFrom(fieldType))
-                    {
-                        if (field.GetValue(target) is UnityEngine.Object current &&
-                            current != null &&
-                            copies.TryGetValue(current, out UnityEngine.Object replacement))
-                            field.SetValue(target, replacement);
-                        continue;
-                    }
-
-                    if (fieldType.IsArray && typeof(UnityEngine.Object).IsAssignableFrom(fieldType.GetElementType()))
-                    {
-                        if (field.GetValue(target) is Array array)
-                        {
-                            for (int index = 0; index < array.Length; index++)
-                            {
-                                if (array.GetValue(index) is UnityEngine.Object current &&
-                                    current != null &&
-                                    copies.TryGetValue(current, out UnityEngine.Object replacement))
-                                    array.SetValue(replacement, index);
-                            }
-                        }
-
-                        continue;
-                    }
-
-                    if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(List<>) &&
-                        typeof(UnityEngine.Object).IsAssignableFrom(fieldType.GetGenericArguments()[0]))
-                    {
-                        if (field.GetValue(target) is System.Collections.IList list)
-                        {
-                            for (int index = 0; index < list.Count; index++)
-                            {
-                                if (list[index] is UnityEngine.Object current &&
-                                    current != null &&
-                                    copies.TryGetValue(current, out UnityEngine.Object replacement))
-                                    list[index] = replacement;
-                            }
-                        }
-
-                        continue;
-                    }
-
-                    if (!fieldType.IsPrimitive && !fieldType.IsEnum && fieldType != typeof(string) && !typeof(UnityEngine.Object).IsAssignableFrom(fieldType))
-                    {
-                        object nested = field.GetValue(target);
-                        if (nested != null && !fieldType.IsValueType)
-                            RewireFields(nested, copies, seen);
-                    }
+                    if (field.IsPublic || Attribute.IsDefined(field, typeof(SerializeField)) ||
+                        Attribute.IsDefined(field, typeof(SerializeReference)))
+                        yield return field;
                 }
-
                 type = type.BaseType;
             }
         }

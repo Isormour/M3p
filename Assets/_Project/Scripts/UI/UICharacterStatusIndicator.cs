@@ -66,8 +66,9 @@ namespace M3P
                 return;
 
             int count = Mathf.Max(1, stacks);
+            bool showSingle = _status?.Definition != null && _status.Definition.DecayOneStackPerTurn;
             _stackCount.text = count.ToString();
-            _stackCount.enabled = count > 1;
+            _stackCount.enabled = count > 1 || showSingle;
         }
 
         void EnsureStackLabel()

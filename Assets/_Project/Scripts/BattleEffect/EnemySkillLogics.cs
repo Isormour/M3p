@@ -5,12 +5,14 @@ using UnityEngine;
 namespace M3P
 {
     /// <summary>
-    /// Damage of <c>amount × floor × rank</c>, optionally as several hits.
+    /// Damage of <c>base + amount × floor × rank</c>, optionally as several hits.
     /// The per-hit amount is the value before strength talents and lasting attack bonuses.
     /// </summary>
     [Serializable]
     public class FloorScaledDamageLogic : BattleEffectLogic, ITooltipPreview
     {
+        [Tooltip("Flat damage added after floor and rank scaling.")]
+        [Min(0), SerializeField] int _baseAmount;
         [SerializeField] int _amount = 1;
         [SerializeField] bool _scaleFloor = true;
         [SerializeField] bool _scaleRank;
@@ -53,7 +55,7 @@ namespace M3P
                 amount *= EnemySkillScale.Floor(context.Caster);
             if (_scaleRank)
                 amount *= EnemySkillScale.Rank(context.Caster);
-            return amount;
+            return Mathf.Max(0, _baseAmount) + amount;
         }
 
         int HitCount(BattleEffectContext context)

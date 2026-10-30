@@ -177,11 +177,22 @@ namespace M3P
         static string BuildStatusMeta(StatusInstance status, int stacks)
         {
             var parts = new List<string>(3);
-            if (status.Definition.PersistUntilConsumed)
+            StatusEffectDefinition definition = status.Definition;
+            if (definition.DecayOneStackPerTurn)
+            {
+                parts.Add($"Stacki: {stacks}");
+                parts.Add("−1 co turę");
+            }
+            else if (definition.PersistUntilConsumed)
+            {
                 parts.Add("Do następnego ataku");
+            }
             else
+            {
                 parts.Add($"Tury: {Mathf.Max(0, status.RemainingTurns)}");
-            if (stacks > 1)
+            }
+
+            if (!definition.DecayOneStackPerTurn && stacks > 1)
                 parts.Add($"Stacki: {stacks}");
             if (status.Definition.CanStack)
                 parts.Add("Stosuje się");

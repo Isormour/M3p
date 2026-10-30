@@ -10,6 +10,11 @@ namespace M3P
         /// <summary>Stable id for this save, so analytics can line up its creation and later fights.</summary>
         public string ProfileId;
 
+        /// <summary>Name entered in the main menu. Empty until the player types one.</summary>
+        public string PlayerName;
+
+        public const int MaxPlayerNameLength = 24;
+
         public int Level = LevelProgressionConfig.FirstLevel;
 
         /// <summary>Lifetime experience. <see cref="Level"/> is what the curve has already paid out for it.</summary>
@@ -100,38 +105,11 @@ namespace M3P
             return index >= 0 ? Mathf.Max(0, PerkTreePoints[index].Value) : 0;
         }
 
-        /// <summary>
-        /// Floor 1 elites offer a perk tree until this many trees are open, then a skill.
-        /// Champions on later floors always offer a skill.
-        /// </summary>
-        public const int SkillUnlockPerkTreeCount = 4;
-
         /// <summary>True when this profile has opened the perk tree. Missing entries stay locked.</summary>
         public bool IsPerkTreeUnlocked(int treeId)
         {
             return StatProgressionConfig.IndexOfTreePoints(PerkTreePoints, treeId) >= 0;
         }
-
-        public int UnlockedPerkTreeCount
-        {
-            get
-            {
-                if (PerkTreePoints == null)
-                    return 0;
-
-                int count = 0;
-                for (int i = 0; i < PerkTreePoints.Count; i++)
-                {
-                    if (PerkTreePoints[i].TreeId != PerkTree.InvalidId)
-                        count++;
-                }
-
-                return count;
-            }
-        }
-
-        /// <summary>True once four perk trees are open. The floor 1 elite then offers a skill, as champions already do.</summary>
-        public bool SkillsUnlocked => UnlockedPerkTreeCount >= SkillUnlockPerkTreeCount;
 
         public void SetPerkTreePoints(int treeId, int value)
         {
@@ -446,12 +424,26 @@ namespace M3P
             return -1;
         }
 
+        /// <summary>Trims a menu name and caps it at <see cref="MaxPlayerNameLength"/>.</summary>
+        public static string SanitizeName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return string.Empty;
+
+            name = name.Trim();
+            if (name.Length > MaxPlayerNameLength)
+                name = name.Substring(0, MaxPlayerNameLength).TrimEnd();
+
+            return name;
+        }
+
         /// <summary>Fills in fields a save written before levels or cards existed never stored.</summary>
         public void NormalizeAfterLoad()
         {
             if (string.IsNullOrEmpty(ProfileId))
                 ProfileId = Guid.NewGuid().ToString();
 
+            PlayerName = SanitizeName(PlayerName);
             Level = Math.Max(LevelProgressionConfig.FirstLevel, Level);
             Experience = Math.Max(0, Experience);
             UnspentStatPoints = Math.Max(0, UnspentStatPoints);
@@ -498,6 +490,7 @@ namespace M3P
                 return;
 
             ProfileId = source.ProfileId;
+            PlayerName = source.PlayerName;
             Level = source.Level;
             Experience = source.Experience;
             UnspentStatPoints = source.UnspentStatPoints;
@@ -530,6 +523,7 @@ namespace M3P
         struct PlayerProfileSaveData
         {
             public string ProfileId;
+            public string PlayerName;
             public int Level;
             public int Experience;
             public int UnspentStatPoints;
@@ -552,6 +546,7 @@ namespace M3P
                 return new PlayerProfileSaveData
                 {
                     ProfileId = profile.ProfileId,
+                    PlayerName = profile.PlayerName,
                     Level = profile.Level,
                     Experience = profile.Experience,
                     UnspentStatPoints = profile.UnspentStatPoints,
@@ -580,6 +575,7 @@ namespace M3P
                 return new PlayerProfile
                 {
                     ProfileId = ProfileId,
+                    PlayerName = PlayerName,
                     Level = Level,
                     Experience = Experience,
                     UnspentStatPoints = UnspentStatPoints,

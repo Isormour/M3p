@@ -11,6 +11,7 @@ namespace M3P
     public sealed class ProfileManager
     {
         const string SaveFileName = "player_profile.json";
+        const string PlayerNamePrefsKey = "M3P.PlayerName";
 
         readonly GameConfig _config;
 
@@ -27,6 +28,23 @@ namespace M3P
         public static string SavePath => Path.Combine(Application.persistentDataPath, SaveFileName);
 
         public static bool HasSave => File.Exists(SavePath);
+
+        /// <summary>Last name typed in the main menu, kept across restarts independently of the profile file.</summary>
+        public static string RememberedPlayerName =>
+            PlayerPrefs.GetString(PlayerNamePrefsKey, string.Empty);
+
+        /// <summary>False when the menu has never stored a name. An empty string is a name the player cleared.</summary>
+        public static bool TryGetRememberedPlayerName(out string name)
+        {
+            if (!PlayerPrefs.HasKey(PlayerNamePrefsKey))
+            {
+                name = string.Empty;
+                return false;
+            }
+
+            name = PlayerProfile.SanitizeName(PlayerPrefs.GetString(PlayerNamePrefsKey, string.Empty));
+            return true;
+        }
 
         public bool IsLoaded => _currentProfile != null;
 
@@ -52,6 +70,9 @@ namespace M3P
 
             bool missingProfileId = string.IsNullOrEmpty(profile.ProfileId);
             profile.NormalizeAfterLoad();
+            bool filledName = string.IsNullOrEmpty(profile.PlayerName) && PlayerPrefs.HasKey(PlayerNamePrefsKey);
+            if (filledName)
+                profile.PlayerName = PlayerProfile.SanitizeName(RememberedPlayerName);
             int cardsBeforeSeed = profile.Cards.Count;
             int tilesBeforeSeed = profile.Tiles.Count;
             int treesBeforeSeed = profile.PerkTreePoints != null ? profile.PerkTreePoints.Count : 0;
@@ -65,11 +86,11 @@ namespace M3P
             bool seededTiles = profile.Tiles.Count > tilesBeforeSeed;
             bool seededTrees = seededUnlocks ||
                 (profile.PerkTreePoints != null ? profile.PerkTreePoints.Count : 0) > treesBeforeSeed;
-            if (!hadSave || missingProfileId || seededCards || seededTiles || seededTrees)
+            if (!hadSave || missingProfileId || seededCards || seededTiles || seededTrees || filledName)
                 Save();
 
             if (!hadSave)
-                GameAnalytics.RecordProfileCreated(profile.ProfileId);
+                GameAnalytics.RecordProfileCreated(profile.PlayerName);
 
             return profile;
         }
@@ -107,7 +128,44 @@ namespace M3P
                 return new PlayerProfile();
             }
 
-            return start.CreateProfile(_config.Skills, _config.Cards, _config.Tiles, _config.StatProgression);
+            PlayerProfile profile = start.CreateProfile(
+                _config.Skills, _config.Cards, _config.Tiles, _config.StatProgression);
+            if (PlayerPrefs.HasKey(PlayerNamePrefsKey))
+                profile.PlayerName = PlayerProfile.SanitizeName(RememberedPlayerName);
+
+            return profile;
+        }
+
+        /// <summary>
+        /// Stores the menu name on the live profile and in PlayerPrefs.
+        /// PlayerPrefs is what the name field reads on the next launch, including after a profile reset.
+        /// </summary>
+        public void SetPlayerName(string name)
+        {
+            name = PlayerProfile.SanitizeName(name);
+            RememberPlayerName(name);
+
+            PlayerProfile profile = CurrentProfile;
+            if (profile == null || profile.PlayerName == name)
+                return;
+
+            profile.PlayerName = name;
+            Save();
+        }
+
+        /// <summary>Writes the name field's last value. Empty is stored only once a name was saved before.</summary>
+        public static void RememberPlayerName(string name)
+        {
+            name = PlayerProfile.SanitizeName(name);
+            bool hasKey = PlayerPrefs.HasKey(PlayerNamePrefsKey);
+            if (!hasKey && name.Length == 0)
+                return;
+
+            if (hasKey && PlayerPrefs.GetString(PlayerNamePrefsKey, string.Empty) == name)
+                return;
+
+            PlayerPrefs.SetString(PlayerNamePrefsKey, name);
+            PlayerPrefs.Save();
         }
 
         void SetCurrentProfile(PlayerProfile profile)

@@ -26,6 +26,9 @@ namespace M3P.RemoteConfig
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
         static void KickoffServices()
         {
+            if (!Application.isPlaying)
+                return;
+
             _ = UgsStartup.EnsureAsync(EnvironmentNameForServices());
         }
 
@@ -68,8 +71,9 @@ namespace M3P.RemoteConfig
             if (_session.Config != null)
                 manager.ApplyRuntimeConfig(_session.Config);
 
-            HookScenes();
-            RuntimeConfigFactory.RewireScene(_session);
+            // Temporarily disabled to isolate the WebGL OOM when starting a new game.
+            // HookScenes();
+            // RuntimeConfigFactory.RewireScene(_session);
 
             if (!ShouldFetchRemote)
             {
