@@ -43,7 +43,7 @@ Poniższe liczby odpowiadają obecnym assetom w `Configs/Skills/Enemies` i powi�
 | --- | --- | --- | --- | --- |
 | Cios | `EnemyStrike` | 1 | 3 obrażenia fizyczne. | Fallback. |
 | Garda | `EnemyGuard` | 3 | +5 Shield przez efekt `GuardUp`. | Wysoki priorytet, gdy przeciwnik nie ma Shield. |
-| Miażdżenie | `EnemySlam` | 2 | 4 obrażenia fizyczne. | Po Gardzie albo co trzecią turę. |
+| Miażdżenie | `EnemySlam` | 2 | `4 + 4 × F` obrażeń fizycznych, gdzie `F` to efektywne piętro przeciwnika. | Po Gardzie albo co trzecią turę. |
 | Rozniecenie | `EnemyEmber` | 1 | Nakłada 1 Burn, bez obrażeń natychmiast. | Gdy cel ma mało Burn. |
 
 ### 4.1. Burn
@@ -85,7 +85,7 @@ Zestaw Miniootaura nie zawiera `EnemyGuard` ani `EnemyEmber`. Usunięcie dotyczy
 | --- | --- | --- |
 | `EnemyStrike` | Standardowy atak awaryjny. | Aktualnie 3 obrażenia fizyczne; CD 1. |
 | `EmberStrike` | Zadaje obrażenia i nakłada Burn na cel. | `3 × level` obrażeń i `1 × level` stacków Burn. |
-| `EmberLight` | Nakłada Burn. | `3 × level` stacków Burn. |
+| `EmberLight` | Nakłada Burn. | `2 × level` stacków Burn. |
 | `EmberDetonation` | Zlicza stacki Burn na celu, zadaje obrażenia i zużywa wszystkie stacki Burn tego celu. | `5 × BurnStacks` obrażeń, według liczby stacków przed ich zużyciem. |
 
 ### 5.4. RudoBat
@@ -104,14 +104,14 @@ Zestaw Miniootaura nie zawiera `EnemyGuard` ani `EnemyEmber`. Usunięcie dotyczy
 | `EnemyStrike` | Standardowy atak awaryjny. | Aktualnie 3 obrażenia fizyczne; CD 1. |
 | `GuardUp` | Nakłada Shield. | Prototyp dexrafiego: `6 × L` Shield. Wspólny efekt daje aktualnie +5 Shield; wymaga osobnego skalowania dla tego zestawu. |
 | `Laser` | Zadaje obrażenia i odbiera manę z każdego typu osobno. | `10 × L` obrażeń; do `3 × L` many każdego typu, minimum do 0 dla każdego zasobu. |
-| `EnemySlam` | Zadaje obrażenia. | `15 × level` obrażeń. |
+| `DexrafiSlam` | Zadaje obrażenia. | `15 × level` obrażeń. |
 
 ### 5.6. frenzy
 
 | Skill | Efekt | Skalowanie |
 | --- | --- | --- |
 | `Corrosion` | Zabiera Armor graczowi i przekazuje faktycznie skradzioną ilość frenzy. | Do `5 × L` Armor, maksymalnie tyle, ile gracz posiada. |
-| `EnemySlam` | Zadaje obrażenia. | Standardowy efekt assetu: 4 obrażenia fizyczne; CD 2, dopóki frenzy nie otrzyma osobnego mnożnika. |
+| `EnemySlam` | Zadaje obrażenia. | `4 + 4 × F` obrażeń fizycznych, gdzie `F` to efektywne piętro przeciwnika; CD 2. |
 | `IronWall` | Dodaje Armor, przygotowując zasób do `ArmorBash`. | `10 × L` Armor. |
 | `ArmorBash` (dawniej `ShieldBash`) | Zużywa cały własny Armor i zadaje obrażenia w przeliczniku 1:1. | Obrażenia równe ilości zużytego Armor; wymaga dodatniego Armor. |
 
@@ -123,7 +123,7 @@ Zestaw Miniootaura nie zawiera `EnemyGuard` ani `EnemyEmber`. Usunięcie dotyczy
 | --- | --- | --- |
 | `EnemyStrike` | Standardowy atak awaryjny, dostępny od piętra 1. | 3 obrażenia fizyczne; CD 1. |
 | `Entail` | Zakorzenia losowe kafelki. Zakorzeniony kafelek pozostaje w miejscu, dopóki nie zostanie zniszczony. | `3 × level` kafelków. |
-| `KonarHit` | Zadaje obrażenia i nakłada na gracza Confusion. | `5 × L` obrażeń; CD 2 tury; status odbiera 1 AP po odnowieniu AP na początku następnej tury gracza, po czym znika. |
+| `KonarHit` | Zadaje obrażenia i nakłada na gracza Confusion. | `5 × L` obrażeń; CD 3 tury; status odbiera 1 AP po odnowieniu AP na początku następnej tury gracza, po czym znika. |
 | `ThrowBeeHive` | Nakłada na gracza Poison, który zadaje 2 obrażenia na turę. | `2 × level × rank` tur. |
 
 ### 5.8. Minioluch
