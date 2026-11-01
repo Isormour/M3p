@@ -3,11 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Pushes status outline parameters onto the character's skinned meshes.
+/// Pushes status outline parameters onto the character's skinned meshes
+/// and keeps the burn and heal particles emitting while those statuses are active.
 /// </summary>
 [DisallowMultipleComponent]
 public class CharacterVFX : MonoBehaviour
 {
+    const int StatusEmissionMinStacks = 1;
+    const int StatusEmissionMaxStacks = 10;
+    const float StatusEmissionMinRate = 20f;
+    const float StatusEmissionMaxRate = 200f;
+
     static readonly int OutlineSizeId = Shader.PropertyToID("_OutlineSize");
     static readonly int OutlineMultNPowerId = Shader.PropertyToID("_OutlineMultNPower");
     static readonly int OutlineMidColorId = Shader.PropertyToID("_OutlineMidColor");
@@ -16,10 +22,12 @@ public class CharacterVFX : MonoBehaviour
     [SerializeField] SkinnedMeshRenderer[] renderers;
     [SerializeField] ParticleSystem flameParticle;
     [SerializeField] ParticleSystem healParticle;
-
+    [SerializeField] ParticleSystem burnStatusParticle;
+    [SerializeField] ParticleSystem healStatusParticle;
     MaterialPropertyBlock _block;
     EStatusType _activeStatus;
     bool _hasApplied;
+    bool _statusParticlesDriven;
 
     public EStatusType ActiveStatus => _activeStatus;
 
@@ -47,6 +55,9 @@ public class CharacterVFX : MonoBehaviour
     {
         if (_activeStatus == EStatusType.None)
             ApplyStatus(EStatusType.None, force: true);
+
+        if (!_statusParticlesDriven)
+            ClearStatusParticles();
     }
 
     [ContextMenu("Collect Renderers")]
@@ -57,15 +68,20 @@ public class CharacterVFX : MonoBehaviour
 
     /// <summary>
     /// Applies the palette for the last active status. No status uses the authored None look.
+    /// Burn and heal emission follow their stacks even when another status owns the outline.
     /// </summary>
     public void Refresh(IReadOnlyList<StatusInstance> statuses)
     {
         ApplyStatus(ResolveVisibleStatus(statuses));
+        _statusParticlesDriven = true;
+        SetStatusParticle(burnStatusParticle, CountStacks(statuses, EStatusType.Burn));
+        SetStatusParticle(healStatusParticle, CountHealStacks(statuses));
     }
 
     public void Clear()
     {
         ApplyStatus(EStatusType.None);
+        ClearStatusParticles();
     }
 
     /// <summary>Restarts the authored flame burst. No-ops when the particle is unassigned.</summary>
@@ -78,6 +94,100 @@ public class CharacterVFX : MonoBehaviour
     public void PlayHeal()
     {
         PlayBurst(healParticle);
+    }
+
+    void ClearStatusParticles()
+    {
+        _statusParticlesDriven = true;
+        SetStatusParticle(burnStatusParticle, 0);
+        SetStatusParticle(healStatusParticle, 0);
+    }
+
+    /// <summary>
+    /// 1 stack emits at 20 particles per second, 10 stacks at 200. Values outside that range clamp.
+    /// </summary>
+    void SetStatusParticle(ParticleSystem particle, int stacks)
+    {
+        if (particle == null)
+            return;
+
+        stacks = Mathf.Max(0, stacks);
+        if (stacks <= 0)
+        {
+            if (particle.isPlaying)
+                particle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            return;
+        }
+
+        ParticleSystem.MainModule main = particle.main;
+        main.loop = true;
+
+        ParticleSystem.EmissionModule emission = particle.emission;
+        emission.enabled = true;
+        emission.rateOverTime = StatusEmissionRate(stacks);
+
+        if (particle.isPlaying)
+            return;
+
+        BindBodyShape(particle);
+        particle.Play();
+    }
+
+    static int CountStacks(IReadOnlyList<StatusInstance> statuses, EStatusType statusType)
+    {
+        if (statuses == null || statusType == EStatusType.None)
+            return 0;
+
+        int stacks = 0;
+        for (int i = 0; i < statuses.Count; i++)
+        {
+            StatusInstance status = statuses[i];
+            StatusEffectDefinition definition = status?.Definition;
+            if (definition == null || definition.StatusType != statusType)
+                continue;
+
+            stacks += Mathf.Max(0, status.Stacks);
+        }
+
+        return stacks;
+    }
+
+    static int CountHealStacks(IReadOnlyList<StatusInstance> statuses)
+    {
+        if (statuses == null)
+            return 0;
+
+        int stacks = 0;
+        for (int i = 0; i < statuses.Count; i++)
+        {
+            StatusInstance status = statuses[i];
+            StatusEffectDefinition definition = status?.Definition;
+            if (definition == null || !HealsOverTime(definition))
+                continue;
+
+            stacks += Mathf.Max(0, status.Stacks);
+        }
+
+        return stacks;
+    }
+
+    static bool HealsOverTime(StatusEffectDefinition definition)
+    {
+        BattleEffect[] effects = definition.OnTurnEffects;
+        for (int i = 0; i < effects.Length; i++)
+        {
+            BattleEffectLogic logic = effects[i] != null ? effects[i].Logic : null;
+            if (logic is HealLogic || logic is FloorScaledHealLogic)
+                return true;
+        }
+
+        return false;
+    }
+
+    static float StatusEmissionRate(int stacks)
+    {
+        float t = Mathf.InverseLerp(StatusEmissionMinStacks, StatusEmissionMaxStacks, stacks);
+        return Mathf.Lerp(StatusEmissionMinRate, StatusEmissionMaxRate, t);
     }
 
     void PlayBurst(ParticleSystem particle)

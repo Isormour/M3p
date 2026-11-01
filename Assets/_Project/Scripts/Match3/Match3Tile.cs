@@ -8,6 +8,7 @@ namespace Match3
     {
         [Header("Graphics")]
         [SerializeField] private SpriteRenderer _tileRenderer;
+        [SerializeField] private SpriteRenderer _entailIndicator;
         [SerializeField] private TileSlot _slotUp;
         [SerializeField] private TileSlot _slotDown;
         [SerializeField] private TileSlot _slotLeft;
@@ -74,6 +75,7 @@ namespace Match3
         void Awake()
         {
             ApplyUpgradeSlots();
+            SetEntailIndicator(false);
         }
 
         public void Initialize(Match3Board board, int x, int y, int typeId, int[] upgradeIds = null)
@@ -236,15 +238,26 @@ namespace Match3
 
         void RefreshMarkerTint()
         {
-            if (_tileRenderer == null)
+            if (_tileRenderer != null)
+            {
+                if (IsCracked)
+                    _tileRenderer.color = CrackedTint;
+                else if (IsLocked)
+                    _tileRenderer.color = RootedTint;
+                else
+                    _tileRenderer.color = Color.white;
+            }
+
+            SetEntailIndicator(IsLocked);
+        }
+
+        void SetEntailIndicator(bool active)
+        {
+            if (_entailIndicator == null)
                 return;
 
-            if (IsCracked)
-                _tileRenderer.color = CrackedTint;
-            else if (IsLocked)
-                _tileRenderer.color = RootedTint;
-            else
-                _tileRenderer.color = Color.white;
+            _entailIndicator.gameObject.SetActive(active);
+            _entailIndicator.enabled = active;
         }
 
         public void ApplyFlags(

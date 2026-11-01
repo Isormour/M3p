@@ -91,7 +91,10 @@ namespace Match3
         }
     }
 
-    /// <summary>Slides the row of the picked tile one cell sideways, wrapping around the edge.</summary>
+    /// <summary>
+    /// Slides the row of the picked tile one cell sideways, wrapping around the edge.
+    /// A rooted tile stays in its cell; the rest of the row shifts around it.
+    /// </summary>
     [Serializable]
     public sealed class ShiftRowLogic : BoardActionLogic
     {

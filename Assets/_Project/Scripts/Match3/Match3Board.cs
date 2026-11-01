@@ -40,6 +40,10 @@ namespace Match3
         private GameConfig _config;
         private Match3Tile[,] _tiles;
         private readonly List<TileSpawnSpec> _spawnSpecs = new List<TileSpawnSpec>();
+        /// <summary>Indices into <see cref="_spawnSpecs"/> that are not currently on the board.</summary>
+        private readonly List<int> _spawnBag = new List<int>();
+        private readonly List<int> _heldSpawnSpecs = new List<int>();
+        private readonly Dictionary<Match3Tile, int> _checkedOutSpawnSpecs = new Dictionary<Match3Tile, int>();
         private bool _isResolving;
         private int _currentCombo;
         private int _bestCombo;
@@ -262,6 +266,7 @@ namespace Match3
                 _rng = new System.Random(0);
             }
 
+            DestroyLeftoverTiles();
             _tiles = new Match3Tile[width, height];
             BuildInitialBoard();
             RaiseComboChanged(0);
@@ -299,30 +304,54 @@ namespace Match3
             TileClicked?.Invoke(tile);
         }
 
+        /// <summary>
+        /// A second <see cref="Start"/> (script reload while the battle object is still alive) must not
+        /// leave the previous pieces in the hierarchy. Those ghosts stay visible under the new fill.
+        /// </summary>
+        void DestroyLeftoverTiles()
+        {
+            Match3Tile[] existing = GetComponentsInChildren<Match3Tile>(true);
+            for (int i = 0; i < existing.Length; i++)
+            {
+                if (existing[i] != null)
+                    Destroy(existing[i].gameObject);
+            }
+        }
+
         private void BuildInitialBoard()
         {
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
                 {
-                    TileSpawnSpec spec = GetRandomSpecAvoidingImmediateMatch(x, y);
+                    TileSpawnSpec spec = GetRandomSpecAvoidingImmediateMatch(x, y, out int specIndex);
                     SpawnTile(x, y, spec.TypeId, spec.UpgradeIds);
+                    CheckOutSpawnSpec(_tiles[x, y], specIndex);
                 }
             }
         }
 
-        private TileSpawnSpec GetRandomSpecAvoidingImmediateMatch(int x, int y)
+        private TileSpawnSpec GetRandomSpecAvoidingImmediateMatch(int x, int y, out int specIndex)
         {
             int attempts = 0;
             TileSpawnSpec spec;
+            _heldSpawnSpecs.Clear();
 
-            do
+            while (true)
             {
-                spec = PickSpawnSpec();
+                spec = TakeSpawnSpec(out specIndex);
                 attempts++;
-            }
-            while (CreatesInitialMatch(x, y, spec.TypeId) && attempts < 16);
+                bool createsMatch = CreatesInitialMatch(x, y, spec.TypeId);
+                if (!createsMatch || attempts >= 16 || specIndex < 0 || _spawnBag.Count == 0)
+                    break;
 
+                _heldSpawnSpecs.Add(specIndex);
+            }
+
+            for (int i = 0; i < _heldSpawnSpecs.Count; i++)
+                _spawnBag.Add(_heldSpawnSpecs[i]);
+
+            _heldSpawnSpecs.Clear();
             return spec;
         }
 
@@ -639,7 +668,11 @@ namespace Match3
             return true;
         }
 
-        /// <summary>Cycles tiles along <paramref name="cells"/>: the tile at index i moves to index i + 1.</summary>
+        /// <summary>
+        /// Cycles tiles along <paramref name="cells"/>: each movable tile moves to the next free slot.
+        /// Rooted and blockade tiles stay in place. This matches <see cref="SimBoard"/>'s cycle, so the
+        /// preview and the resolve agree when a row contains an Entail root.
+        /// </summary>
         public IEnumerator CycleCellsRoutine(IReadOnlyList<Vector2Int> cells)
         {
             if (_tiles == null || cells == null || cells.Count < 2)
@@ -648,27 +681,58 @@ namespace Match3
             }
 
             int count = cells.Count;
-            Match3Tile[] moving = new Match3Tile[count];
             for (int i = 0; i < count; i++)
             {
-                moving[i] = GetTile(cells[i].x, cells[i].y);
-                if (moving[i] == null || !moving[i].CanMove)
+                if (!IsInsideBoard(cells[i].x, cells[i].y))
                 {
                     yield break;
                 }
             }
 
+            int freeCount = 0;
+            int[] free = new int[count];
             for (int i = 0; i < count; i++)
             {
-                Vector2Int destination = cells[(i + 1) % count];
-                _tiles[destination.x, destination.y] = moving[i];
-                moving[i].SetCoordinates(destination.x, destination.y);
+                Match3Tile tile = GetTile(cells[i].x, cells[i].y);
+                if (tile != null && !tile.CanMove)
+                {
+                    continue;
+                }
+
+                free[freeCount++] = i;
             }
 
-            List<Coroutine> moves = new List<Coroutine>(count);
-            for (int i = 0; i < count; i++)
+            if (freeCount < 2)
             {
-                Vector2Int destination = cells[(i + 1) % count];
+                yield break;
+            }
+
+            Match3Tile[] moving = new Match3Tile[freeCount];
+            for (int i = 0; i < freeCount; i++)
+            {
+                Vector2Int cell = cells[free[i]];
+                moving[i] = _tiles[cell.x, cell.y];
+            }
+
+            for (int i = 0; i < freeCount; i++)
+            {
+                Vector2Int destination = cells[free[(i + 1) % freeCount]];
+                _tiles[destination.x, destination.y] = moving[i];
+                if (moving[i] != null)
+                {
+                    moving[i].SetCoordinates(destination.x, destination.y);
+                }
+            }
+
+            List<Coroutine> moves = new List<Coroutine>(freeCount);
+            for (int i = 0; i < freeCount; i++)
+            {
+                if (moving[i] == null)
+                {
+                    continue;
+                }
+
+                Vector2Int destination = cells[free[(i + 1) % freeCount]];
                 moves.Add(StartCoroutine(AnimateMove(moving[i].transform, GridToWorld(destination.x, destination.y), swapDuration)));
             }
 
@@ -734,6 +798,8 @@ namespace Match3
             }
 
             int[] upgradeIds = tile.UpgradeIds;
+            bool keptSpec = _checkedOutSpawnSpecs.TryGetValue(tile, out int specIndex);
+            _checkedOutSpawnSpecs.Remove(tile);
             bool isLocked = tile.IsLocked;
             bool isNegative = tile.IsNegative;
             bool isBlockade = tile.IsBlockade;
@@ -750,10 +816,14 @@ namespace Match3
             Match3Tile spawned = _tiles[x, y];
             if (spawned == null)
             {
+                if (keptSpec)
+                    _spawnBag.Add(specIndex);
                 return false;
             }
 
             spawned.SetTileId(tileId);
+            if (keptSpec)
+                _checkedOutSpawnSpecs[spawned] = specIndex;
             spawned.ApplyFlags(isLocked, isNegative, isBlockade, isEnemyElement, allowsColorChange, canDestroy);
             spawned.SetCracked(isCracked);
             Sfx.Play(SfxId.TileRecolor);
@@ -883,6 +953,7 @@ namespace Match3
                 TileDestroyed?.Invoke(tile.transform.position, typeId);
                 Sfx.Play(SfxId.TileBreak);
 
+                ReturnSpawnSpec(tile);
                 _tiles[tile.X, tile.Y] = null;
                 Destroy(tile.gameObject);
             }
@@ -975,8 +1046,9 @@ namespace Match3
                         continue;
                     }
 
-                    TileSpawnSpec spec = PickSpawnSpec();
+                    TileSpawnSpec spec = TakeSpawnSpec(out int specIndex);
                     SpawnTile(x, y, spec.TypeId, spec.UpgradeIds);
+                    CheckOutSpawnSpec(_tiles[x, y], specIndex);
                     Match3Tile tile = _tiles[x, y];
                     tile.transform.position = GetRefillSpawnPosition(x, y);
                     Vector3 targetPos = GridToWorld(x, y);
@@ -1360,28 +1432,114 @@ namespace Match3
         void BuildSpawnPool()
         {
             _spawnSpecs.Clear();
+            _spawnBag.Clear();
+            _checkedOutSpawnSpecs.Clear();
 
             PlayerProfile profile = GameManager.Instance != null
                 ? GameManager.Instance.ProfileManager?.CurrentProfile
                 : null;
             _config.ResolveTileDeckSpawns(profile, _spawnSpecs);
 
-            if (_spawnSpecs.Count > 0)
-                return;
-
-            for (int i = 0; i < _config.TileTypeCount; i++)
+            if (_spawnSpecs.Count == 0)
             {
-                if (_config.GetTileType(i) != null)
-                    _spawnSpecs.Add(new TileSpawnSpec(i, Array.Empty<int>()));
+                for (int i = 0; i < _config.TileTypeCount; i++)
+                {
+                    if (_config.GetTileType(i) != null)
+                        _spawnSpecs.Add(new TileSpawnSpec(i, Array.Empty<int>()));
+                }
             }
+
+            for (int i = 0; i < _spawnSpecs.Count; i++)
+                _spawnBag.Add(i);
         }
 
-        TileSpawnSpec PickSpawnSpec()
+        /// <summary>
+        /// Draws one owned copy and keeps it out of the bag until that piece leaves the board.
+        /// A copy that is already on the board is never drawn again, and the fallback used when the
+        /// bag is empty does not clone upgrades onto a second piece.
+        /// </summary>
+        TileSpawnSpec TakeSpawnSpec(out int specIndex)
+        {
+            int guard = _spawnBag.Count;
+            while (guard-- > 0 && _spawnBag.Count > 0)
+            {
+                int pick = NextRandom(_spawnBag.Count);
+                int index = _spawnBag[pick];
+                _spawnBag.RemoveAt(pick);
+                if (IsSpecOnBoard(index))
+                    continue;
+
+                specIndex = index;
+                return _spawnSpecs[index];
+            }
+
+            specIndex = -1;
+            return PickUnupgradedOverflow();
+        }
+
+        bool IsSpecOnBoard(int specIndex)
+        {
+            if (specIndex < 0)
+                return false;
+
+            foreach (KeyValuePair<Match3Tile, int> pair in _checkedOutSpawnSpecs)
+            {
+                if (pair.Value == specIndex)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Used only when every owned copy is already on the board. Upgrades stay with the piece
+        /// that checked them out, so this never manufactures a second crafted tile.
+        /// </summary>
+        TileSpawnSpec PickUnupgradedOverflow()
         {
             if (_spawnSpecs.Count == 0)
                 return new TileSpawnSpec(NextRandom(Mathf.Max(1, _config.TileTypeCount)), Array.Empty<int>());
 
-            return _spawnSpecs[NextRandom(_spawnSpecs.Count)];
+            int start = NextRandom(_spawnSpecs.Count);
+            for (int n = 0; n < _spawnSpecs.Count; n++)
+            {
+                TileSpawnSpec spec = _spawnSpecs[(start + n) % _spawnSpecs.Count];
+                if (!HasUpgrades(spec.UpgradeIds))
+                    return new TileSpawnSpec(spec.TypeId, Array.Empty<int>());
+            }
+
+            return new TileSpawnSpec(_spawnSpecs[start].TypeId, Array.Empty<int>());
+        }
+
+        static bool HasUpgrades(int[] upgradeIds)
+        {
+            if (upgradeIds == null)
+                return false;
+
+            for (int i = 0; i < upgradeIds.Length; i++)
+            {
+                if (upgradeIds[i] != TileUpgradeConfig.InvalidUpgradeId)
+                    return true;
+            }
+
+            return false;
+        }
+
+        void CheckOutSpawnSpec(Match3Tile tile, int specIndex)
+        {
+            if (tile == null || specIndex < 0)
+                return;
+
+            _checkedOutSpawnSpecs[tile] = specIndex;
+        }
+
+        void ReturnSpawnSpec(Match3Tile tile)
+        {
+            if (tile == null || !_checkedOutSpawnSpecs.TryGetValue(tile, out int specIndex))
+                return;
+
+            _checkedOutSpawnSpecs.Remove(tile);
+            _spawnBag.Add(specIndex);
         }
     }
 }

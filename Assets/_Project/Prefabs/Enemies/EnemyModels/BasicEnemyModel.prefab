@@ -73,6 +73,8 @@ MonoBehaviour:
   - {fileID: 8415594508287208519}
   flameParticle: {fileID: 5803889617188957830}
   healParticle: {fileID: 103593755668270073}
+  burnStatusParticle: {fileID: 1639271707459145017}
+  healStatusParticle: {fileID: 2806350765546835300}
 --- !u!199 &9044751868778586037
 ParticleSystemRenderer:
   serializedVersion: 7
@@ -5214,10 +5216,6 @@ PrefabInstance:
     m_TransformParent: {fileID: 5393355372502565080}
     m_Modifications:
     - target: {fileID: 2457253403502291743, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
-      propertyPath: ShapeModule.m_UseMeshColors
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2457253403502291743, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
       propertyPath: ShapeModule.m_SkinnedMeshRenderer
       value: 
       objectReference: {fileID: 8415594508287208519}
@@ -5261,13 +5259,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6079944227082406141, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
+      propertyPath: ShapeModule.m_SkinnedMeshRenderer
+      value: 
+      objectReference: {fileID: 8415594508287208519}
+    - target: {fileID: 7218628938548693152, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
+      propertyPath: ShapeModule.m_SkinnedMeshRenderer
+      value: 
+      objectReference: {fileID: 8415594508287208519}
     - target: {fileID: 7639226582440372627, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
       propertyPath: m_Name
       value: CharacterParticles
-      objectReference: {fileID: 0}
-    - target: {fileID: 8350357399310290528, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
-      propertyPath: ShapeModule.m_UseMeshColors
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8350357399310290528, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
       propertyPath: ShapeModule.m_SkinnedMeshRenderer
@@ -5281,6 +5283,16 @@ PrefabInstance:
 --- !u!198 &103593755668270073 stripped
 ParticleSystem:
   m_CorrespondingSourceObject: {fileID: 8350357399310290528, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
+  m_PrefabInstance: {fileID: 8255771193290753433}
+  m_PrefabAsset: {fileID: 0}
+--- !u!198 &1639271707459145017 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 7218628938548693152, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
+  m_PrefabInstance: {fileID: 8255771193290753433}
+  m_PrefabAsset: {fileID: 0}
+--- !u!198 &2806350765546835300 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 6079944227082406141, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
   m_PrefabInstance: {fileID: 8255771193290753433}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &4924530732177025046 stripped

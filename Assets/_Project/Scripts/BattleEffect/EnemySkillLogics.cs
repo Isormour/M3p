@@ -298,11 +298,12 @@ namespace M3P
         }
     }
 
-    /// <summary>Removes action points from the bearer. A stored status drain wins; otherwise the source's floor scales the amount.</summary>
+    /// <summary>Removes action points from the bearer. A stored status drain wins; otherwise the amount is <c>perFloor × floor + flat</c>.</summary>
     [Serializable]
     public class DrainActionPointsLogic : BattleEffectLogic, ITooltipPreview
     {
         [SerializeField] int _perFloor = 1;
+        [SerializeField] int _flat;
 
         public override void Apply(BattleEffectContext context, EEffectTarget target)
         {
@@ -326,7 +327,8 @@ namespace M3P
             if (context.ActionPointDrain > 0)
                 return context.ActionPointDrain;
 
-            return Mathf.Max(0, _perFloor) * EnemySkillScale.Floor(context.Caster);
+            int floor = EnemySkillScale.Floor(context.Caster);
+            return Mathf.Max(0, _perFloor * floor + _flat);
         }
     }
 

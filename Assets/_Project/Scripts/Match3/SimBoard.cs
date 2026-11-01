@@ -206,23 +206,46 @@ namespace Match3
                 (_cells[second.x, second.y], _cells[first.x, first.y]);
         }
 
+        /// <summary>
+        /// Rotates <paramref name="cells"/> so each entry moves to the next. Rooted and blockade tiles
+        /// stay put; the remaining slots keep the same rotation, which is what lets a row shift wrap
+        /// around an Entail root. The real board plays this same permutation.
+        /// </summary>
         void ApplyCycle(Vector2Int[] cells)
         {
             if (cells == null || cells.Length < 2)
                 return;
 
-            SimTile[] moving = new SimTile[cells.Length];
             for (int i = 0; i < cells.Length; i++)
             {
                 if (!IsInside(cells[i].x, cells[i].y))
                     return;
-
-                moving[i] = _cells[cells[i].x, cells[i].y];
             }
 
+            int freeCount = 0;
+            int[] free = new int[cells.Length];
             for (int i = 0; i < cells.Length; i++)
             {
-                Vector2Int destination = cells[(i + 1) % cells.Length];
+                SimTile tile = _cells[cells[i].x, cells[i].y];
+                if (tile != null && !tile.CanMove)
+                    continue;
+
+                free[freeCount++] = i;
+            }
+
+            if (freeCount < 2)
+                return;
+
+            SimTile[] moving = new SimTile[freeCount];
+            for (int i = 0; i < freeCount; i++)
+            {
+                Vector2Int cell = cells[free[i]];
+                moving[i] = _cells[cell.x, cell.y];
+            }
+
+            for (int i = 0; i < freeCount; i++)
+            {
+                Vector2Int destination = cells[free[(i + 1) % freeCount]];
                 _cells[destination.x, destination.y] = moving[i];
             }
         }

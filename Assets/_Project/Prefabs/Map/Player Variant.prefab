@@ -254,13 +254,21 @@ PrefabInstance:
       value: Player Variant
       objectReference: {fileID: 0}
     - target: {fileID: 6568488526419764991, guid: 6981cdb98b2c67846b381bd1ebea7db6, type: 3}
+      propertyPath: healParticle
+      value: 
+      objectReference: {fileID: 1687716841279437730}
+    - target: {fileID: 6568488526419764991, guid: 6981cdb98b2c67846b381bd1ebea7db6, type: 3}
       propertyPath: flameParticle
       value: 
       objectReference: {fileID: 5084703230702247645}
     - target: {fileID: 6568488526419764991, guid: 6981cdb98b2c67846b381bd1ebea7db6, type: 3}
-      propertyPath: healParticle
+      propertyPath: burnStatusParticle
       value: 
-      objectReference: {fileID: 6193847261058374620}
+      objectReference: {fileID: 46210895299919202}
+    - target: {fileID: 6568488526419764991, guid: 6981cdb98b2c67846b381bd1ebea7db6, type: 3}
+      propertyPath: healStatusParticle
+      value: 
+      objectReference: {fileID: 3524587162722467135}
     - target: {fileID: 6568488526419764991, guid: 6981cdb98b2c67846b381bd1ebea7db6, type: 3}
       propertyPath: renderers.Array.size
       value: 2
@@ -398,6 +406,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6079944227082406141, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
+      propertyPath: ShapeModule.m_SkinnedMeshRenderer
+      value: 
+      objectReference: {fileID: 3578677688412920820}
+    - target: {fileID: 7218628938548693152, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
+      propertyPath: ShapeModule.placementMode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7218628938548693152, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
+      propertyPath: ShapeModule.m_SkinnedMeshRenderer
+      value: 
+      objectReference: {fileID: 3578677688412920820}
     - target: {fileID: 7639226582440372627, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
       propertyPath: m_Name
       value: CharacterParticles
@@ -411,14 +431,24 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
+--- !u!198 &46210895299919202 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 7218628938548693152, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
+  m_PrefabInstance: {fileID: 7244484574579160514}
+  m_PrefabAsset: {fileID: 0}
+--- !u!198 &1687716841279437730 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 8350357399310290528, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
+  m_PrefabInstance: {fileID: 7244484574579160514}
+  m_PrefabAsset: {fileID: 0}
+--- !u!198 &3524587162722467135 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 6079944227082406141, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
+  m_PrefabInstance: {fileID: 7244484574579160514}
+  m_PrefabAsset: {fileID: 0}
 --- !u!198 &5084703230702247645 stripped
 ParticleSystem:
   m_CorrespondingSourceObject: {fileID: 2457253403502291743, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
-  m_PrefabInstance: {fileID: 7244484574579160514}
-  m_PrefabAsset: {fileID: 0}
---- !u!198 &6193847261058374620 stripped
-ParticleSystem:
-  m_CorrespondingSourceObject: {fileID: 8350357399310290528, guid: d9e7ecb13f3e54b4589719aa5b4bda61, type: 3}
   m_PrefabInstance: {fileID: 7244484574579160514}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &5930258719375759437 stripped
