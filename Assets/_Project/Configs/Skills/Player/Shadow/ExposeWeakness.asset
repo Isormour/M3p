@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
   m_Name: ExposeWeakness
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
-  <_skillName>k__BackingField: Odsłonięcie Słabości
-  _description: Następne 2 + floor(Tempo / 2) trafienia zadają po 3 + 2 × Precision dodatkowych obrażeń.
+  <_skillName>k__BackingField: "Expose Weakness"
+  _description: "Your next 2 + floor(Tempo / 2) hits each deal 3 + 2 × Precision extra damage."
   _artwork: {fileID: 21300000, guid: fc7d8438d5bb6a648830241d70d66ed3, type: 3}
   _manaCosts:
   - TileType: {fileID: 11400000, guid: 031c32cbcfb4a0f4e97c6bd265a1bb5d, type: 2}
@@ -28,4 +28,6 @@ MonoBehaviour:
   _castPrompt: 0
   _physicalSkill: 0
   _archetype: 3
+  _useProjectile: 0
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
   <_animationName>k__BackingField: BasicAttack

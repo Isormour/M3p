@@ -36,16 +36,16 @@ namespace M3P
         public void AppendTooltipLines(BattleEffectContext preview, EEffectTarget target, List<TooltipLine> lines)
         {
             int hits = HitCount(preview);
-            int scaled = SkillCombat.ScaleAmount(preview, DamagePerHit(preview), _physical);
+            int scaled = SkillCombat.PreviewScaledDamage(preview, target, DamagePerHit(preview), _physical);
             int bonus = preview.Caster != null ? preview.Caster.GetPersistentOutgoingBonus() : 0;
             int perHit = scaled + bonus;
             if (perHit <= 0)
                 return;
 
             if (hits > 1)
-                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {perHit} obrażeń × {hits}"));
+                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Deal {perHit} damage × {hits}"));
             else
-                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {perHit} obrażeń"));
+                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Deal {perHit} damage"));
         }
 
         int DamagePerHit(BattleEffectContext context)
@@ -96,7 +96,7 @@ namespace M3P
             string name = _status.DisplayName;
             lines.Add(new TooltipLine(
                 TooltipLineKind.Status,
-                stacks > 1 ? $"Nakłada {stacks} stacki: {name}" : $"Nakłada {name}"));
+                stacks > 1 ? $"Apply {stacks} stacks of {name}" : $"Apply {name}"));
         }
 
         int StackCount(BattleEffectContext context)
@@ -145,7 +145,7 @@ namespace M3P
             int duration = Duration(preview);
             lines.Add(new TooltipLine(
                 TooltipLineKind.Status,
-                $"Nakłada {_status.DisplayName} ({duration} tury)"));
+                $"Apply {_status.DisplayName} (turns: {duration})"));
 
             int magnitude = Magnitude(preview);
             _status.AppendPersistentModifierTooltip(lines, magnitude);
@@ -187,7 +187,7 @@ namespace M3P
         {
             int amount = SkillCombat.ScaleHealOrShield(preview, HealAmount(preview));
             if (amount > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Heal, $"Leczy {amount}"));
+                lines.Add(new TooltipLine(TooltipLineKind.Heal, $"Restore {amount} HP"));
         }
 
         int HealAmount(BattleEffectContext context)
@@ -217,7 +217,7 @@ namespace M3P
         {
             int amount = SkillCombat.ScaleHealOrShield(preview, ShieldAmount(preview));
             if (amount > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Shield, $"Daje {amount} tarczy"));
+                lines.Add(new TooltipLine(TooltipLineKind.Shield, $"Gain {amount} Shield"));
         }
 
         int ShieldAmount(BattleEffectContext context)
@@ -252,7 +252,7 @@ namespace M3P
         {
             int requested = Requested(preview);
             if (requested > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Shield, $"Kradnie do {requested} tarczy"));
+                lines.Add(new TooltipLine(TooltipLineKind.Shield, $"Steal up to {requested} Shield"));
         }
 
         int Requested(BattleEffectContext context)
@@ -289,7 +289,7 @@ namespace M3P
         {
             int drain = DrainAmount(preview);
             if (drain > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Odbiera {drain} many każdego koloru"));
+                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Remove {drain} mana of each color"));
         }
 
         int DrainAmount(BattleEffectContext context)
@@ -319,7 +319,7 @@ namespace M3P
         {
             int amount = DrainAmount(preview);
             if (amount > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Odbiera {amount} AP"));
+                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Remove {amount} AP"));
         }
 
         int DrainAmount(BattleEffectContext context)
@@ -351,7 +351,7 @@ namespace M3P
         {
             int count = TileCount(preview);
             if (count > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Zakorzenia {count} kafelków"));
+                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Root {count} tiles"));
         }
 
         int TileCount(BattleEffectContext context)

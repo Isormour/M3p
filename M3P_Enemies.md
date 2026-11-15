@@ -43,14 +43,14 @@ Poniższe liczby odpowiadają obecnym assetom w `Configs/Skills/Enemies` i powi�
 | --- | --- | --- | --- | --- |
 | Cios | `EnemyStrike` | 1 | 3 obrażenia fizyczne. | Fallback. |
 | Garda | `EnemyGuard` | 3 | +5 Shield przez efekt `GuardUp`. | Wysoki priorytet, gdy przeciwnik nie ma Shield. |
-| Miażdżenie | `EnemySlam` | 2 | `4 + 4 × F` obrażeń fizycznych, gdzie `F` to efektywne piętro przeciwnika. | Po Gardzie albo co trzecią turę. |
+| Miażdżenie | `EnemySlam` | 2 | `4 + F` obrażeń fizycznych przed mnożnikiem K, gdzie `F` to efektywne piętro przeciwnika. | Po Gardzie albo co trzecią turę. |
 | Rozniecenie | `EnemyEmber` | 1 | Nakłada 1 Burn, bez obrażeń natychmiast. | Gdy cel ma mało Burn. |
 
 ### 4.1. Burn
 
 | Status | Czas | Tick | Źródła |
 | --- | --- | --- | --- |
-| Burn | 2 tury, stackowalny | 1 obrażenie za stack na turę wroga. | Tile Stack Burn, `EnemyEmber`, Ignite / Zapłon. |
+| Burn | Stackowalny; po każdym ticku traci 1 stack, wygasa przy 0 | Na początku tury podpalonej postaci dokładnie 1 obrażenie za stack, bez mnożników K, talentów ani ataku; pancerz i tarcza absorbują obrażenia. | Tile Stack Burn, `EnemyEmber`, Ignite / Zapłon. |
 
 ## 5. Zestawy przeciwników
 
@@ -58,7 +58,7 @@ Poniższe liczby odpowiadają obecnym assetom w `Configs/Skills/Enemies` i powi�
 
 Guard oznacza efekt obronny przyznający Shield, zgodnie z obecnym `GuardUp`; nie wprowadza osobnego zasobu. Armor (pancerz) jest zasobem używanym przez `Corrosion`, `IronWall` i `ArmorBash` frenzy.
 
-Confusion jest statusem nakładanym na gracza. Na początku jego następnej tury, po odnowieniu AP, odejmuje punkty akcji (minimum do 0), po czym znika. `Scream` RudoBata odbiera `L` AP. `KonarHit` Entona odbiera zawsze 1 AP.
+Confusion jest statusem nakładanym na gracza. Na początku jego następnej tury, po odnowieniu AP, odejmuje punkty akcji (minimum do 0), po czym znika. `Scream` RudoBata odbiera `L − 2` AP. `KonarHit` Entona odbiera zawsze 1 AP.
 
 ### 5.1. Leszinio
 
@@ -83,7 +83,7 @@ Zestaw Miniootaura nie zawiera `EnemyGuard` ani `EnemyEmber`. Usunięcie dotyczy
 
 | Skill | Efekt | Skalowanie |
 | --- | --- | --- |
-| `EnemyStrike` | Standardowy atak awaryjny. | Aktualnie 3 obrażenia fizyczne; CD 1. |
+| `Flame Hit` | Osobny atak podstawowy z unikatową ikoną, zastępujący `EnemyStrike`. | `RoundToInt(1 + 2 × K)` obrażeń fizycznych przed płaskimi bonusami i redukcjami oraz dokładnie 1 stack Burn; CD 1. Stała 1 jest dodawana po mnożnikach, przed zaokrągleniem; współczynnik 2 przy K podlega zwykłym mnożnikom talentów/ataku, jeśli są aktywne. |
 | `EmberStrike` | Zadaje obrażenia i nakłada Burn na cel. | `3 × level` obrażeń i `1 × level` stacków Burn. |
 | `EmberLight` | Nakłada Burn. | `2 × level` stacków Burn. |
 | `EmberDetonation` | Zlicza stacki Burn na celu, zadaje obrażenia i zużywa wszystkie stacki Burn tego celu. | `5 × BurnStacks` obrażeń, według liczby stacków przed ich zużyciem. |
@@ -92,8 +92,8 @@ Zestaw Miniootaura nie zawiera `EnemyGuard` ani `EnemyEmber`. Usunięcie dotyczy
 
 | Skill | Efekt | Czas / skalowanie |
 | --- | --- | --- |
-| `EnemyStrike` | Standardowy atak awaryjny. | Aktualnie 3 obrażenia fizyczne; CD 1. |
-| `Scream` | Zadaje obrażenia i nakłada na gracza status Confusion. | `7 × L` obrażeń; status odbiera `L` AP na początku następnej tury gracza, po odnowieniu AP, po czym znika. AP nie spada poniżej 0. |
+| `Scratch` | Osobny skill z logiką `EnemyStrike` i unikatową ikoną pazurów. | Bazowo 3 obrażenia fizyczne ze standardowym skalowaniem walki; CD 1. |
+| `Scream` | Zadaje obrażenia i nakłada na gracza status Confusion. | `5 × L` obrażeń; status odbiera `L − 2` AP na początku następnej tury gracza, po odnowieniu AP, po czym znika. AP nie spada poniżej 0. |
 | `Rage` | Nakłada buff do ataku podstawowego. | `+3` obrażenia przez `2 × level` tur. |
 | `MultiStrike` | Wykonuje serię ataków po 5 obrażeń. | `2 × level` trafień; łącznie `10 × level` obrażeń przed modyfikatorami. |
 
@@ -110,10 +110,10 @@ Zestaw Miniootaura nie zawiera `EnemyGuard` ani `EnemyEmber`. Usunięcie dotyczy
 
 | Skill | Efekt | Skalowanie |
 | --- | --- | --- |
-| `Corrosion` | Zabiera Armor graczowi i przekazuje faktycznie skradzioną ilość frenzy. | Do `5 × L` Armor, maksymalnie tyle, ile gracz posiada. |
-| `EnemySlam` | Zadaje obrażenia. | `4 + 4 × F` obrażeń fizycznych, gdzie `F` to efektywne piętro przeciwnika; CD 2. |
-| `IronWall` | Dodaje Armor, przygotowując zasób do `ArmorBash`. | `10 × L` Armor. |
-| `ArmorBash` (dawniej `ShieldBash`) | Zużywa cały własny Armor i zadaje obrażenia w przeliczniku 1:1. | Obrażenia równe ilości zużytego Armor; wymaga dodatniego Armor. |
+| `Corrosion` | Zabiera najpierw Armor, następnie Shield gracza, i przekazuje faktycznie skradzioną ilość jako Armor frenzy. | Łącznie do `2 × L`, maksymalnie tyle, ile gracz posiada. |
+| `EnemySlam` | Zadaje obrażenia. | `RoundToInt((4 + F) × K)` obrażeń fizycznych przed płaskimi bonusami i redukcjami, gdzie `F` to efektywne piętro przeciwnika; boss pobiera `K` z tabeli dla aktualnego piętra mapy, opisanej w sekcji 8.3; CD 2. |
+| `IronWall` | Dodaje Armor, przygotowując zasób do `ArmorBash`. | `3 × L` Armor. |
+| `ArmorBash` (dawniej `ShieldBash`) | Zużywa cały własny Armor i zadaje obrażenia w przeliczniku 1:1. | `A` obrażeń przed płaskimi bonusami i redukcjami, gdzie `A` to aktualny własny Armor; bez mnożnika K. Wymaga dodatniego Armor. |
 
 `Corrosion` i `IronWall` budują ten sam zasób, który następnie konsumuje `ArmorBash`. Nazwa `ShieldBash` w poprzednim prototypie odnosiła się do tego skilla; docelowa mechanika korzysta z Armor.
 
@@ -133,7 +133,7 @@ Rola: trucizna, osłabianie gracza i unikanie ataków podczas działania trucizn
 | Skill | Efekt | Czas / skalowanie |
 | --- | --- | --- |
 | `EnemyStrike` | Standardowy atak awaryjny. | Aktualnie 3 obrażenia fizyczne; CD 1. |
-| `ToxicBite` | Zadaje obrażenia i nakłada na gracza status Weakened. | `4 × L` obrażeń; każdy atak gracza zadaje o `L` mniej obrażeń, minimum 0, przez następne `2 × R` tury gracza. |
+| `ToxicBite` | Zadaje obrażenia i nakłada na gracza status Weakened. | `4 × L` obrażeń przed K; każdy atak gracza zadaje o stałe `2` mniej obrażeń, minimum 0, przez następne `2 × R` tury gracza. |
 | `PoisonGas` | Nakłada na gracza słabą truciznę (small poison). | Siła i czas Poison do ustalenia. |
 | Zakopanie | Nakłada na Miniolucha status pozwalający uniknąć wszystkich obrażeń. | 1 tura gracza; CD 3 tury przeciwnika. |
 
@@ -146,7 +146,7 @@ Rola: trucizna, regeneracja i obrona utrudniająca przebicie serią słabych ata
 | `PoisonBlob` | Zadaje obrażenia przy trafieniu i nakłada na gracza słabą truciznę. Podstawowy atak awaryjny zestawu. | Obrażenia oraz siła i czas Poison do ustalenia. |
 | `Regen` | Nakłada na Bloba status regeneracji. | Ilość leczenia, czas i moment ticku do ustalenia. |
 | `PoisonCloud` | Nakłada na gracza silną truciznę (strong poison). | Siła i czas Poison do ustalenia. |
-| `SlimeCoat` | Daje Blobowi Shield i status Toxic Skin. Każde trafienie Bloba przez gracza nakłada na atakującego 1 stack Poison. | `6 × L` Shield; Toxic Skin trwa `2 × R` tury gracza. |
+| `SlimeCoat` | Daje Blobowi Shield i status Toxic Skin. Każde trafienie Bloba przez gracza nakłada na atakującego 1 stack Poison. | `3 × L` Shield; Toxic Skin trwa `2 × R` tury gracza. |
 
 Limit aktywacji Toxic Skin na turę oraz siła i czas Poison z tego statusu wymagają decyzji przed implementacją.
 
@@ -176,7 +176,7 @@ Rola: ciężki przeciwnik, który chroni się, wykonuje mocne uderzenie kosztem 
 
 ## 6. Kotwice balansu
 
-- Podstawowy przeciwnik piętra 1 — goblin, debug, Leszinio lub RudoBat — ma około **30 Max HP** (±5), przy **Constitution 3** i progu +10 HP w drzewku Kondycji.
+- Aktualne HP wynikają z progów drzewka Kondycji, mnożnika typu spotkania i płaskiego bonusu przeciwnika. Wartości po kalibracji z nowym generatorem tili opisuje sekcja 8.4.
 - Bonus obrażeń basic attack z matchy liczy wyłącznie kafelki powyżej matcha 3. Supermatch i dodatkowy atak na kaskadzie pozostają bez zmian.
 - Po korekcie obrażeń z matchy TTK wydłużył się. HP przeciwników i bieżący balans Odnowienia, Iskry oraz Gardy wroga są pierwszą odpowiedzią, bez cofania formuły matchy.
 - `EnemyGuard` daje 5 Shield, nie 10. Współdzielony legacy skill `GuardUp` korzysta z tego samego efektu i również daje 5 Shield.
@@ -207,16 +207,46 @@ Jeden `EnemyDefinition` opisuje gatunek lub archetyp, nie wariant konkretnego pi
 
 | Statystyka | Wartość bazowa | Przyrost na piętro |
 | --- | --- | --- |
-| STR | 2 | +1,00 |
+| STR | 2 | +2,00 |
 | INT | 0 | +0,34 |
-| CON | 3 | +1,00 |
+| CON | 3 | +5,00 |
 | AGI | 1 | +0,20 |
 
-Wartości są punktem startowym do playtestu i korzystają ze wspólnego `StatProgressionConfig`.
+Wartości odpowiadają aktualnemu assetowi Goblina i korzystają ze wspólnego `StatProgressionConfig`. Po kalibracji w sekcji 8.4 Goblin ma dodatkowe +7 Max HP, dodawane po mnożniku typu spotkania.
 
 ### 8.2. Typ spotkania
 
 Typ spotkania modyfikuje piętro efektywne po wybraniu `EnemyDefinition`. Numer piętra jest ograniczany do minimum 1, a elita otrzymuje premię +1: `piętro efektywne = max(1, piętro dungeona) + 1`. Premia wpływa na statystyki, progi rang i skilli, skalowane efekty oraz EXP. Elita może korzystać z tej samej definicji i wcześniejszych progów skilli. Boss powinien mieć osobną definicję, gdy posiada unikalne fazy, model lub reguły zwycięstwa.
+
+### 8.3. Poprzednia kalibracja 65–95% — 5 listopada 2026
+
+W assetach 11 gatunków zapisano 230 współczynników K: 10 pięter × 10 zwykłych przeciwników, 10 elit i 3 bossów (MinioTaur, Frenzi, Goblin). Dexrafi pozostaje poza zakresem na życzenie użytkownika; DebugEnemy jest assetem testowym. Zwykłe walki korzystają z `_damageMultipliersByEffectiveFloor`, elity z `_eliteDamageMultipliersByMapFloor`, a bossowie z nowej `_bossDamageMultipliersByMapFloor`. Puste lub niepoprawne wpisy bossów zachowują dotychczasowy `_bossDamageMultiplier`; powyżej ostatniego wpisu tabela bossów powtarza ostatnią wartość. Rangi, odblokowania, HP i EXP nie zostały zmienione.
+
+Cel dotyczy średniej dla każdej kombinacji gatunku, typu spotkania i piętra, przy równym udziale 10 buildów i 2 strategii rozdawania punktów. Walidacja na nowych losowaniach: 230 000 walk, po 1000 na kombinację; wszystkie 230 wyników w przedziale **69,6–92,2%**, średnia **81,14%**. Wszystkie punktowe przedziały Wilsona 95% mieszczą się w 65–95%. Spośród 230 000 walk 11 osiągnęło limit 150 tur i pozostało w mianowniku.
+
+To model JavaScript, nie pomiar rozgrywki w Unity ani gwarancja dla graczy. Każda walka zaczyna się z pełnym HP, bez many i osłon; wcześniejsze spotkania na ścieżce uznaje się za wygrane. Buildy mają różną skuteczność — „Mag z Might” osiąga 32,26% łącznie, więc zakres nie jest spełniony dla każdego buildu osobno. Osobnego strojenia wymagały tarcza Blobinia, pancerz i kradzież Frenziego, osłabienie Miniolucha oraz stała część Flame Hit, zgodnie z wartościami powyżej.
+
+Pełne współczynniki, rozkład wyników i założenia: [raport balansu](outputs/balance-65-95-2026-11-05/report.html), [dane walidacji](outputs/balance-65-95-2026-11-05/results.json), [zapisane zmiany](outputs/balance-65-95-2026-11-05/applied.json). Kopie zmienianych assetów sprzed tej kalibracji znajdują się w `outputs/balance-65-95-2026-11-05/assets-backup`.
+
+### 8.4. Aktualna kalibracja 80–95% z nowym generatorem tili — 5 listopada 2026
+
+W 11 assetach przeciwników zapisano nowe 230 współczynników K dla pięter 1–10: 10 zwykłych przeciwników, 10 elit i 3 bossów. Dexrafi pozostaje wyłączony. Kalibracja zastępuje współczynniki z sekcji 8.3 i uwzględnia aktualny generator: pierwsze uzupełnienie po usunięciu dopasowania ma jedną dodatkową próbę losowania pasującego kafelka, kolejne mają dwie. Odrzucony kafelek wraca do worka; licznik zeruje się przy każdym Resolve. Logikę symulacji porównano z niezmienionymi metodami produkcyjnego C# na 402 przypadkach (2848 asercji).
+
+| Przeciwnik | Zmieniona wartość | Zwykła walka na piętrze 1: HP przed → po |
+| --- | --- | --- |
+| Blobinio | Dodatkowe płaskie Max HP: 0 → 7 | 40 → 47 |
+| Goblin | Dodatkowe płaskie Max HP: 0 → 7 | 40 → 47 |
+| Klops | Dodatkowe płaskie Max HP: 0 → 5 | 40 → 45 |
+| Leszinio | Dodatkowe płaskie Max HP: 0 → 30 | 60 → 90 |
+| SuroFajstos | Bazowa Constitution: 10 → 2; przyrost pozostaje +5 na piętro | 60 → 30 |
+
+Płaskie HP dodawane są po mnożniku typu spotkania. SuroFajstos w elitarnej walce na pierwszym piętrze ma teraz 62 HP zamiast 100. Korekty HP razem z nowymi K pozwalają omijać duże skoki skuteczności spowodowane całkowitoliczbowym zaokrąglaniem obrażeń. Formuły skilli z poprzedniej kalibracji pozostają zachowane, w tym ArmorBash 1:1.
+
+Walidacja końcowa: **230 000 walk**, po 1000 na kombinację przeciwnika, typu spotkania i piętra. Wszystkie **230/230** wyników mieszczą się w **83,2–94,9%**, średnia wynosi **89,02%**. Limit 150 tur osiągnęło 101 walk; pozostają one w mianowniku. Wszystkie dolne granice punktowych przedziałów Wilsona 95% przekraczają 80%; 223/230 całych przedziałów mieszczą się w 80–95%.
+
+Cel nadal dotyczy średniej z 10 buildów i 2 strategii rozdawania punktów dla każdego spotkania osobno. Nie jest gwarancją dla każdego buildu ani pomiarem rozgrywki w Unity; na przykład „Mag z Might” osiąga 43,67% łącznie. Model zaczyna pojedyncze walki z pełnym HP, bez many i osłon, korzysta z tego samego zachłannego bota i uwzględnia aktualny generator tili.
+
+Pełne wartości i wyniki: [raport balansu](outputs/balance-80-95-refill-2026-11-05/report.html), [dane walidacji](outputs/balance-80-95-refill-2026-11-05/results.json), [zapisane zmiany](outputs/balance-80-95-refill-2026-11-05/applied.json). Kontrola 293 assetów potwierdziła wyłącznie zamierzone zmiany w 11 definicjach przeciwników; 521 sprawdzeń potwierdziło zgodność zapisanych K i HP z walidacją oraz zachowanie formuł skilli. Kopie poprzednich assetów są w `outputs/balance-80-95-refill-2026-11-05/assets-backup`.
 
 ## 9. Model techniczny
 

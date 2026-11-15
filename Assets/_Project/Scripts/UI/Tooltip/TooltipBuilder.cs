@@ -38,8 +38,8 @@ namespace M3P
             content.Description = card.Description;
             content.Icon = card.Artwork;
             content.Meta = actionPointCost > 0
-                ? $"Koszt: {actionPointCost} AP"
-                : "Bez kosztu AP";
+                ? $"Cost: {actionPointCost} AP"
+                : "No AP cost";
 
             string targeting = TargetingLabel(card.Targeting);
             if (!string.IsNullOrEmpty(targeting))
@@ -89,8 +89,8 @@ namespace M3P
 
             var parts = new List<string>(2);
             if (statLevel > 0)
-                parts.Add($"Wymaga {statLevel}");
-            parts.Add(unlocked ? "Odblokowany" : "Zablokowany");
+                parts.Add($"Requires {statLevel}");
+            parts.Add(unlocked ? "Unlocked" : "Locked");
             content.Meta = string.Join("  ·  ", parts);
 
             perk.Logic?.AppendTooltipLines(content.Lines);
@@ -128,12 +128,12 @@ namespace M3P
 
             int remaining = caster != null ? caster.GetRemainingCooldown(skill) : 0;
             if (remaining > 0)
-                parts.Add($"Gotowe za {remaining} tur");
+                parts.Add($"Turns until ready: {remaining}");
             else if (skill.Cooldown > 0)
-                parts.Add($"Odnowienie: {skill.Cooldown}");
+                parts.Add($"Cooldown: {skill.Cooldown}");
 
             if (skill.OncePerTurn)
-                parts.Add("Raz na turę");
+                parts.Add("Once per turn");
 
             return string.Join("  ·  ", parts);
         }
@@ -168,7 +168,7 @@ namespace M3P
                 }
 
                 builder.Append(skill.DistinctColorManaCost);
-                builder.Append(" różnych kolorów");
+                builder.Append(" different colors");
             }
 
             return builder.Length > 0 ? $"Mana: {builder}" : string.Empty;
@@ -180,22 +180,22 @@ namespace M3P
             StatusEffectDefinition definition = status.Definition;
             if (definition.DecayOneStackPerTurn)
             {
-                parts.Add($"Stacki: {stacks}");
-                parts.Add("−1 co turę");
+                parts.Add($"Stacks: {stacks}");
+                parts.Add("−1 per turn");
             }
             else if (definition.PersistUntilConsumed)
             {
-                parts.Add("Do następnego ataku");
+                parts.Add("Until the next attack");
             }
             else
             {
-                parts.Add($"Tury: {Mathf.Max(0, status.RemainingTurns)}");
+                parts.Add($"Turns: {Mathf.Max(0, status.RemainingTurns)}");
             }
 
             if (!definition.DecayOneStackPerTurn && stacks > 1)
-                parts.Add($"Stacki: {stacks}");
+                parts.Add($"Stacks: {stacks}");
             if (status.Definition.CanStack)
-                parts.Add("Stosuje się");
+                parts.Add("Stacks");
             return string.Join("  ·  ", parts);
         }
 
@@ -220,9 +220,9 @@ namespace M3P
         {
             return targeting switch
             {
-                CardTargeting.SingleTile => "Wybierz kafelek",
-                CardTargeting.AdjacentPair => "Wybierz dwa sąsiednie kafelki",
-                CardTargeting.Triple => "Wybierz trzy kafelki",
+                CardTargeting.SingleTile => "Select a tile",
+                CardTargeting.AdjacentPair => "Select two adjacent tiles",
+                CardTargeting.Triple => "Select three tiles",
                 _ => string.Empty
             };
         }
@@ -231,10 +231,10 @@ namespace M3P
         {
             return stat switch
             {
-                EStatType.Strength => "Siła",
-                EStatType.Intelligence => "Inteligencja",
-                EStatType.Constitution => "Kondycja",
-                EStatType.Agility => "Zręczność",
+                EStatType.Strength => "Strength",
+                EStatType.Intelligence => "Intelligence",
+                EStatType.Constitution => "Constitution",
+                EStatType.Agility => "Agility",
                 _ => stat.ToString()
             };
         }

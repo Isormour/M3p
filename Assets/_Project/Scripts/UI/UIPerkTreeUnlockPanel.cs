@@ -33,18 +33,18 @@ namespace M3P
         [SerializeField, Min(1)] int _offerCount = 3;
         [SerializeField, Min(1)] int _previewPerkCount = 3;
 
-        [SerializeField] string _eyebrowText = "NOWA ŚCIEŻKA ROZWOJU";
-        [SerializeField] string _titleWhenChosen = "Drzewko odblokowane";
-        [SerializeField] string _titleWhenEmpty = "Wybierz drzewko";
-        [SerializeField] string _subtitleWhenChosen = "Możesz teraz rozwijać drzewko: {0}.";
-        [SerializeField] string _subtitleWhenEmpty = "Wybierz jedną z oferowanych ścieżek.";
-        [SerializeField] string _confirmWhenChosen = "Odblokowano drzewko: {0}.";
-        [SerializeField] string _confirmWhenEmpty = "Wybierz drzewko.";
-        [SerializeField] string _chooseStatus = "Wybierz drzewko";
-        [SerializeField] string _chosenStatus = "Drzewko odblokowane";
-        [SerializeField] string _thresholdFormat = "Próg {0}";
-        [SerializeField] string _hintText = "Po odblokowaniu możesz inwestować punkty i aktywować kolejne perki.";
-        [SerializeField] string _ownershipCaption = "Twoje drzewka";
+        [SerializeField] string _eyebrowText = "NEW PROGRESSION PATH";
+        [SerializeField] string _titleWhenChosen = "Tree Unlocked";
+        [SerializeField] string _titleWhenEmpty = "Choose a Tree";
+        [SerializeField] string _subtitleWhenChosen = "You can now invest in the {0} tree.";
+        [SerializeField] string _subtitleWhenEmpty = "Choose one of the offered paths.";
+        [SerializeField] string _confirmWhenChosen = "Tree unlocked: {0}.";
+        [SerializeField] string _confirmWhenEmpty = "Choose a tree.";
+        [SerializeField] string _chooseStatus = "Choose a Tree";
+        [SerializeField] string _chosenStatus = "Tree Unlocked";
+        [SerializeField] string _thresholdFormat = "Requires {0}";
+        [SerializeField] string _hintText = "Once unlocked, invest points to activate more perks.";
+        [SerializeField] string _ownershipCaption = "Your Trees";
 
         readonly List<UIPerkTreeOfferCard> _cards = new List<UIPerkTreeOfferCard>();
         readonly List<UIPerkTreeCountPip> _pips = new List<UIPerkTreeCountPip>();

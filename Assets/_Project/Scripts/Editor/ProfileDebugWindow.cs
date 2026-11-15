@@ -1093,7 +1093,7 @@ namespace M3P.Editor
             if (start == null)
                 return new PlayerProfile();
 
-            return start.CreateProfile(_config.Skills, _config.Cards, _config.Tiles, _config.StatProgression);
+            return start.CreateProfile(_config.Cards, _config.Tiles, _config.StatProgression);
         }
 
         static PlayerProfile CloneProfile(PlayerProfile source)

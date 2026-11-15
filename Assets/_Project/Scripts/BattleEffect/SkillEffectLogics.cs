@@ -81,54 +81,66 @@ namespace M3P
         {
             switch (_formula)
             {
+                case ResolveDamageFormula.ColorsInResolve:
+                    if (preview.Caster == null)
+                        return;
+
+                    int colorCount = SkillCombat.LastResolveColorCount();
+                    lines.Add(new TooltipLine(TooltipLineKind.Other, $"Last Resolve: {colorCount} colors"));
+                    int colorDamage = PreviewDamage(preview, WithProperties(preview, ResolveAmount(preview)));
+                    lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Deal {colorDamage} damage"));
+                    return;
                 case ResolveDamageFormula.HitsPerGroup:
                     int hits = HitCount(preview);
                     int perHit = PreviewDamage(preview, WithProperties(preview, _amount));
                     if (perHit > 0 && hits > 0)
-                        lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {perHit} obrażeń × {hits}"));
+                        lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Deal {perHit} damage × {hits}"));
                     return;
                 case ResolveDamageFormula.CardsInSequence:
                 case ResolveDamageFormula.CardsInSequencePrecision:
+                    lines.Add(new TooltipLine(
+                        TooltipLineKind.Other,
+                        $"Cards in the last resolved sequence: {SkillCombat.LastResolveCardsInSequence()}"));
                     int sequenceDamage = PreviewDamage(preview, CardSequenceDamage(preview));
                     if (sequenceDamage > 0)
-                        lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {sequenceDamage} obrażeń"));
+                        lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Deal {sequenceDamage} damage"));
                     return;
                 case ResolveDamageFormula.ExecuteBelowHealth:
                     int executeBase = PreviewDamage(preview, WithProperties(preview, _amount));
                     if (executeBase > 0)
-                        lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {executeBase} obrażeń"));
+                        lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Deal {executeBase} damage"));
                     int executeDoubled = PreviewDamage(preview, WithProperties(preview, _amount) * 2);
                     if (executeDoubled > 0)
-                        lines.Add(new TooltipLine(TooltipLineKind.Damage, $"{executeDoubled} gdy wróg poniżej {_threshold}% HP"));
+                        lines.Add(new TooltipLine(TooltipLineKind.Damage, $"{executeDoubled} if the enemy is below {_threshold}% HP"));
                     return;
                 case ResolveDamageFormula.PrecisionBonus:
                     int precisionBase = PreviewDamage(preview, WithProperties(preview, _amount));
                     if (precisionBase > 0)
-                        lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {precisionBase} obrażeń"));
+                        lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Deal {precisionBase} damage"));
                     int precisionBonus = ConditionalBonus(preview);
                     if (precisionBonus > 0)
                     {
                         int precisionTotal = PreviewDamage(preview, WithProperties(preview, _amount) + precisionBonus);
-                        lines.Add(new TooltipLine(TooltipLineKind.Damage, $"{precisionTotal} gdy jeden match bez kaskady"));
+                        lines.Add(new TooltipLine(TooltipLineKind.Damage, $"{precisionTotal} with one match and no cascade"));
                     }
                     return;
             }
 
             int baseAmount = PreviewDamage(preview, WithProperties(preview, _amount));
             if (baseAmount > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {baseAmount} obrażeń"));
+                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Deal {baseAmount} damage"));
 
             if (_formula == ResolveDamageFormula.IntentConditional && _bonus > 0 && _bonus != _amount)
             {
                 int bonus = PreviewDamage(preview, WithProperties(preview, _bonus));
                 if (bonus > 0)
-                    lines.Add(new TooltipLine(TooltipLineKind.Damage, $"{bonus} gdy wróg zapowiada atak"));
+                    lines.Add(new TooltipLine(TooltipLineKind.Damage, $"{bonus} if the enemy is preparing an attack"));
                 return;
             }
 
             int resolved = PreviewDamage(preview, WithProperties(preview, ResolveAmount(preview)));
             if (resolved > 0 && resolved != baseAmount)
-                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Teraz: {resolved}"));
+                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Current: {resolved}"));
         }
 
         int ResolveAmount(BattleEffectContext context)
@@ -250,11 +262,11 @@ namespace M3P
             {
                 int scaled = SkillCombat.ScaleAmount(preview, damage, _physical, includeAttackBonus: true);
                 if (scaled > 0)
-                    lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {scaled} obrażeń (tarcza)"));
+                    lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Deal {scaled} damage (Shield)"));
                 return;
             }
 
-            lines.Add(new TooltipLine(TooltipLineKind.Other, "Zadaje obrażenia równe aktualnej tarczy"));
+            lines.Add(new TooltipLine(TooltipLineKind.Other, "Deal damage equal to current Shield"));
         }
     }
 
@@ -313,11 +325,11 @@ namespace M3P
             PlayerProperties properties = SkillPropertyScaling.Read(preview);
             int reduction = SkillPropertyScaling.Apply(_reduction, _reductionTerms, properties);
             if (reduction > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Następny atak: -{reduction} obrażeń"));
+                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Next incoming attack: -{reduction} damage"));
 
             int counter = SkillPropertyScaling.Apply(_counterDamage, _counterTerms, properties);
             if (counter > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Kontratak: {counter}"));
+                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Counterattack: {counter}"));
         }
     }
 
@@ -346,7 +358,7 @@ namespace M3P
             if (bonus <= 0 || hits <= 0)
                 return;
 
-            lines.Add(new TooltipLine(TooltipLineKind.Damage, $"+{bonus} obrażeń przy {hits} kolejnych trafieniach"));
+            lines.Add(new TooltipLine(TooltipLineKind.Damage, $"+{bonus} damage on the next {hits} hits"));
         }
     }
 
@@ -388,16 +400,16 @@ namespace M3P
                 preview,
                 SkillPropertyScaling.Apply(_shield, _shieldTerms, properties));
             if (shield > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Shield, $"Daje {shield} tarczy"));
+                lines.Add(new TooltipLine(TooltipLineKind.Shield, $"Gain {shield} Shield"));
 
             int percent = Mathf.Max(0, SkillPropertyScaling.Apply(_bonusPercent, _percentTerms, properties));
             if (percent > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Następny atak: +{percent}%"));
+                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Next attack: +{percent}%"));
         }
     }
 
     [Serializable]
-    public class ConvergenceLogic : BattleEffectLogic
+    public class ConvergenceLogic : BattleEffectLogic, ITooltipPreview
     {
         [SerializeField] int _damage = 15;
         [SerializeField] SkillPropertyTerm[] _damageTerms = Array.Empty<SkillPropertyTerm>();
@@ -424,6 +436,15 @@ namespace M3P
 
             casterSoft.HealFromSkill(SkillCombat.ScaleHealOrShield(context, heal));
             casterSoft.AddShieldFromSkill(SkillCombat.ScaleHealOrShield(context, shield));
+        }
+
+        public void AppendTooltipLines(BattleEffectContext preview, EEffectTarget target, List<TooltipLine> lines)
+        {
+            int colorCount = SkillCombat.LastResolveColorCount();
+            string state = colorCount >= _bonusColorCount ? "met" : "not met";
+            lines.Add(new TooltipLine(
+                TooltipLineKind.Other,
+                $"Bonus condition: {state} (colors: {colorCount}/{_bonusColorCount})"));
         }
 
         static int Scale(float bonus, int amount)
@@ -478,7 +499,7 @@ namespace M3P
             if (perHit <= 0 || hits <= 0)
                 return;
 
-            lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {perHit} obrażeń × {hits}"));
+            lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Deal {perHit} damage × {hits}"));
         }
     }
 
@@ -508,7 +529,7 @@ namespace M3P
             if (draw <= 0 && _cards <= 0)
                 return;
 
-            lines.Add(new TooltipLine(TooltipLineKind.Draw, $"Dobiera {Mathf.Max(1, draw)} kart"));
+            lines.Add(new TooltipLine(TooltipLineKind.Draw, $"Draw cards: {Mathf.Max(1, draw)}"));
         }
 
         int DrawCount(BattleEffectContext context)
@@ -699,12 +720,12 @@ namespace M3P
             {
                 int heal = SkillCombat.ScaleHealOrShield(preview, souls * healPerSoul);
                 if (heal > 0)
-                    lines.Add(new TooltipLine(TooltipLineKind.Heal, $"Leczy {heal} ({souls} Dusz)"));
+                    lines.Add(new TooltipLine(TooltipLineKind.Heal, $"Restore {heal} HP ({souls} Souls)"));
                 return;
             }
 
             if (healPerSoul > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Heal, $"Leczy {healPerSoul} HP za każdą Duszę"));
+                lines.Add(new TooltipLine(TooltipLineKind.Heal, $"Restore {healPerSoul} HP per Soul"));
         }
     }
 }

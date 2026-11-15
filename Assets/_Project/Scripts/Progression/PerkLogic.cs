@@ -177,13 +177,13 @@ namespace M3P
             if (amount <= 0)
                 return;
 
-            lines.Add(new TooltipLine(TooltipLineKind.Damage, $"+{amount} obrażeń podstawowych"));
+            lines.Add(new TooltipLine(TooltipLineKind.Damage, $"+{amount} basic attack damage"));
         }
 
         public override string FormatOffer()
         {
             int amount = Mathf.Max(0, _amount);
-            return amount > 0 ? $"+{amount} obrażeń" : string.Empty;
+            return amount > 0 ? $"+{amount} damage" : string.Empty;
         }
     }
 
@@ -235,13 +235,13 @@ namespace M3P
             if (amount <= 0)
                 return;
 
-            lines.Add(new TooltipLine(TooltipLineKind.Heal, $"+{amount} maks. HP"));
+            lines.Add(new TooltipLine(TooltipLineKind.Heal, $"+{amount} max HP"));
         }
 
         public override string FormatOffer()
         {
             int amount = Mathf.Max(0, _amount);
-            return amount > 0 ? $"+{amount} maks. HP" : string.Empty;
+            return amount > 0 ? $"+{amount} max HP" : string.Empty;
         }
     }
 
@@ -264,7 +264,7 @@ namespace M3P
             if (amount <= 0)
                 return;
 
-            lines.Add(new TooltipLine(TooltipLineKind.Draw, $"+{amount} kart w ręce"));
+            lines.Add(new TooltipLine(TooltipLineKind.Draw, $"+{amount} hand size"));
         }
 
         public override string FormatOffer()
@@ -278,15 +278,7 @@ namespace M3P
 
         static string CardWord(int amount)
         {
-            if (amount == 1)
-                return "karta";
-
-            int mod10 = amount % 10;
-            int mod100 = amount % 100;
-            if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14))
-                return "karty";
-
-            return "kart";
+            return amount == 1 ? "card" : "cards";
         }
     }
 
@@ -339,13 +331,13 @@ namespace M3P
             if (amount <= 0)
                 return;
 
-            lines.Add(new TooltipLine(TooltipLineKind.Other, $"+{amount} Dusz na początku walki"));
+            lines.Add(new TooltipLine(TooltipLineKind.Other, $"+{amount} Souls at the start of battle"));
         }
 
         public override string FormatOffer()
         {
             int amount = Mathf.Max(0, _amount);
-            return amount > 0 ? $"+{amount} Dusz" : string.Empty;
+            return amount > 0 ? $"+{amount} Souls" : string.Empty;
         }
     }
 

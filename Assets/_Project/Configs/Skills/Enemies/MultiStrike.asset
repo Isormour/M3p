@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
   m_Name: MultiStrike
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
-  <_skillName>k__BackingField: MultiStrike
-  _description: Wykonuje 2 razy piętro trafień po 5 obrażeń.
+  <_skillName>k__BackingField: "Multi Strike"
+  _description: "Strike 2 × floor level times, dealing 5 damage per hit."
   _artwork: {fileID: 21300000, guid: 51b130ab1ac3456db85b121efa17d149, type: 3}
   _manaCosts: []
   _effects:
@@ -24,4 +24,6 @@ MonoBehaviour:
   _castPrompt: 0
   _physicalSkill: 1
   _archetype: 0
+  _useProjectile: 1
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
   <_animationName>k__BackingField: BasicAttack

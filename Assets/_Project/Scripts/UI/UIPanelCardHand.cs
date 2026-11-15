@@ -430,10 +430,10 @@ namespace M3P
         {
             IReadOnlyList<QueuedCard> entries = _cardPlay.Queue.Entries;
             if (entries.Count == 0)
-                return "<alpha=#80>Kolejka pusta — zagraj karty, potem Resolve.";
+                return "<alpha=#80>Queue empty — play cards, then Resolve.";
 
             _queueText.Clear();
-            _queueText.Append("Kolejka: ");
+            _queueText.Append("Queue: ");
 
             for (int i = 0; i < entries.Count; i++)
             {

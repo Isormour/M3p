@@ -61,6 +61,11 @@ namespace Match3
         private readonly HashSet<Match3Tile> _crackedRemovalBuffer = new HashSet<Match3Tile>();
         private System.Random _rng;
         private int _nextTileId = 1;
+        /// <summary>
+        /// Refills that placed tiles after a match was cleared in the current Resolve.
+        /// The first of them rerolls a candidate that would match; later ones reroll twice.
+        /// </summary>
+        int _postMatchRefills;
 
         /// <summary>
         /// What the last Resolve produced. Reward runes and payouts read this rather than reacting to a
@@ -454,6 +459,7 @@ namespace Match3
 
             _isResolving = true;
             _currentCombo = 0;
+            _postMatchRefills = 0;
             _destroyedTypeCountsThisResolve.Clear();
             _resolveReport.Reset();
             _resolveReport.CardsInSequence = cardCount;
@@ -568,12 +574,15 @@ namespace Match3
         /// Settles the board once the sequence has run: drops tiles into gaps, refills, then clears every
         /// match until none remain. Each wave reports its groups so damage is scored per match, and the
         /// whole run is summarised into one <see cref="ResolveReport"/>.
+        /// Tiles added before the first clear are a normal draw. Tiles added after a match of 3, 4 or
+        /// longer are redrawn when they would close a line, so a cascade has to come from tiles that
+        /// slid together or from a candidate that still matched after its extra draws.
         /// </summary>
         private IEnumerator ResolveCascadesRoutine()
         {
             _activeGravity = _pendingGravity ?? BoardGravity.Down;
             yield return StartCoroutine(CollapseAlongGravity());
-            yield return StartCoroutine(RefillBoard());
+            yield return StartCoroutine(RefillBoard(afterMatch: false));
 
             List<MatchGroup> groups = FindAllMatchGroups();
             while (groups.Count > 0)
@@ -594,7 +603,7 @@ namespace Match3
                 AccumulateTilePointsForWave(_destroyedThisWave);
                 RaiseTilePointsChanged();
                 yield return StartCoroutine(CollapseAlongGravity());
-                yield return StartCoroutine(RefillBoard());
+                yield return StartCoroutine(RefillBoard(afterMatch: true));
                 groups = FindAllMatchGroups();
             }
         }
@@ -1032,9 +1041,18 @@ namespace Match3
                 Sfx.Play(SfxId.TileFall);
         }
 
-        private IEnumerator RefillBoard()
+        /// <summary>
+        /// Fills empty cells from the tile bag. After a match has been cleared, a candidate that would
+        /// immediately make a line of <see cref="MinimumMatchSize"/> is put back and drawn again:
+        /// once on the first such refill, twice on every later refill in the same Resolve. The last
+        /// candidate is kept even if it matches. Rejected copies stay in the bag with their upgrades.
+        /// A refill that places nothing does not advance the count. Matches made by cards or by tiles
+        /// sliding into each other are left alone.
+        /// </summary>
+        private IEnumerator RefillBoard(bool afterMatch)
         {
             List<Coroutine> moveCoroutines = new List<Coroutine>();
+            int extraAttempts = afterMatch ? (_postMatchRefills == 0 ? 1 : 2) : 0;
 
             bool spawnedAny = false;
             for (int x = 0; x < width; x++)
@@ -1046,7 +1064,7 @@ namespace Match3
                         continue;
                     }
 
-                    TileSpawnSpec spec = TakeSpawnSpec(out int specIndex);
+                    TileSpawnSpec spec = TakeRefillSpec(x, y, extraAttempts, out int specIndex);
                     SpawnTile(x, y, spec.TypeId, spec.UpgradeIds);
                     CheckOutSpawnSpec(_tiles[x, y], specIndex);
                     Match3Tile tile = _tiles[x, y];
@@ -1056,6 +1074,9 @@ namespace Match3
                     spawnedAny = true;
                 }
             }
+
+            if (spawnedAny && afterMatch)
+                _postMatchRefills++;
 
             if (spawnedAny)
                 Sfx.Play(SfxId.TileSpawn);
@@ -1451,6 +1472,25 @@ namespace Match3
 
             for (int i = 0; i < _spawnSpecs.Count; i++)
                 _spawnBag.Add(i);
+        }
+
+        /// <summary>
+        /// Draws a refill candidate. Each extra attempt is used only when the draw would match the
+        /// tiles already on the board, including pieces accepted earlier in this same refill.
+        /// </summary>
+        TileSpawnSpec TakeRefillSpec(int x, int y, int extraAttempts, out int specIndex)
+        {
+            while (true)
+            {
+                TileSpawnSpec spec = TakeSpawnSpec(out specIndex);
+                if (extraAttempts <= 0 || !FormsMatchAt(x, y, spec.TypeId))
+                    return spec;
+
+                if (specIndex >= 0)
+                    _spawnBag.Add(specIndex);
+
+                extraAttempts--;
+            }
         }
 
         /// <summary>

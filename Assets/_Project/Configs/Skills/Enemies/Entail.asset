@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Entail
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
   <_skillName>k__BackingField: Entail
-  _description: Zakorzenia 3 razy piętro losowych kafelków. Zakorzeniony kafelek stoi w miejscu, dopóki nie zostanie zniszczony.
+  _description: "Root 3 × floor level random tiles. Rooted tiles stay in place until destroyed."
   _artwork: {fileID: 21300000, guid: c282d7e5f59340c9bca0513deeb489a6, type: 3}
   _manaCosts: []
   _effects:
@@ -24,4 +24,6 @@ MonoBehaviour:
   _castPrompt: 0
   _physicalSkill: 0
   _archetype: 0
+  _useProjectile: 1
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
   <_animationName>k__BackingField: GuardUp

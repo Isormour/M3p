@@ -124,12 +124,12 @@ namespace M3P
             if (start == null)
             {
                 Debug.LogError(
-                    $"{nameof(ProfileManager)}: assign {nameof(GameConfig.PlayerStart)} on {nameof(GameConfig)} or new characters begin with no skills, cards or tiles.");
+                    $"{nameof(ProfileManager)}: assign {nameof(GameConfig.PlayerStart)} on {nameof(GameConfig)} or new characters begin with no cards or tiles.");
                 return new PlayerProfile();
             }
 
             PlayerProfile profile = start.CreateProfile(
-                _config.Skills, _config.Cards, _config.Tiles, _config.StatProgression);
+                _config.Cards, _config.Tiles, _config.StatProgression);
             if (PlayerPrefs.HasKey(PlayerNamePrefsKey))
                 profile.PlayerName = PlayerProfile.SanitizeName(RememberedPlayerName);
 

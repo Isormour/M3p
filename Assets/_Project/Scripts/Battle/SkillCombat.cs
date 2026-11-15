@@ -106,15 +106,30 @@ namespace M3P
             return ScaleAmount(context, amount, physical: false, applyContextMultiplier: false);
         }
 
+        /// <summary>Tooltip equivalent of ScaleAmount followed by the per-hit enemy multiplier.</summary>
+        public static int PreviewScaledDamage(
+            BattleEffectContext context,
+            EEffectTarget target,
+            int amount,
+            bool physical,
+            bool includeAttackBonus = false,
+            int flatDamageAfterEnemyScaling = 0)
+        {
+            int scaled = ScaleAmount(context, amount, physical, includeAttackBonus);
+            return EnemySkillScale.ScaleDamage(scaled, context.Caster, context.Resolve(target), flatDamageAfterEnemyScaling);
+        }
+
         /// <summary>
         /// Applies a skill hit: outgoing bonuses, incoming reduction from a guard status or
         /// combat modifier, then optional counter. Status ticks pass
         /// <see cref="BattleEffectContext.DirectHit"/> as false and skip those modifiers.
         /// </summary>
-        public static void ApplyHit(BattleEffectContext context, BattleCharacter defender, int amount, bool physical)
+        public static void ApplyHit(BattleEffectContext context, BattleCharacter defender, int amount, bool physical, int flatDamageAfterEnemyScaling = 0)
         {
             if (defender?.Stats?.Soft == null)
                 return;
+
+            amount = EnemySkillScale.ScaleDamage(amount, context.Caster, defender, flatDamageAfterEnemyScaling);
 
             if (!context.DirectHit)
             {
@@ -163,6 +178,7 @@ namespace M3P
                 new BattleEffectContext(defender, attacker, directHit: false),
                 counterDamage,
                 counterPhysical);
+            scaledCounter = EnemySkillScale.ScaleDamage(scaledCounter, defender, attacker);
             if (attacker.Stats.Soft.PerkRules != null)
                 scaledCounter = attacker.Stats.Soft.PerkRules.ApplyIncomingHitReduction(scaledCounter);
             if (scaledCounter > 0)
@@ -177,6 +193,8 @@ namespace M3P
         {
             if (defender?.Stats?.Soft == null || defender.EvadesDirectHits())
                 return;
+
+            amount = EnemySkillScale.ScaleDamage(amount, attacker, defender);
 
             if (attacker != null)
                 amount = Mathf.Max(0, amount - attacker.GetPersistentOutgoingPenalty());
@@ -215,13 +233,14 @@ namespace M3P
             BattleEffectContext context,
             EEffectTarget target,
             int amount,
-            bool physical)
+            bool physical,
+            int flatDamageAfterEnemyScaling = 0)
         {
-            if (amount <= 0)
+            if (amount <= 0 && flatDamageAfterEnemyScaling <= 0)
                 return;
 
             BattleCharacter defender = context.Resolve(target);
-            ApplyHit(context, defender, ScaleAmount(context, amount, physical, includeAttackBonus: true), physical);
+            ApplyHit(context, defender, ScaleAmount(context, amount, physical, includeAttackBonus: true), physical, flatDamageAfterEnemyScaling);
         }
 
         public static bool TryCollectDistinctColorSpendOrder(

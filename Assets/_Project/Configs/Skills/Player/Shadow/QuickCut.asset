@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
   m_Name: QuickCut
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
-  <_skillName>k__BackingField: Szybkie Cięcia
-  _description: Wykonuje 1 + Tempo ataków, każdy za 2 + Precision obrażeń fizycznych.
+  <_skillName>k__BackingField: "Quick Cuts"
+  _description: "Strike 1 + Tempo times, each hit dealing 2 + Precision physical damage."
   _artwork: {fileID: 21300000, guid: 27f5f073b24a49048af4246422b1011e, type: 3}
   _manaCosts:
   - TileType: {fileID: 11400000, guid: fb0e43bb3e72afb43a017902700c99c4, type: 2}
@@ -28,4 +28,6 @@ MonoBehaviour:
   _castPrompt: 0
   _physicalSkill: 1
   _archetype: 3
+  _useProjectile: 1
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
   <_animationName>k__BackingField: BasicAttack

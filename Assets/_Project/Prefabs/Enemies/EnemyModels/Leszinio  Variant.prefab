@@ -17,6 +17,10 @@ PrefabInstance:
       value: Leszinio  Variant
       objectReference: {fileID: 0}
     - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: hand
+      value:
+      objectReference: {fileID: 7597918158740242147}
+    - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
       propertyPath: _animator
       value: 
       objectReference: {fileID: 1207898802219674118}
@@ -192,5 +196,10 @@ MonoBehaviour:
 --- !u!137 &9145169141054188111 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: -4664622250521330216, guid: bed72a89dbf41d741afa289321af93e1, type: 3}
+  m_PrefabInstance: {fileID: 4731528552848873367}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &7597918158740242147 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2943382084370000244, guid: bed72a89dbf41d741afa289321af93e1, type: 3}
   m_PrefabInstance: {fileID: 4731528552848873367}
   m_PrefabAsset: {fileID: 0}

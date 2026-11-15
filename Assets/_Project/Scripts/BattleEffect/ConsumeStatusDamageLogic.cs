@@ -60,15 +60,15 @@ namespace M3P
             if (stacks > 0)
             {
                 int raw = SkillPropertyScaling.Apply(stacks * DamagePerStack, _propertyTerms, properties);
-                int damage = SkillCombat.ScaleAmount(preview, raw, _physical, includeAttackBonus: true);
+                int damage = SkillCombat.PreviewScaledDamage(preview, target, raw, _physical, includeAttackBonus: true);
                 if (damage > 0)
-                    lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {damage} obrażeń ({stacks} × {statusName})"));
+                    lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Deal {damage} damage ({stacks} × {statusName})"));
                 return;
             }
 
-            int perStack = SkillCombat.ScaleAmount(preview, DamagePerStack, _physical, includeAttackBonus: true);
+            int perStack = SkillCombat.PreviewScaledDamage(preview, target, DamagePerStack, _physical, includeAttackBonus: true);
             if (perStack > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {perStack} obrażeń za każdy stack: {statusName}"));
+                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Deal {perStack} damage per stack of {statusName}"));
         }
     }
 }

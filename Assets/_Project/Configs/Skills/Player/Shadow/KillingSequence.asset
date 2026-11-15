@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
   m_Name: KillingSequence
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
-  <_skillName>k__BackingField: Zabójcza Sekwencja
-  _description: Zadaje 6 × liczba kart + Precision + Tempo obrażeń fizycznych. Cooldown: 3 tury.
+  <_skillName>k__BackingField: "Killing Sequence"
+  _description: "Deal (6 × number of cards + Precision + Tempo) physical damage in a single hit. Uses the cards from the last resolved sequence."
   _artwork: {fileID: 21300000, guid: a0f68b13f97d04e41850a06d55a44717, type: 3}
   _manaCosts:
   - TileType: {fileID: 11400000, guid: fb0e43bb3e72afb43a017902700c99c4, type: 2}
@@ -28,4 +28,6 @@ MonoBehaviour:
   _castPrompt: 0
   _physicalSkill: 1
   _archetype: 3
+  _useProjectile: 1
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
   <_animationName>k__BackingField: BasicAttack

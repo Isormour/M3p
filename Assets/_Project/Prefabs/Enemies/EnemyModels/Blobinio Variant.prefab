@@ -37,6 +37,10 @@ PrefabInstance:
       value: Blobinio Variant
       objectReference: {fileID: 0}
     - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: hand
+      value:
+      objectReference: {fileID: 8021095122799860943}
+    - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
       propertyPath: _animator
       value: 
       objectReference: {fileID: 1649105008194832426}
@@ -212,5 +216,10 @@ Transform:
 --- !u!137 &6202470782130530338 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: -7954549100108259943, guid: 091427be548abd2469a1fd34ae2a5956, type: 3}
+  m_PrefabInstance: {fileID: 5154468649998087611}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8021095122799860943 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2943382084370000244, guid: 091427be548abd2469a1fd34ae2a5956, type: 3}
   m_PrefabInstance: {fileID: 5154468649998087611}
   m_PrefabAsset: {fileID: 0}

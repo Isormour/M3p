@@ -157,10 +157,10 @@ namespace Match3
     {
         static readonly CardChoiceOption[] Directions =
         {
-            new CardChoiceOption("Góra", new Color(0.55f, 0.8f, 1f), (int)BoardGravity.Up),
-            new CardChoiceOption("Dół", new Color(0.85f, 0.7f, 0.4f), (int)BoardGravity.Down),
-            new CardChoiceOption("Lewo", new Color(0.7f, 0.85f, 0.5f), (int)BoardGravity.Left),
-            new CardChoiceOption("Prawo", new Color(0.9f, 0.55f, 0.55f), (int)BoardGravity.Right)
+            new CardChoiceOption("Up", new Color(0.55f, 0.8f, 1f), (int)BoardGravity.Up),
+            new CardChoiceOption("Down", new Color(0.85f, 0.7f, 0.4f), (int)BoardGravity.Down),
+            new CardChoiceOption("Left", new Color(0.7f, 0.85f, 0.5f), (int)BoardGravity.Left),
+            new CardChoiceOption("Right", new Color(0.9f, 0.55f, 0.55f), (int)BoardGravity.Right)
         };
 
         public override CardTargeting Targeting => CardTargeting.None;
@@ -219,7 +219,7 @@ namespace Match3
 
         public override bool IsAvailable => false;
 
-        public override string UnavailableReason => "Rewind wymaga przeprojektowania pod model kolejki.";
+        public override string UnavailableReason => "Rewind is currently unavailable.";
 
         public override void BuildOps(
             SimBoard board,

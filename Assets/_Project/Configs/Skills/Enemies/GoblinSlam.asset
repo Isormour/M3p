@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
+  m_Name: GoblinSlam
+  m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
+  <_skillName>k__BackingField: "Slam"
+  _description: "A powerful physical strike."
+  _artwork: {fileID: 21300000, guid: 2a62736b263f4b5aac2b9a5059449806, type: 3}
+  _manaCosts: []
+  _effects:
+  - {fileID: 11400000, guid: abf83eba6a1b400cbef91a8d67acb9c8, type: 2}
+  _cooldown: 2
+  _useProjectile: 1
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
+  <_animationName>k__BackingField: BasicAttack

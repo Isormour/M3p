@@ -41,5 +41,14 @@ namespace M3P
         {
             Soft?.RecalculateFromHard(Hard, _progression, _talentBonuses, _treePoints);
         }
+
+        /// <summary>
+        /// Refills action points from the same perk trees used at battle start.
+        /// Trees without a hard stat, such as Tactic, are invisible to a hard-stat-only recalculation.
+        /// </summary>
+        public void ResetActionPointsForTurn()
+        {
+            Soft?.ResetActionPoints(Hard, _progression, _talentBonuses, _treePoints);
+        }
     }
 }

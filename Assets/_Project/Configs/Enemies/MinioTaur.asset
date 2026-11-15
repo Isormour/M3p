@@ -24,6 +24,40 @@ MonoBehaviour:
     Intelligence: 0.34
     Constitution: 5
     Agility: 0.2
+  _damageMultipliersByEffectiveFloor:
+  - 1.1248
+  - 2.4009
+  - 3.4978
+  - 3.7367
+  - 1.4246
+  - 1.3088
+  - 1.1844
+  - 1.1315
+  - 1.0982
+  - 1.0185
+  _bossDamageMultiplier: 2.1
+  _eliteDamageMultipliersByMapFloor:
+  - 1.5265
+  - 2.6314
+  - 3.1581
+  - 1.1878
+  - 1.1583
+  - 1.0482
+  - 0.9873
+  - 0.9511
+  - 0.9288
+  - 0.8393
+  _bossDamageMultipliersByMapFloor:
+  - 1.5225
+  - 1.7779
+  - 1.5619
+  - 1.47
+  - 1.4504
+  - 1.3126
+  - 1.1641
+  - 1.1262
+  - 0.9992
+  - 1.05
   _enemyCharacterPrefab: {fileID: 5361038239209304539, guid: 7f6fff7c585ec75448eb03cc5e3e3628, type: 3}
   _skills:
   - {fileID: 11400000, guid: 4a8e0b2a6c5d1b0a9f8e7d6c5b4a3901, type: 2}
@@ -45,13 +79,28 @@ MonoBehaviour:
     Replaces: {fileID: 0}
   _rankThresholds:
   - MinFloor: 1
-    RankName: Zwiadowca
+    RankName: "Scout"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: 5f6980195d129714db65834923c8a26e, type: 3}
   - MinFloor: 2
-    RankName: Wartownik
+    RankName: "Sentry"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: a18cb113286eddf47a26a09f04653334, type: 3}
   - MinFloor: 3
-    RankName: Podpalacz
+    RankName: "Arsonist"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: bb9209beae986634b9126a621908b9f0, type: 3}
   - MinFloor: 5
-    RankName: Weteran
+    RankName: "Veteran"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: adeb4a36cc8d51a41ba33582bf969966, type: 3}
   - MinFloor: 8
-    RankName: Herszt
+    RankName: "Chieftain"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: dfcda2fc18272f548bbdc94c6dc0c09f, type: 3}
   _enemyModelPrefab: {fileID: 204735648004223828, guid: da7844916c03ab84b88e24f451a737b2, type: 3}

@@ -13,12 +13,16 @@ MonoBehaviour:
   m_Name: PerkTree_Tactic
   m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkTree
   Nazwa: Tactic
-  _subtitle: "TEMPO I R\u0118KA"
-  _description: "Tempo i wi\u0119ksza pocz\u0105tkowa r\u0119ka."
+  _subtitle: "TEMPO AND HAND SIZE"
+  _description: "Tempo and a larger starting hand."
   id: 7
+  _starterSkills:
+  - {fileID: 11400000, guid: 831340929e964125b80ea8ff1cb9ce1b, type: 2}
+  - {fileID: 11400000, guid: d9bb4a11e7f748c5a089c9708e48a3df, type: 2}
+  - {fileID: 11400000, guid: c7f7dca3a573403fb8dcf6b2829b9acc, type: 2}
   perks:
   - StatLevel: 1
-    Perk: {fileID: 11400000, guid: 3b6b15cd285647428163ae5d7e159711, type: 2}
+    Perk: {fileID: 11400000, guid: ce6a9c5d0f7b4e6829d1e3f5a7b98012, type: 2}
   - StatLevel: 2
     Perk: {fileID: 11400000, guid: 64bc0e75a1d64ea7a6d0881253acf980, type: 2}
   - StatLevel: 3
@@ -34,7 +38,7 @@ MonoBehaviour:
   - StatLevel: 8
     Perk: {fileID: 11400000, guid: 3b6b15cd285647428163ae5d7e159711, type: 2}
   - StatLevel: 9
-    Perk: {fileID: 11400000, guid: 3b6b15cd285647428163ae5d7e159711, type: 2}
+    Perk: {fileID: 11400000, guid: 27490ef7ae244e91af4ecaed241cb2ce, type: 2}
   - StatLevel: 10
     Perk: {fileID: 11400000, guid: ae8e8b7d117346e588cc928e9ea2c13c, type: 2}
   TreeStatBonusLogic:

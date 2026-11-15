@@ -22,7 +22,7 @@ namespace M3P
             }
 
             if (_threshold != null)
-                _threshold.text = string.Format(string.IsNullOrEmpty(thresholdFormat) ? "Próg {0}" : thresholdFormat, statLevel);
+                _threshold.text = string.Format(string.IsNullOrEmpty(thresholdFormat) ? "Requires {0}" : thresholdFormat, statLevel);
 
             if (_effect != null)
                 _effect.text = perk != null ? perk.OfferText : string.Empty;

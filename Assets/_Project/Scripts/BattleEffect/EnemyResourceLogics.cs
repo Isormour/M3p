@@ -74,7 +74,7 @@ namespace M3P
         {
             int amount = SkillCombat.ScaleHealOrShield(preview, ArmorAmount(preview));
             if (amount > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Daje {amount} pancerza"));
+                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Gain {amount} Armor"));
         }
 
         int ArmorAmount(BattleEffectContext context)
@@ -113,7 +113,7 @@ namespace M3P
         {
             int requested = Requested(preview);
             if (requested > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Shield, $"Kradnie do {requested} tarczy lub pancerza"));
+                lines.Add(new TooltipLine(TooltipLineKind.Shield, $"Steal up to {requested} Shield or Armor"));
         }
 
         int Requested(BattleEffectContext context)
@@ -143,7 +143,8 @@ namespace M3P
                 return;
 
             casterSoft.ClearArmor();
-            SkillCombat.ApplyHit(context, character, amount, true);
+            // Armor converts to damage 1:1, after the enemy damage multiplier.
+            SkillCombat.ApplyHit(context, character, 0, true, flatDamageAfterEnemyScaling: amount);
         }
 
         public void AppendTooltipLines(BattleEffectContext preview, EEffectTarget target, List<TooltipLine> lines)
@@ -154,9 +155,9 @@ namespace M3P
             if (amount > 0 && preview.DirectHit && preview.Caster != null)
                 amount += preview.Caster.GetPersistentOutgoingBonus();
             if (amount > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {amount} obrażeń (aktualny pancerz)"));
+                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Deal {amount} damage (current Armor)"));
             else
-                lines.Add(new TooltipLine(TooltipLineKind.Other, "Zadaje obrażenia równe aktualnemu pancerzowi"));
+                lines.Add(new TooltipLine(TooltipLineKind.Other, "Deal damage equal to current Armor"));
         }
     }
 
@@ -193,8 +194,8 @@ namespace M3P
                 return;
 
             string text = _healCasterForRemoved
-                ? $"Usuwa do {requested} many losowego koloru i leczy o tyle samo"
-                : $"Usuwa do {requested} many losowego koloru";
+                ? $"Remove up to {requested} mana of a random color and restore that much HP"
+                : $"Remove up to {requested} mana of a random color";
             lines.Add(new TooltipLine(TooltipLineKind.Other, text));
         }
 
@@ -228,7 +229,7 @@ namespace M3P
             if (magnitude <= 0)
                 return;
 
-            lines.Add(new TooltipLine(TooltipLineKind.Other, $"Usuwa do {magnitude} many losowego koloru"));
+            lines.Add(new TooltipLine(TooltipLineKind.Other, $"Remove up to {magnitude} mana of a random color"));
         }
 
         int DrainCap(BattleEffectContext context)
@@ -260,7 +261,7 @@ namespace M3P
         {
             int cost = Cost(preview);
             if (cost > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Kosztuje {cost} HP"));
+                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Costs {cost} HP"));
         }
 
         int Cost(BattleEffectContext context)
@@ -298,15 +299,15 @@ namespace M3P
 
         public void AppendTooltipLines(BattleEffectContext preview, EEffectTarget target, List<TooltipLine> lines)
         {
-            int scaled = SkillCombat.ScaleAmount(preview, Damage(preview), _physical);
+            int scaled = SkillCombat.PreviewScaledDamage(preview, target, Damage(preview), _physical);
             int bonus = preview.Caster != null ? preview.Caster.GetPersistentOutgoingBonus() : 0;
             int shown = scaled + bonus;
             if (shown > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {shown} obrażeń"));
+                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Deal {shown} damage"));
 
             int percent = Mathf.Clamp(_healPercent, 0, 100);
             if (percent > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Heal, $"Leczy {percent}% utraconego HP"));
+                lines.Add(new TooltipLine(TooltipLineKind.Heal, $"Restore {percent}% of the HP lost by the target"));
         }
 
         int Damage(BattleEffectContext context)

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Corrosion
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
   <_skillName>k__BackingField: Corrosion
-  _description: Kradnie do 5 razy piętro tarczy lub pancerza i dodaje to sobie jako pancerz.
+  _description: "Steal up to 2 × floor level Armor or Shield and gain the stolen amount as Armor."
   _artwork: {fileID: 21300000, guid: 3ff9fa7960bd44c09bb77dbf7e258ef3, type: 3}
   _manaCosts: []
   _effects:
@@ -24,4 +24,6 @@ MonoBehaviour:
   _castPrompt: 0
   _physicalSkill: 0
   _archetype: 0
+  _useProjectile: 0
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
   <_animationName>k__BackingField: BasicAttack

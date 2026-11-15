@@ -137,7 +137,7 @@ namespace M3P.Editor
             if (inheritedTitle != null)
                 inheritedTitle.gameObject.SetActive(false);
 
-            TextMeshProUGUI tmp = GetOrCreateLabel(header.transform, "HeaderTitle", font, "TALIA KART", 40f, Cream, TextAlignmentOptions.Center);
+            TextMeshProUGUI tmp = GetOrCreateLabel(header.transform, "HeaderTitle", font, "CARD DECK", 40f, Cream, TextAlignmentOptions.Center);
             Place(tmp.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, -16f), new Vector2(460f, 64f));
             tmp.fontStyle = FontStyles.Bold;
             tmp.characterSpacing = 6f;
@@ -209,10 +209,10 @@ namespace M3P.Editor
             layout.childForceExpandHeight = false;
             layout.padding = new RectOffset(0, 0, 0, 0);
 
-            Button all = MakeTab(row, "FilterAll", "Wszystkie", font, selected);
-            MakeTab(row, "FilterSwaps", "Zamiany", font, normal);
-            MakeTab(row, "FilterShifts", "Przesunięcia", font, normal);
-            MakeTab(row, "FilterColors", "Kolory", font, normal);
+            Button all = MakeTab(row, "FilterAll", "All", font, selected);
+            MakeTab(row, "FilterSwaps", "Swaps", font, normal);
+            MakeTab(row, "FilterShifts", "Shifts", font, normal);
+            MakeTab(row, "FilterColors", "Colors", font, normal);
             return all;
         }
 
@@ -301,7 +301,7 @@ namespace M3P.Editor
             if (title.GetComponent<CanvasRenderer>() == null)
                 title.gameObject.AddComponent<CanvasRenderer>();
             ApplyFont(titleTmp, font, 28f, Cream, TextAlignmentOptions.Left);
-            titleTmp.text = "Twoja talia";
+            titleTmp.text = "Your Deck";
             titleTmp.fontStyle = FontStyles.Bold;
             titleTmp.raycastTarget = false;
 
@@ -374,7 +374,7 @@ namespace M3P.Editor
 
             Stretch(tmp.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, new Vector2(-24f, -8f));
             ApplyFont(tmp, font, 24f, Color.white, TextAlignmentOptions.Center);
-            tmp.text = "ZAPISZ TALIĘ";
+            tmp.text = "SAVE DECK";
             tmp.fontStyle = FontStyles.Bold;
             tmp.characterSpacing = 2f;
             tmp.raycastTarget = false;

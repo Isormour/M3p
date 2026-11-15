@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
   m_Name: Execute
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
-  <_skillName>k__BackingField: Egzekucja
-  _description: Zadaje 8 + Power + 2 × Precision obrażeń. Poniżej 25% HP przeciwnika podwaja cały wynik. Cooldown: 2 tury.
+  <_skillName>k__BackingField: "Execute"
+  _description: "Deal 8 + Power + 2 × Precision damage. Double the total if the enemy is below 25% HP. Cooldown: 2 turns."
   _artwork: {fileID: 21300000, guid: 4b64a177e808e84489ba1c0b5caf9e36, type: 3}
   _manaCosts:
   - TileType: {fileID: 11400000, guid: fb0e43bb3e72afb43a017902700c99c4, type: 2}
@@ -28,4 +28,6 @@ MonoBehaviour:
   _castPrompt: 0
   _physicalSkill: 1
   _archetype: 1
+  _useProjectile: 1
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
   <_animationName>k__BackingField: BasicAttack

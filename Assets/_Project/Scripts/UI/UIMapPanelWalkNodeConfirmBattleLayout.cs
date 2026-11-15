@@ -16,6 +16,8 @@ namespace M3P
         [SerializeField] UIHealthIndicator healthIndicator;
         [SerializeField] UIPlayerPanelSkillsBar[] skills;
 
+        EnemyBattleCharacter _previewCaster;
+
         public void Show(EnemyRuntimeSpec spec)
         {
             gameObject.SetActive(true);
@@ -31,7 +33,7 @@ namespace M3P
                     healthIndicator.Unbind();
             }
 
-            ApplySkills(spec != null ? spec.ActiveSkills : null);
+            ApplySkills(spec);
         }
 
         void EnsureLabels()
@@ -96,10 +98,13 @@ namespace M3P
             gameObject.SetActive(false);
         }
 
-        void ApplySkills(IReadOnlyList<SkillDefinition> activeSkills)
+        void ApplySkills(EnemyRuntimeSpec spec)
         {
             if (skills == null)
                 return;
+
+            IReadOnlyList<SkillDefinition> activeSkills = spec != null ? spec.ActiveSkills : null;
+            BattleCharacter caster = spec != null ? EnsurePreviewCaster(spec) : null;
 
             for (int i = 0; i < skills.Length; i++)
             {
@@ -115,7 +120,7 @@ namespace M3P
                 if (!show)
                     continue;
 
-                bar.Configure(skill, null);
+                bar.Configure(skill, caster);
                 Transform fade = bar.transform.Find("Fade");
                 if (fade != null)
                     fade.gameObject.SetActive(false);
@@ -124,6 +129,26 @@ namespace M3P
                 if (button != null)
                     button.interactable = false;
             }
+        }
+
+        BattleCharacter EnsurePreviewCaster(EnemyRuntimeSpec spec)
+        {
+            if (_previewCaster == null)
+            {
+                var previewObject = new GameObject("EnemyPreviewCaster");
+                previewObject.transform.SetParent(transform, false);
+                previewObject.SetActive(false);
+                _previewCaster = previewObject.AddComponent<EnemyBattleCharacter>();
+            }
+
+            _previewCaster.Configure(spec);
+            return _previewCaster;
+        }
+
+        void OnDestroy()
+        {
+            if (_previewCaster != null)
+                Destroy(_previewCaster.gameObject);
         }
 
         static int ResolveMaxHp(EnemyRuntimeSpec spec)

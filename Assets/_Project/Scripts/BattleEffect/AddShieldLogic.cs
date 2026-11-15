@@ -34,7 +34,7 @@ namespace M3P
             if (amount <= 0)
                 return;
 
-            lines.Add(new TooltipLine(TooltipLineKind.Shield, $"Daje {amount} tarczy"));
+            lines.Add(new TooltipLine(TooltipLineKind.Shield, $"Gain {amount} Shield"));
         }
 
         int ResolveAmount(BattleEffectContext context)

@@ -95,12 +95,12 @@ namespace M3P
             if (shownReduction > 0)
                 lines.Add(new TooltipLine(
                     TooltipLineKind.Other,
-                    $"Następny atak: -{shownReduction} obrażeń"));
+                    $"Next incoming attack: -{shownReduction} damage"));
 
             if (shownCounter > 0)
                 lines.Add(new TooltipLine(
                     TooltipLineKind.Damage,
-                    $"Kontratak: {shownCounter}"));
+                    $"Counterattack: {shownCounter}"));
         }
 
         public void AppendPersistentModifierTooltip(List<TooltipLine> lines, int magnitude)
@@ -109,13 +109,13 @@ namespace M3P
                 return;
 
             if (PersistentIncomingReduction)
-                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Redukcja obrażeń: {magnitude}"));
+                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Damage reduction: {magnitude}"));
 
             if (PersistentOutgoingBonus)
-                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Ataki: +{magnitude}"));
+                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Attacks: +{magnitude}"));
 
             if (PersistentOutgoingPenalty)
-                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Ataki: -{magnitude}"));
+                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Attacks: -{magnitude}"));
         }
 
         /// <summary>Runs on-hit effects against the attacker. Does not follow the authored effect target.</summary>

@@ -321,6 +321,16 @@ namespace M3P
             return true;
         }
 
+        /// <summary>Spends a shard cost. Returns false when the wallet cannot cover it.</summary>
+        public bool TrySpendShardCost(IReadOnlyList<TileTypeShardCost> costs)
+        {
+            if (!CanAffordCraftCost(costs))
+                return false;
+
+            SpendCraftCost(costs);
+            return true;
+        }
+
         /// <summary>
         /// Spends the craft cost and adds one owned copy. Returns false when the wallet cannot cover it.
         /// The new copy is not added to the battle deck; the cards panel does that.

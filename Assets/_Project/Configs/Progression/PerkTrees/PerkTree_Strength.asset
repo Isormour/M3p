@@ -12,10 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25723ff7ec4d09240a43340a6c620ca8, type: 3}
   m_Name: PerkTree_Strength
   m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkTree
-  Nazwa: Siła
-  _subtitle: OBRAŻENIA I POWER
-  _description: Obrażenia podstawowe, Power i premie za wiele dopasowań w jednej sekwencji.
+  Nazwa: "Strength"
+  _subtitle: "DAMAGE AND POWER"
+  _description: "Basic attack damage, Power, and bonuses for multiple matches in one sequence."
   id: 1
+  _starterSkills:
+  - {fileID: 11400000, guid: 0453756ee00942d1921ee3255a3cbb4d, type: 2}
+  - {fileID: 11400000, guid: d9bb4a11e7f748c5a089c9708e48a3df, type: 2}
+  - {fileID: 11400000, guid: c7f7dca3a573403fb8dcf6b2829b9acc, type: 2}
   perks:
   - StatLevel: 1
     Perk: {fileID: 11400000, guid: 4c8e1a7b2d9f46e0a1b3c5d7e9f10234, type: 2}

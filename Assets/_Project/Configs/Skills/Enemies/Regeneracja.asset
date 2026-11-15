@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
   m_Name: Regeneracja
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
-  <_skillName>k__BackingField: Regeneracja
-  _description: Nakłada regenerację. 2 HP na turę przez 5 tur, łącznie 10 HP.
+  <_skillName>k__BackingField: "Regeneration"
+  _description: "Apply Regeneration: 2 HP per turn for 5 turns, restoring 10 HP in total."
   _artwork: {fileID: 21300000, guid: c285b17238f58f747994138a3733911e, type: 3}
   _manaCosts: []
   _effects:
@@ -21,7 +21,12 @@ MonoBehaviour:
   _cooldown: 5
   _oncePerTurn: 0
   _distinctColorManaCost: 0
+  _manaPerDistinctColor: 1
+  _excludedFromUnlocks: 0
   _castPrompt: 0
   _physicalSkill: 0
   _archetype: 0
+  _playableDirector: {fileID: 3950459926759219309, guid: 76daeddbc25ce204098aeec34fb21489, type: 3}
+  _useProjectile: 0
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
   <_animationName>k__BackingField: GuardUp

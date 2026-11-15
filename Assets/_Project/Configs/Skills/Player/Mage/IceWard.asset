@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
   m_Name: IceWard
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
-  <_skillName>k__BackingField: Lodowa Osłona
-  _description: Daje 8 + 2 × Guard Shield. Następny atak przeciwnika zadaje o 10 × (1 + Guard) mniej obrażeń. Cooldown: 2 tury.
+  <_skillName>k__BackingField: "Ice Ward"
+  _description: "Gain 8 + 2 × Guard + Arcane Shield. The enemy's next attack deals 10 × (1 + Guard) less damage. Cooldown: 2 turns."
   _artwork: {fileID: 21300000, guid: 837546bc3b689c24cbe93327d8e231c3, type: 3}
   _manaCosts:
   - TileType: {fileID: 11400000, guid: d2fc95fcf0bc7f94d903f81e8e26b5f1, type: 2}
-    Amount: 4
-  - TileType: {fileID: 11400000, guid: 3b3c19c61b9ce4a4ea680cbd46f909a6, type: 2}
     Amount: 2
+  - TileType: {fileID: 11400000, guid: 3b3c19c61b9ce4a4ea680cbd46f909a6, type: 2}
+    Amount: 1
   _effects:
   - {fileID: 11400000, guid: 5077a1d2bf4e4bb2be44579b4bf15aa5, type: 2}
   - {fileID: 11400000, guid: c892ac69a5a5455c8c21fa27c991baca, type: 2}
@@ -29,4 +29,6 @@ MonoBehaviour:
   _castPrompt: 0
   _physicalSkill: 0
   _archetype: 2
+  _useProjectile: 0
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
   <_animationName>k__BackingField: BasicAttack

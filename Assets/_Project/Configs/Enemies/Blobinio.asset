@@ -12,18 +12,42 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e7355e1d850817a4a80f5aadf212fe7b, type: 3}
   m_Name: Blobinio
   m_EditorClassIdentifier: Assembly-CSharp::M3P.EnemyDefinition
-  _name: Blobinio glut
+  _name: "Blobinio Slime"
   _hardStats:
     Strength: 2
     Intelligence: 0
     Constitution: 3
     Agility: 1
+  _bonusMaxHp: 7
   _experienceReward: 50
   _statGrowthPerFloor:
     Strength: 2
     Intelligence: 0.34
     Constitution: 5
     Agility: 0.2
+  _bossDamageMultiplier: 2.1
+  _damageMultipliersByEffectiveFloor:
+  - 1.3936
+  - 1.3846
+  - 1.7307
+  - 1.7307
+  - 1.7307
+  - 1.7307
+  - 1.7307
+  - 1.295
+  - 1.675
+  - 1.675
+  _eliteDamageMultipliersByMapFloor:
+  - 0.8
+  - 1.1782
+  - 1.1725
+  - 1.4
+  - 1.4
+  - 1.4
+  - 1.206
+  - 1.23
+  - 1.6
+  - 1.4866
   _enemyCharacterPrefab: {fileID: 5361038239209304539, guid: 7f6fff7c585ec75448eb03cc5e3e3628, type: 3}
   _skills:
   - {fileID: 11400000, guid: 4a8e0b2a6c5d1b0a9f8e7d6c5b4a3901, type: 2}
@@ -37,11 +61,23 @@ MonoBehaviour:
     Replaces: {fileID: 0}
   _rankThresholds:
   - MinFloor: 1
-    RankName: Zwiadowca
+    RankName: "Scout"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: ef2a4cf0ede797f49a5408c07008b18f, type: 3}
   - MinFloor: 2
-    RankName: Wartownik
+    RankName: "Sentry"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: f007c196b7e58564fac80e2615195440, type: 3}
   - MinFloor: 3
-    RankName: Weteran
+    RankName: "Veteran"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: 75389bc93da7b67498c62c4111cbcb9d, type: 3}
   - MinFloor: 5
-    RankName: Herszt
+    RankName: "Chieftain"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: 9df8a21e05f092b4e989f1fb2a1a8b75, type: 3}
   _enemyModelPrefab: {fileID: 2277848116310433148, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}

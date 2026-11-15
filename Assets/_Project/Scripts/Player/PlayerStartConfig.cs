@@ -7,16 +7,13 @@ namespace M3P
 {
     /// <summary>
     /// The build a character begins the game with, used to seed a profile that has never been saved.
-    /// Skills, the starter card deck and the starter tile deck are authored as assets here and stored
-    /// as ids in the profile.
+    /// The starter card deck and tile deck are authored here and stored as ids in the profile.
+    /// Skills are granted later, when the player chooses their first perk tree.
     /// </summary>
     [CreateAssetMenu(fileName = "PlayerStartConfig", menuName = "M3P/Player Start Config", order = 2)]
     public class PlayerStartConfig : ScriptableObject
     {
         [SerializeField] HardStats _hardStats = new HardStats(1, 1, 1, 1);
-
-        [Tooltip("Skills the character owns from the first battle. Each must be registered in the skill config.")]
-        [SerializeField] SkillDefinition[] _skills = Array.Empty<SkillDefinition>();
 
         [Tooltip("Copied into a new profile as owned cards. Each copy becomes its own entry with empty upgrades.")]
         [SerializeField] DeckDefinition _starterDeck;
@@ -26,14 +23,11 @@ namespace M3P
 
         public HardStats HardStats => _hardStats;
 
-        public SkillDefinition[] Skills => _skills ?? Array.Empty<SkillDefinition>();
-
         public DeckDefinition StarterDeck => _starterDeck;
 
         public TileDeckDefinition StarterTileDeck => _starterTileDeck;
 
         public PlayerProfile CreateProfile(
-            SkillConfig skillConfig,
             CardConfig cardConfig,
             TileConfig tileConfig,
             StatProgressionConfig statProgression = null)
@@ -42,7 +36,6 @@ namespace M3P
             if (statProgression != null)
                 profile.HardStats = statProgression.CalculateHardStats(profile.PerkTreePoints);
 
-            CopyStartingSkills(profile, skillConfig);
             CopyStarterDeck(profile, cardConfig);
             CopyStarterTileDeck(profile, tileConfig);
             return profile;
@@ -92,29 +85,6 @@ namespace M3P
                 return;
 
             CopyStarterTileDeck(profile, tileConfig);
-        }
-
-        void CopyStartingSkills(PlayerProfile profile, SkillConfig skillConfig)
-        {
-            SkillDefinition[] skills = Skills;
-            for (int i = 0; i < skills.Length; i++)
-            {
-                SkillDefinition skill = skills[i];
-                if (skill == null)
-                    continue;
-
-                int skillId = skillConfig != null ? skillConfig.GetSkillId(skill) : SkillConfig.InvalidSkillId;
-                if (skillId == SkillConfig.InvalidSkillId)
-                {
-                    Debug.LogError(
-                        $"{nameof(PlayerStartConfig)} '{name}': skill '{skill.name}' is not registered in {nameof(SkillConfig)}, so it cannot be saved to a profile.",
-                        this);
-                    continue;
-                }
-
-                profile.Skills.Add(new CharacterSkill(skillId, 1, skill.name));
-                profile.TryAddSkillToLoadout(skillId);
-            }
         }
 
         void CopyStarterDeck(PlayerProfile profile, CardConfig cardConfig)

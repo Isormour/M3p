@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
   m_Name: LightningChain
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
-  <_skillName>k__BackingField: Łańcuch Błyskawic
-  _description: Zadaje 4 + 3 × Tempo × dodatkowe fale kaskady + Arcane obrażeń magicznych.
+  <_skillName>k__BackingField: "Lightning Chain"
+  _description: "Deal 4 + 3 × Tempo × additional cascade waves + Arcane magic damage."
   _artwork: {fileID: 21300000, guid: 8dd9e41adc3ebf84c88e69bd505731ad, type: 3}
   _manaCosts:
   - TileType: {fileID: 11400000, guid: 031c32cbcfb4a0f4e97c6bd265a1bb5d, type: 2}
@@ -28,4 +28,6 @@ MonoBehaviour:
   _castPrompt: 0
   _physicalSkill: 0
   _archetype: 2
+  _useProjectile: 1
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
   <_animationName>k__BackingField: BasicAttack

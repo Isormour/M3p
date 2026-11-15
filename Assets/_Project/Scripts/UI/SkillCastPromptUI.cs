@@ -47,7 +47,7 @@ namespace M3P
                 options.Add(new CardChoiceOption(label, new Color(0.2f, 0.25f, 0.35f, 1f), i));
             }
 
-            return UICardChoiceOverlay.Show(parent, "Karta", options, picked, cancelled);
+            return UICardChoiceOverlay.Show(parent, "Card", options, picked, cancelled);
         }
 
         public static UICardChoiceOverlay ShowManaColor(

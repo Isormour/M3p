@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
   m_Name: WideSwing
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
-  <_skillName>k__BackingField: Grad ciosów
-  _description: Wykonuje (liczba grup + Tempo) trafień. Każde zadaje 1 + floor(Power / 3) obrażeń fizycznych.
+  <_skillName>k__BackingField: "Flurry of Blows"
+  _description: "Strike (number of groups + Tempo) times. Each hit deals 1 + floor(Power / 3) physical damage."
   _artwork: {fileID: 21300000, guid: bfe02ec837c66094f923a6985577ee11, type: 3}
   _manaCosts:
   - TileType: {fileID: 11400000, guid: fb0e43bb3e72afb43a017902700c99c4, type: 2}
@@ -28,4 +28,6 @@ MonoBehaviour:
   _castPrompt: 0
   _physicalSkill: 1
   _archetype: 1
+  _useProjectile: 1
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
   <_animationName>k__BackingField: BasicAttack

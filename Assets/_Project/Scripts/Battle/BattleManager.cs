@@ -440,7 +440,8 @@ namespace M3P
                 MapNodeType.Battle));
             _activeEnemy = spawned;
 
-            _battleWorld?.SpawnEnemyModel(_activeEnemyDefinition.EnemyModelPrefab);
+            _battleWorld?.SpawnEnemyModel(_activeEnemyDefinition.EnemyModelPrefab, spawned.RuntimeSpec.MainTexture,
+                spawned.RuntimeSpec.MaterialTextures, spawned.RuntimeSpec.AdditionalBodyMaterial);
         }
 
         IEnumerator SetupTurnFlowRoutine()

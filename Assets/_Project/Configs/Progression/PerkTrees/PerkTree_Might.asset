@@ -13,9 +13,13 @@ MonoBehaviour:
   m_Name: PerkTree_Might
   m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkTree
   Nazwa: Might
-  _subtitle: "POWER I WYTRWA\u0141O\u015A\u0106"
-  _description: "Power i maksymalne HP, z premi\u0105 do walki przy niskim zdrowiu."
+  _subtitle: "POWER AND ENDURANCE"
+  _description: "Power and maximum HP, with a combat bonus at low health."
   id: 6
+  _starterSkills:
+  - {fileID: 11400000, guid: 0453756ee00942d1921ee3255a3cbb4d, type: 2}
+  - {fileID: 11400000, guid: d9bb4a11e7f748c5a089c9708e48a3df, type: 2}
+  - {fileID: 11400000, guid: c7f7dca3a573403fb8dcf6b2829b9acc, type: 2}
   perks:
   - StatLevel: 1
     Perk: {fileID: 11400000, guid: 0da4afce3c8f4720973ec8494985bdf2, type: 2}

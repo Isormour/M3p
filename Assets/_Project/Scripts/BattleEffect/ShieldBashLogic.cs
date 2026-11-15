@@ -39,9 +39,9 @@ namespace M3P
             if (amount > 0 && preview.DirectHit && preview.Caster != null)
                 amount += preview.Caster.GetPersistentOutgoingBonus();
             if (amount > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Zadaje {amount} obrażeń (aktualna tarcza)"));
+                lines.Add(new TooltipLine(TooltipLineKind.Damage, $"Deal {amount} damage (current Shield)"));
             else
-                lines.Add(new TooltipLine(TooltipLineKind.Other, "Zadaje obrażenia równe aktualnej tarczy"));
+                lines.Add(new TooltipLine(TooltipLineKind.Other, "Deal damage equal to current Shield"));
         }
     }
 }

@@ -10,11 +10,22 @@ namespace M3P
         [Tooltip("Parent for the spawned enemy model. Defaults to this transform.")]
         [SerializeField] Transform _characterParent;
 
+        [Tooltip("Shown only on a champion fight. A champion is an elite node.")]
+        [SerializeField] GameObject _championProps;
+
+        [Tooltip("Shown only on a boss fight.")]
+        [SerializeField] GameObject _bossProps;
+
         GameObject _spawnedCharacter;
+        Quaternion _championPropsRotation = Quaternion.identity;
+        Quaternion _bossPropsRotation = Quaternion.identity;
+        bool _championPropsRotationCached;
+        bool _bossPropsRotationCached;
 
         public override void Configure(string nodeId, EncounterConfig encounter, MapNodeType type, Color color)
         {
             base.Configure(nodeId, encounter, type, color);
+            ApplyEncounterProps();
             SpawnCharacterFromEncounter();
         }
 
@@ -59,6 +70,7 @@ namespace M3P
             _spawnedCharacter.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             _spawnedCharacter.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
             _spawnedCharacter.transform.rotation = Quaternion.Euler(0, 180, 0);
+            ApplyRankAppearance(_spawnedCharacter, enemy);
             ApplyFlyingMapHover(_spawnedCharacter);
             // Prefab colliders are battle-sized and would cover neighbouring nodes.
             Collider[] colliders = _spawnedCharacter.GetComponentsInChildren<Collider>(true);
@@ -111,6 +123,63 @@ namespace M3P
             box.center = volume.InverseTransformPoint(world.center);
             Vector3 size = volume.InverseTransformVector(world.size);
             box.size = new Vector3(Mathf.Abs(size.x), Mathf.Abs(size.y), Mathf.Abs(size.z));
+        }
+
+        /// <summary>Champion props follow elite nodes. Boss props follow boss nodes. Other fights hide both.</summary>
+        void ApplyEncounterProps()
+        {
+            if (_championProps == null)
+                _championProps = FindDirectChild("ChampionProps");
+            if (_bossProps == null)
+                _bossProps = FindDirectChild("BossProps");
+
+            if (_championProps != null)
+                _championProps.SetActive(NodeType == MapNodeType.Elite);
+            if (_bossProps != null)
+                _bossProps.SetActive(NodeType == MapNodeType.Boss);
+
+            // The marker root gets a random yaw with the pedestal. These props keep the map orientation.
+            FaceMap(_championProps, ref _championPropsRotation, ref _championPropsRotationCached);
+            FaceMap(_bossProps, ref _bossPropsRotation, ref _bossPropsRotationCached);
+        }
+
+        void FaceMap(GameObject props, ref Quaternion authoredLocal, ref bool cached)
+        {
+            if (props == null)
+                return;
+
+            if (!cached)
+            {
+                authoredLocal = props.transform.localRotation;
+                cached = true;
+            }
+
+            Quaternion mapRotation = transform.parent != null ? transform.parent.rotation : Quaternion.identity;
+            props.transform.rotation = mapRotation * authoredLocal;
+        }
+
+        GameObject FindDirectChild(string childName)
+        {
+            Transform child = transform.Find(childName);
+            return child != null ? child.gameObject : null;
+        }
+
+        void ApplyRankAppearance(GameObject root, EnemyDefinition enemy)
+        {
+            if (root == null || enemy == null)
+                return;
+
+            WorldCharacter character = root.GetComponent<WorldCharacter>();
+            if (character == null)
+                character = root.GetComponentInChildren<WorldCharacter>(true);
+            if (character == null)
+                return;
+
+            MapRunState run = ResolveRun();
+            int floor = run != null && run.FloorIndex > 0 ? run.FloorIndex : 1;
+            EnemyRuntimeSpec spec = EnemyProgressionResolver.Resolve(enemy, floor, NodeType);
+            character.ApplyRankTextures(spec.MainTexture, spec.MaterialTextures);
+            character.ApplyAdditionalBodyMaterial(spec.AdditionalBodyMaterial, spec.MaterialTextures);
         }
 
         static void ApplyFlyingMapHover(GameObject root)

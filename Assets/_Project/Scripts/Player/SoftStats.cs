@@ -392,10 +392,17 @@ namespace M3P
             PerkRules?.OnPlayerTurnStarted(this);
         }
 
-        public void ResetActionPoints(HardStats hard, StatProgressionConfig progression, TalentBonuses talents = default)
+        public void ResetActionPoints(
+            HardStats hard,
+            StatProgressionConfig progression,
+            TalentBonuses talents = default,
+            IReadOnlyList<PerkTreePoints> treePoints = null)
         {
             progression ??= StatProgressionConfig.CreateDefault();
-            MaxActionPoints = progression.CalculateMaxActionPoints(hard, talents);
+            SoftStatValues calculated = treePoints != null
+                ? progression.CalculateSoftStats(treePoints, talents)
+                : progression.CalculateSoftStats(hard, talents);
+            MaxActionPoints = calculated.MaxActionPoints;
             CurrentActionPoints = MaxActionPoints;
             NotifyChanged();
         }

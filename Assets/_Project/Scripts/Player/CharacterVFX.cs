@@ -268,6 +268,21 @@ public class CharacterVFX : MonoBehaviour
             _block.SetColor(OutlineMidColorId, parameters.OutlineMidColor);
             _block.SetColor(OutlineHighColorId, parameters.OutlineHighColor);
             renderer.SetPropertyBlock(_block);
+            // Rank textures use per-material blocks, which override the renderer-wide block.
+            // Update existing slot blocks too, preserving their texture overrides.
+            int materialCount = renderer.sharedMaterials.Length;
+            for (int slot = 0; slot < materialCount; slot++)
+            {
+                _block.Clear();
+                renderer.GetPropertyBlock(_block, slot);
+                if (_block.isEmpty)
+                    continue;
+                _block.SetFloat(OutlineSizeId, parameters.OutlineSize);
+                _block.SetVector(OutlineMultNPowerId, parameters.OutlineMultNPower);
+                _block.SetColor(OutlineMidColorId, parameters.OutlineMidColor);
+                _block.SetColor(OutlineHighColorId, parameters.OutlineHighColor);
+                renderer.SetPropertyBlock(_block, slot);
+            }
         }
     }
 

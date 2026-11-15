@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
   m_Name: BattleFrenzy
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
-  <_skillName>k__BackingField: Szał Bitewny
-  _description: Zadaje 4 + 3 × wcześniejsze sekwencje + (Power − 1) + floor(Tempo / 2) obrażeń fizycznych.
+  <_skillName>k__BackingField: "Battle Frenzy"
+  _description: "Deal 4 + 3 × previous sequences + (Power − 1) + floor(Tempo / 2) physical damage."
   _artwork: {fileID: 21300000, guid: 461dea54e6feaee44ad12dcd68e8f7db, type: 3}
   _manaCosts:
   - TileType: {fileID: 11400000, guid: fb0e43bb3e72afb43a017902700c99c4, type: 2}
@@ -28,4 +28,6 @@ MonoBehaviour:
   _castPrompt: 0
   _physicalSkill: 1
   _archetype: 1
+  _useProjectile: 1
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
   <_animationName>k__BackingField: BasicAttack

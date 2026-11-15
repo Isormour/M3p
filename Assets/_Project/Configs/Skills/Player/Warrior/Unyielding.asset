@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
   m_Name: Unyielding
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
-  <_skillName>k__BackingField: Nieugięty
-  _description: Daje 12 + 3 × Guard Shield i wzmacnia następny atak o (25 + 5 × Power)%. Poniżej 30% HP daje 1 AP. Cooldown: 4 tury.
+  <_skillName>k__BackingField: "Unyielding"
+  _description: "Gain 12 + 3 × Guard Shield and boost your next attack by (25 + 5 × Power)%. Below 30% HP, gain 1 AP. Cooldown: 4 turns."
   _artwork: {fileID: 21300000, guid: 73b1b5b631f951148a89c1c0059d6df7, type: 3}
   _manaCosts:
   - TileType: {fileID: 11400000, guid: 031c32cbcfb4a0f4e97c6bd265a1bb5d, type: 2}
@@ -30,4 +30,6 @@ MonoBehaviour:
   _castPrompt: 0
   _physicalSkill: 0
   _archetype: 1
+  _useProjectile: 0
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
   <_animationName>k__BackingField: BasicAttack

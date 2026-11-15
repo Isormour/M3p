@@ -63,22 +63,25 @@ namespace M3P
             string text;
             if (_status.DecayOneStackPerTurn)
             {
+                string tick = _status.StatusType == EStatusType.Burn
+                    ? "Each turn: 1 damage per stack, then lose 1 stack."
+                    : "Each turn: trigger the status effect, then lose 1 stack.";
                 text = stacks > 1
-                    ? $"Nakłada {stacks} stacki: {name}. Co turę obrażenia równe stackom, potem −1 stack."
-                    : $"Nakłada {name}. Co turę obrażenia równe stackom, potem −1 stack.";
+                    ? $"Apply {stacks} stacks of {name}. {tick}"
+                    : $"Apply {name}. {tick}";
             }
             else
             {
                 string duration = _status.PersistUntilConsumed
-                    ? "do następnego ataku"
-                    : $"{durationTurns} tury";
+                    ? "until the next attack"
+                    : $"turns: {durationTurns}";
                 text = stacks > 1
-                    ? $"Nakłada {stacks} stacki: {name} ({duration})"
-                    : $"Nakłada {name} ({duration})";
+                    ? $"Apply {stacks} stacks of {name} ({duration})"
+                    : $"Apply {name} ({duration})";
             }
             lines.Add(new TooltipLine(TooltipLineKind.Status, text));
             if (_actionPointDrain > 0)
-                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Odbiera {_actionPointDrain} AP"));
+                lines.Add(new TooltipLine(TooltipLineKind.Other, $"Remove {_actionPointDrain} AP"));
 
             int reduction = ScaledReduction(properties);
             int counter = ScaledCounter(properties);

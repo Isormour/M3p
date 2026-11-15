@@ -12,17 +12,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25723ff7ec4d09240a43340a6c620ca8, type: 3}
   m_Name: PerkTree_Intelligence
   m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkTree
-  Nazwa: Inteligencja
-  _subtitle: ARCANA I RĘKA
-  _description: Arcane, większa początkowa ręka i premie za jedno duże dopasowanie.
+  Nazwa: "Intelligence"
+  _subtitle: "ARCANE AND HAND SIZE"
+  _description: "Arcane, a larger starting hand, and bonuses for a single large match."
   id: 2
+  _starterSkills:
+  - {fileID: 11400000, guid: cfce880aa0d64955bbf2d72f37ae6bc0, type: 2}
+  - {fileID: 11400000, guid: d9bb4a11e7f748c5a089c9708e48a3df, type: 2}
+  - {fileID: 11400000, guid: adfef0cfccde47958fecc77538fef10c, type: 2}
   perks:
   - StatLevel: 1
-    Perk: {fileID: 11400000, guid: 7b410b4658cf4ac28d2847af05996bdc, type: 2}
+    Perk: {fileID: 11400000, guid: 622d582cc1f4475f85c87be0f07d0d56, type: 2}
   - StatLevel: 2
     Perk: {fileID: 11400000, guid: 64bc0e75a1d64ea7a6d0881253acf980, type: 2}
   - StatLevel: 3
-    Perk: {fileID: 11400000, guid: 7b410b4658cf4ac28d2847af05996bdc, type: 2}
+    Perk: {fileID: 11400000, guid: 622d582cc1f4475f85c87be0f07d0d56, type: 2}
   - StatLevel: 4
     Perk: {fileID: 11400000, guid: 7b410b4658cf4ac28d2847af05996bdc, type: 2}
   - StatLevel: 5

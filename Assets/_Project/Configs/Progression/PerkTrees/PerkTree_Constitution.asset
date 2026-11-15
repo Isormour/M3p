@@ -12,10 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25723ff7ec4d09240a43340a6c620ca8, type: 3}
   m_Name: PerkTree_Constitution
   m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkTree
-  Nazwa: Kondycja
-  _subtitle: HP I OBRONA
-  _description: Maksymalne HP, Guard, Recovery i przetrwanie przy niskim zdrowiu.
+  Nazwa: "Constitution"
+  _subtitle: "HP AND DEFENSE"
+  _description: "Maximum HP, Guard, Recovery, and survival at low health."
   id: 3
+  _starterSkills:
+  - {fileID: 11400000, guid: d9bb4a11e7f748c5a089c9708e48a3df, type: 2}
+  - {fileID: 11400000, guid: c7f7dca3a573403fb8dcf6b2829b9acc, type: 2}
+  - {fileID: 11400000, guid: 0453756ee00942d1921ee3255a3cbb4d, type: 2}
   perks:
   - StatLevel: 1
     Perk: {fileID: 11400000, guid: cd3b4d185bcd4cc6b7ed8bbf0a1f5280, type: 2}

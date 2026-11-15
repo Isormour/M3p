@@ -83,4 +83,7 @@ public class CharacterAnimation : MonoBehaviour
     {
 
     }
+    void Shoot()
+    {
+    }
 }

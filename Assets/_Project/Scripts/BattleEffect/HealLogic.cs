@@ -34,7 +34,7 @@ namespace M3P
             if (amount <= 0)
                 return;
 
-            lines.Add(new TooltipLine(TooltipLineKind.Heal, $"Leczy {amount}"));
+            lines.Add(new TooltipLine(TooltipLineKind.Heal, $"Restore {amount} HP"));
         }
 
         int ResolveAmount(BattleEffectContext context)

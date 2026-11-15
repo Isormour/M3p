@@ -175,6 +175,10 @@ PrefabInstance:
       value: 1.2
       objectReference: {fileID: 0}
     - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: hand
+      value:
+      objectReference: {fileID: 3916573792671718031}
+    - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
       propertyPath: _animator
       value: 
       objectReference: {fileID: 5757883862630960746}
@@ -324,3 +328,8 @@ MonoBehaviour:
   m_ReferenceObject: {fileID: 0}
   m_DistanceToObject: 20
   m_Multithread: 1
+--- !u!4 &3916573792671718031 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2943382084370000244, guid: 3b6d04847eea7a74183f41bb1008b87b, type: 3}
+  m_PrefabInstance: {fileID: 2198470700121076731}
+  m_PrefabAsset: {fileID: 0}

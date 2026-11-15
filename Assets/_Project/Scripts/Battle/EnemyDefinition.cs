@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace M3P
 {
@@ -30,6 +31,56 @@ namespace M3P
         [SerializeField] StatGrowthPerFloor _statGrowthPerFloor;
 
         public StatGrowthPerFloor StatGrowthPerFloor => _statGrowthPerFloor;
+
+        [Tooltip("Damage multipliers by effective floor for normal fights and elites without an override. Elites use floor + 1. Empty means 1; later floors reuse the last entry. Bosses use their own multipliers.")]
+        [FormerlySerializedAs("_ordinaryDamageMultipliersByFloor")]
+        [SerializeField] float[] _damageMultipliersByEffectiveFloor = System.Array.Empty<float>();
+
+        public float GetDamageMultiplier(int effectiveFloor)
+        {
+            if (_damageMultipliersByEffectiveFloor == null || _damageMultipliersByEffectiveFloor.Length == 0)
+                return 1f;
+
+            int index = Mathf.Clamp(Mathf.Max(1, effectiveFloor) - 1, 0, _damageMultipliersByEffectiveFloor.Length - 1);
+            float value = _damageMultipliersByEffectiveFloor[index];
+            return value > 0f && !float.IsInfinity(value) ? value : 1f;
+        }
+
+        [Tooltip("Optional elite K by actual map floor. Missing, zero or invalid entries use the effective-floor table. Short arrays do not repeat their last entry.")]
+        [SerializeField] float[] _eliteDamageMultipliersByMapFloor = System.Array.Empty<float>();
+
+        public float GetEliteDamageMultiplier(int mapFloor)
+        {
+            int floor = Mathf.Max(1, mapFloor);
+            int index = floor - 1;
+            if (_eliteDamageMultipliersByMapFloor != null && index < _eliteDamageMultipliersByMapFloor.Length)
+            {
+                float value = _eliteDamageMultipliersByMapFloor[index];
+                if (value > 0f && !float.IsInfinity(value))
+                    return value;
+            }
+
+            return GetDamageMultiplier(EnemyProgressionResolver.GetEffectiveFloor(floor, MapNodeType.Elite));
+        }
+
+        [Tooltip("Fallback boss damage multiplier when no valid map-floor override is authored.")]
+        [Min(0.01f), SerializeField] float _bossDamageMultiplier = 2.1f;
+
+        public float BossDamageMultiplier =>
+            _bossDamageMultiplier > 0f && !float.IsInfinity(_bossDamageMultiplier) ? _bossDamageMultiplier : 1f;
+
+        [Tooltip("Optional boss damage multipliers by actual map floor. Later floors reuse the last entry. Missing or invalid entries use Boss Damage Multiplier.")]
+        [SerializeField] float[] _bossDamageMultipliersByMapFloor = System.Array.Empty<float>();
+
+        public float GetBossDamageMultiplier(int mapFloor)
+        {
+            if (_bossDamageMultipliersByMapFloor == null || _bossDamageMultipliersByMapFloor.Length == 0)
+                return BossDamageMultiplier;
+
+            int index = Mathf.Clamp(Mathf.Max(1, mapFloor) - 1, 0, _bossDamageMultipliersByMapFloor.Length - 1);
+            float value = _bossDamageMultipliersByMapFloor[index];
+            return value > 0f && !float.IsInfinity(value) ? value : BossDamageMultiplier;
+        }
 
         [Tooltip("Visual / behaviour prefab for this enemy. Root must have EnemyBattleCharacter.")]
         [SerializeField] EnemyBattleCharacter _enemyCharacterPrefab;

@@ -30,6 +30,9 @@ namespace M3P
         Color _borderBaseColor;
         bool _hasBorderBaseColor;
         bool _hovered;
+        TileTypeManaCost[] _displayedManaCosts;
+        int _displayedDistinctColorCount;
+        int _displayedManaPerColor;
 
         readonly List<UIPlayerPanelSkillsCostLabel> _costLabels = new List<UIPlayerPanelSkillsCostLabel>();
 
@@ -66,7 +69,21 @@ namespace M3P
                 return;
             }
 
-            TileTypeManaCost[] costs = skill.ManaCosts;
+            WireButton();
+            BindTooltip();
+            RefreshInteractable();
+        }
+
+        void RefreshCostLabels()
+        {
+            if (_skill == null || _costLabelPrefab == null)
+                return;
+
+            TileTypeManaCost[] costs = _skill.ManaCosts;
+            if (DisplayedCostsMatch(costs))
+                return;
+
+            ClearCostLabels();
             for (int i = 0; i < costs.Length; i++)
             {
                 if (costs[i].Amount <= 0 || costs[i].TileType == null)
@@ -78,17 +95,36 @@ namespace M3P
                 _costLabels.Add(label);
             }
 
-            if (skill.DistinctColorManaCost > 0)
+            if (_skill.DistinctColorManaCost > 0)
             {
                 UIPlayerPanelSkillsCostLabel label = Instantiate(_costLabelPrefab, _costContainer);
                 label.name = "CostLabel_DistinctColors";
-                label.Configure(null, skill.DistinctColorManaCost * skill.ManaPerDistinctColor);
+                label.ConfigureDistinctColors(_skill.DistinctColorManaCost, _skill.ManaPerDistinctColor);
                 _costLabels.Add(label);
             }
 
-            WireButton();
-            BindTooltip();
-            RefreshInteractable();
+            // Copy the entries so changes to the existing config array are detected too.
+            _displayedManaCosts = (TileTypeManaCost[])costs.Clone();
+            _displayedDistinctColorCount = _skill.DistinctColorManaCost;
+            _displayedManaPerColor = _skill.ManaPerDistinctColor;
+        }
+
+        bool DisplayedCostsMatch(TileTypeManaCost[] costs)
+        {
+            if (_displayedManaCosts == null
+                || _displayedManaCosts.Length != costs.Length
+                || _displayedDistinctColorCount != _skill.DistinctColorManaCost
+                || _displayedManaPerColor != _skill.ManaPerDistinctColor)
+                return false;
+
+            for (int i = 0; i < costs.Length; i++)
+            {
+                if (_displayedManaCosts[i].TileType != costs[i].TileType
+                    || _displayedManaCosts[i].Amount != costs[i].Amount)
+                    return false;
+            }
+
+            return true;
         }
 
         void BindTooltip()
@@ -172,7 +208,7 @@ namespace M3P
             HidePrompt();
             manager.BeginSkillChoice();
             _promptOverlay = SkillCastPromptUI.ShowManaColor(
-                "Z",
+                "From",
                 _player.Stats?.Soft,
                 _skill,
                 excludeTypeId: -1,
@@ -186,7 +222,7 @@ namespace M3P
         {
             HidePrompt();
             _promptOverlay = SkillCastPromptUI.ShowManaColor(
-                "Na",
+                "To",
                 _player.Stats?.Soft,
                 _skill,
                 excludeTypeId: sourceTypeId,
@@ -242,6 +278,8 @@ namespace M3P
 
         public void RefreshInteractable()
         {
+            RefreshCostLabels();
+
             BattleManager manager = BattleManager.Instance;
             if (manager == null || !manager.IsPlayerTurn)
                 HidePrompt();
@@ -475,10 +513,14 @@ namespace M3P
             for (int i = 0; i < _costLabels.Count; i++)
             {
                 if (_costLabels[i] != null)
+                {
+                    _costLabels[i].gameObject.SetActive(false);
                     Destroy(_costLabels[i].gameObject);
+                }
             }
 
             _costLabels.Clear();
+            _displayedManaCosts = null;
         }
 
         void OnDestroy()

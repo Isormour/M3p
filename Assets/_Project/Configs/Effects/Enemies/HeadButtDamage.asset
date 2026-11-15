@@ -21,9 +21,10 @@ MonoBehaviour:
     - rid: 1000
       type: {class: FloorScaledDamageLogic, ns: M3P, asm: Assembly-CSharp}
       data:
-        _amount: 3
+        _baseAmount: 2
+        _amount: 2
         _scaleFloor: 1
-        _scaleRank: 1
+        _scaleRank: 0
         _hitCount: 1
         _scaleHitsByFloor: 0
         _physical: 1

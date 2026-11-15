@@ -169,6 +169,7 @@ namespace M3P
 
         /// <summary>
         /// Opens a perk tree at one point. The point is the tree's starting value, not a spent level-up point.
+        /// The first tree also supplies the character's three starting skills and loadout.
         /// </summary>
         public bool TryUnlockPerkTree(PerkTree tree)
         {
@@ -179,9 +180,45 @@ namespace M3P
             if (profile == null || profile.IsPerkTreeUnlocked(tree.Id))
                 return false;
 
+            bool firstTree = profile.PerkTreePoints == null || profile.PerkTreePoints.Count == 0;
+            if (firstTree && !TryApplyStarterSkills(profile, tree))
+                return false;
+
             profile.SetPerkTreePoints(tree.Id, 1);
             profile.HardStats = StatProgression.CalculateHardStats(profile.PerkTreePoints);
             _profiles.Save();
+            return true;
+        }
+
+        bool TryApplyStarterSkills(PlayerProfile profile, PerkTree tree)
+        {
+            SkillDefinition[] definitions = tree.StarterSkills;
+            SkillConfig catalog = _config != null ? _config.Skills : null;
+            if (catalog == null || definitions.Length != PerkTree.StarterSkillCount)
+            {
+                Debug.LogError($"Cannot unlock first tree '{tree.name}': assign a skill catalog and exactly {PerkTree.StarterSkillCount} starter skills.", tree);
+                return false;
+            }
+
+            var skills = new List<CharacterSkill>(definitions.Length);
+            var loadout = new List<int>(definitions.Length);
+            for (int i = 0; i < definitions.Length; i++)
+            {
+                SkillDefinition skill = definitions[i];
+                int skillId = catalog.GetSkillId(skill);
+                if (skillId == SkillConfig.InvalidSkillId || loadout.Contains(skillId))
+                {
+                    Debug.LogError($"Cannot unlock first tree '{tree.name}': starter skill {i + 1} is missing, unregistered or duplicated.", tree);
+                    return false;
+                }
+
+                skills.Add(new CharacterSkill(skillId, 1, skill.name));
+                loadout.Add(skillId);
+            }
+
+            // Validate the complete set before replacing skills from an unchosen older profile.
+            profile.Skills = skills;
+            profile.SkillLoadout = loadout;
             return true;
         }
 

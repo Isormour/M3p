@@ -1,6 +1,7 @@
 using Match3;
 using System;
 using UnityEngine;
+using UnityEngine.Playables;
 
 namespace M3P
 {
@@ -43,6 +44,13 @@ namespace M3P
         [Tooltip("Marks a skill whose damage is physical.")]
         [SerializeField] bool _physicalSkill;
         [SerializeField] SkillArchetype _archetype;
+        [Tooltip("When disabled, opponent hit reactions play immediately without launching a projectile. Damage is unchanged.")]
+        [SerializeField] bool _useProjectile = true;
+        [Tooltip("Optional projectile prefab. Empty uses VFXManager's default. A Projectile clip with its own prefab overrides this. Requires Use Projectile.")]
+        [SerializeField] GameObject _projectilePrefab;
+        [Tooltip("Timeline prefab. Spawned on the caster, player or enemy. Activation clips turn particle systems on and off. An Animation track on this director plays on the caster.")]
+        [SerializeField] PlayableDirector _playableDirector;
+        [Tooltip("Animator trigger used when Playable Director is empty, or when its timeline has no animation clip.")]
         [field: SerializeField] public string _animationName { private set; get; } = "BasicAttack";
 
         [NonSerialized] bool _loggedUnresolvedTileType;
@@ -53,6 +61,12 @@ namespace M3P
         public string Description => _description ?? string.Empty;
 
         public Sprite Artwork => _artwork;
+
+        public bool UseProjectile => _useProjectile;
+
+        public GameObject ProjectilePrefab => _projectilePrefab;
+
+        public PlayableDirector PlayableDirector => _playableDirector;
 
         public TileTypeManaCost[] ManaCosts => _manaCosts ?? Array.Empty<TileTypeManaCost>();
 

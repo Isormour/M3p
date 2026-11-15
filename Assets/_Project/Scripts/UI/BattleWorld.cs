@@ -19,6 +19,8 @@ namespace M3P
         BattleCharacter _boundEnemy;
 
         [SerializeField] BattleEnviormentSettings[] Backgrounds;
+        [Tooltip("Timeline for each swing of the match flurry. A Projectile clip on it releases the projectile.")]
+        [SerializeField] SkillDefinition _basicAttack;
 
         public Transform PlayerVfxPoint =>
             _playerVfxPoint != null
@@ -108,7 +110,9 @@ namespace M3P
             return null;
         }
 
-        public void SpawnEnemyModel(GameObject prefab)
+        public void SpawnEnemyModel(GameObject prefab, Texture2D mainTexture = null,
+            System.Collections.Generic.IReadOnlyList<EnemyMaterialTexture> materialTextures = null,
+            Material additionalBodyMaterial = null)
         {
             ClearEnemyModel();
 
@@ -119,6 +123,8 @@ namespace M3P
             _spawnedEnemyModel = Instantiate(prefab, parent);
             _spawnedEnemyModel.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             _enemyCharacter = ResolveWorldCharacter(_spawnedEnemyModel);
+            _enemyCharacter?.ApplyRankTextures(mainTexture, materialTextures);
+            _enemyCharacter?.ApplyAdditionalBodyMaterial(additionalBodyMaterial, materialTextures);
         }
 
         public void BindStatusVisuals(BattleCharacter player, BattleCharacter enemy)
@@ -199,7 +205,28 @@ namespace M3P
         /// <summary>One swing of the flurry the player throws once the board has settled.</summary>
         public void NotifyBasicAttack()
         {
-            _playerCharacter?.PlayAttack("BasicAttack");
+            if (_playerCharacter == null)
+                return;
+
+            if (_basicAttack != null && _basicAttack.PlayableDirector != null)
+                _playerCharacter.PlaySkill(_basicAttack);
+            else
+                _playerCharacter.PlayAttack("BasicAttack");
+        }
+
+        /// <summary>
+        /// Hands a projectile to the player's active timeline. Returns false when that timeline has no
+        /// Projectile clip, so the caller launches immediately.
+        /// </summary>
+        public bool ArmPlayerProjectile(SkillProjectileRequest request)
+        {
+            return _playerCharacter != null && _playerCharacter.ArmProjectile(request);
+        }
+
+        public bool ArmCasterProjectile(bool playerCaster, SkillProjectileRequest request)
+        {
+            WorldCharacter character = playerCaster ? _playerCharacter : _enemyCharacter;
+            return character != null && character.ArmProjectile(request);
         }
 
         public void NotifyPlayerHit(bool died, int damage, bool shielded = false)
@@ -232,14 +259,7 @@ namespace M3P
 
         static void PlayCharacterAttack(WorldCharacter character, SkillDefinition skill)
         {
-            if (character == null)
-                return;
-
-            string triggerName = skill != null && !string.IsNullOrEmpty(skill._animationName)
-                ? skill._animationName
-                : "BasicAttack";
-
-            character.PlayAttack(triggerName);
+            character?.PlaySkill(skill);
         }
 
         void OnDestroy()

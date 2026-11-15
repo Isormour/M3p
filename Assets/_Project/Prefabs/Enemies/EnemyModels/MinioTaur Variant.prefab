@@ -8,6 +8,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: _rankTextureRenderers.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: _rankTextureRenderers.Array.data[0]
+      value: 
+      objectReference: {fileID: 7400215725667182256}
     - target: {fileID: 1115763737850123812, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
       propertyPath: 'renderers.Array.data[0]'
       value: 
@@ -16,6 +24,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: MinioTaur Variant
       objectReference: {fileID: 0}
+    - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: hand
+      value:
+      objectReference: {fileID: 6398376971047228054}
     - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
       propertyPath: _animator
       value: 
@@ -218,3 +230,8 @@ MonoBehaviour:
   _rayUp: 0.5
   _rayDown: 1.5
   _footSoleOffset: 0.02
+--- !u!4 &6398376971047228054 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2943382084370000244, guid: 9327b31a01eeeae47b103c0acdd5f9ae, type: 3}
+  m_PrefabInstance: {fileID: 8075912483955555298}
+  m_PrefabAsset: {fileID: 0}

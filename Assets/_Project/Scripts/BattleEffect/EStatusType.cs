@@ -8,5 +8,6 @@ namespace M3P
         Riposte = 2,
         Confusion = 3,
         Poison = 4,
+        Rage = 5,
     }
 }

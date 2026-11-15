@@ -12,8 +12,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
   m_Name: BasicAttackSkill
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
+  <_skillName>k__BackingField: Skill Name
+  _description: 
   _artwork: {fileID: 21300000, guid: 19514f8f288240e384f551339a260460, type: 3}
   _manaCosts: []
   _effects:
   - {fileID: 11400000, guid: c4e8f1a23b5d4678901234567890abcd, type: 2}
+  _cooldown: 0
+  _oncePerTurn: 0
+  _distinctColorManaCost: 0
+  _manaPerDistinctColor: 1
   _excludedFromUnlocks: 1
+  _castPrompt: 0
+  _physicalSkill: 0
+  _archetype: 0
+  _playableDirector: {fileID: 3950459926759219309, guid: 3166187970c276a4182eafacda2a36d9, type: 3}
+  _useProjectile: 1
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
+  <_animationName>k__BackingField: BasicAttack

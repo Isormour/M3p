@@ -17,6 +17,10 @@ PrefabInstance:
       value: SuroFajstos Variant
       objectReference: {fileID: 0}
     - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: hand
+      value:
+      objectReference: {fileID: 1507326241525881180}
+    - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
       propertyPath: _animator
       value: 
       objectReference: {fileID: 8313329177148034488}
@@ -196,5 +200,10 @@ SkinnedMeshRenderer:
 --- !u!95 &8313329177148034488 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: d3f7fa534fbad2843b8bf8e36f142579, type: 3}
+  m_PrefabInstance: {fileID: 2464724083377188905}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1507326241525881180 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -5269373992140379787, guid: d3f7fa534fbad2843b8bf8e36f142579, type: 3}
   m_PrefabInstance: {fileID: 2464724083377188905}
   m_PrefabAsset: {fileID: 0}

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Burn
   m_EditorClassIdentifier: Assembly-CSharp::M3P.StatusEffectDefinition
   _statusType: 1
-  _displayName: Podpalenie
-  _description: Na początku każdej tury zadaje obrażenia równe liczbie stacków, potem traci jeden stack. Płonie aż do wyczerpania.
+  _displayName: "Burn"
+  _description: "At the start of the affected character's turn, deal 1 damage per stack, then lose 1 stack. Lasts until all stacks are gone."
   _icon: {fileID: 21300000, guid: 4701e1fd58f1e8c40bc730325cc54afd, type: 3}
   _durationTurns: 2
   _canStack: 1

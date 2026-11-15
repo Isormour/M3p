@@ -25,6 +25,18 @@ MonoBehaviour:
     Intelligence: 0
     Constitution: 5
     Agility: 0
+  _bossDamageMultiplier: 2.1
+  _bossDamageMultipliersByMapFloor:
+  - 1.89
+  - 2.1887
+  - 1.9032
+  - 1.7129
+  - 1.6177
+  - 1.4333
+  - 1.1432
+  - 1.1432
+  - 1.0025
+  - 0.882
   _enemyCharacterPrefab: {fileID: 5361038239209304539, guid: 7f6fff7c585ec75448eb03cc5e3e3628, type: 3}
   _skills:
   - {fileID: 11400000, guid: 0a4a6c8b2a1b7d6c5b4a392810feed01, type: 2}
@@ -44,5 +56,55 @@ MonoBehaviour:
   - Skill: {fileID: 11400000, guid: 11aa0fe1b2c34d5e6f708192a3b4c5d6, type: 2}
     MinFloor: 5
     Replaces: {fileID: 0}
-  _rankThresholds: []
+  _rankThresholds:
+  - MinFloor: 1
+    RankName: "Scout"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 0}
+    MaterialTextures:
+    - Material: {fileID: 2100000, guid: 15cc02af58e2a8643b9ea200a78eadb8, type: 2}
+      Texture: {fileID: 2800000, guid: 51a119e88e63466c9755bda51b11c2bb, type: 3}
+    - Material: {fileID: 2100000, guid: 753e46b8642cbd14a96de4481943d531, type: 2}
+      Texture: {fileID: 2800000, guid: 7b067a93664e4e0a822d130ec88e3d72, type: 3}
+  - MinFloor: 2
+    RankName: "Sentry"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 0}
+    MaterialTextures:
+    - Material: {fileID: 2100000, guid: 15cc02af58e2a8643b9ea200a78eadb8, type: 2}
+      Texture: {fileID: 2800000, guid: 619cd3bbaf97446a9808eebdbca6c1b7, type: 3}
+    - Material: {fileID: 2100000, guid: 753e46b8642cbd14a96de4481943d531, type: 2}
+      Texture: {fileID: 2800000, guid: 9b6bd74c227b435f9ef0781f183cefa6, type: 3}
+  - MinFloor: 3
+    RankName: "Arsonist"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 0}
+    MaterialTextures:
+    - Material: {fileID: 2100000, guid: 15cc02af58e2a8643b9ea200a78eadb8, type: 2}
+      Texture: {fileID: 2800000, guid: 5d9f190a5c6042418ab8af949e7f0edf, type: 3}
+    - Material: {fileID: 2100000, guid: 753e46b8642cbd14a96de4481943d531, type: 2}
+      Texture: {fileID: 2800000, guid: fb8de838549943318bc2e3fa72f5d333, type: 3}
+  - MinFloor: 5
+    RankName: "Veteran"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 0}
+    MaterialTextures:
+    - Material: {fileID: 2100000, guid: 15cc02af58e2a8643b9ea200a78eadb8, type: 2}
+      Texture: {fileID: 2800000, guid: 8bebc851de86460cb05769eb511a774e, type: 3}
+    - Material: {fileID: 2100000, guid: 753e46b8642cbd14a96de4481943d531, type: 2}
+      Texture: {fileID: 2800000, guid: 3f0452e360e540499a6813beb87022b3, type: 3}
+  - MinFloor: 8
+    RankName: "Chieftain"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 0}
+    MaterialTextures:
+    - Material: {fileID: 2100000, guid: 15cc02af58e2a8643b9ea200a78eadb8, type: 2}
+      Texture: {fileID: 2800000, guid: fe6ba9062c1d44368f75dac5cb2b0ad3, type: 3}
+    - Material: {fileID: 2100000, guid: 753e46b8642cbd14a96de4481943d531, type: 2}
+      Texture: {fileID: 2800000, guid: a77783b41fb241dfa774b27734974791, type: 3}
   _enemyModelPrefab: {fileID: 6597027836471231214, guid: 9a8fa711845d3d04eae456ceaf9bdfb3, type: 3}

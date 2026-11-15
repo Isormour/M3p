@@ -18,6 +18,7 @@ namespace M3P.Editor
         SerializedProperty _perks;
         SerializedProperty _statBonus;
         SerializedProperty _icon;
+        SerializedProperty _starterSkills;
 
         void OnEnable()
         {
@@ -28,6 +29,7 @@ namespace M3P.Editor
             _perks = serializedObject.FindProperty("perks");
             _statBonus = serializedObject.FindProperty("TreeStatBonusLogic");
             _icon = serializedObject.FindProperty("_icon");
+            _starterSkills = serializedObject.FindProperty("_starterSkills");
             CacheLogicTypes();
         }
 
@@ -39,6 +41,7 @@ namespace M3P.Editor
             EditorGUILayout.PropertyField(_description, new GUIContent("Description"));
             EditorGUILayout.PropertyField(_id);
             EditorGUILayout.PropertyField(_icon);
+            EditorGUILayout.PropertyField(_starterSkills, true);
             EditorGUILayout.PropertyField(_perks, true);
             DrawLogicSection();
             serializedObject.ApplyModifiedProperties();

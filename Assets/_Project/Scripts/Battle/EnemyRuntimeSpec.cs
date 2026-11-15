@@ -19,7 +19,11 @@ namespace M3P
             string displayName,
             int effectiveFloor,
             MapNodeType encounterType,
-            int rank)
+            int rank,
+            UnityEngine.Texture2D mainTexture = null,
+            float damageMultiplier = 1f,
+            EnemyMaterialTexture[] materialTextures = null,
+            UnityEngine.Material additionalBodyMaterial = null)
         {
             Definition = definition;
             HardStats = hardStats;
@@ -30,6 +34,12 @@ namespace M3P
             EffectiveFloor = System.Math.Max(1, effectiveFloor);
             EncounterType = encounterType;
             Rank = System.Math.Max(1, rank);
+            MainTexture = mainTexture;
+            AdditionalBodyMaterial = additionalBodyMaterial;
+            MaterialTextures = materialTextures != null
+                ? (EnemyMaterialTexture[])materialTextures.Clone()
+                : System.Array.Empty<EnemyMaterialTexture>();
+            DamageMultiplier = damageMultiplier > 0f && !float.IsInfinity(damageMultiplier) ? damageMultiplier : 1f;
         }
 
         public EnemyDefinition Definition { get; }
@@ -38,6 +48,9 @@ namespace M3P
 
         /// <summary>Applied to CON-derived max HP after stats are built. Elite and boss use 1.25.</summary>
         public float HealthMultiplier { get; }
+
+        /// <summary>Per-hit damage tuning for this fight. Does not scale healing or shields.</summary>
+        public float DamageMultiplier { get; }
 
         public IReadOnlyList<SkillDefinition> ActiveSkills { get; }
 
@@ -51,5 +64,8 @@ namespace M3P
 
         /// <summary>1-based count of rank thresholds reached on <see cref="EffectiveFloor"/>. At least 1.</summary>
         public int Rank { get; }
+        public UnityEngine.Texture2D MainTexture { get; }
+        public IReadOnlyList<EnemyMaterialTexture> MaterialTextures { get; }
+        public UnityEngine.Material AdditionalBodyMaterial { get; }
     }
 }

@@ -53,13 +53,13 @@ namespace M3P
         {
             switch (type)
             {
-                case MapNodeType.Shop: return "SKLEP";
-                case MapNodeType.Forge: return "KUŹNIA";
-                case MapNodeType.Chest: return "SKRZYNIA";
-                case MapNodeType.Elite: return "ELITA";
+                case MapNodeType.Shop: return "SHOP";
+                case MapNodeType.Forge: return "FORGE";
+                case MapNodeType.Chest: return "CHEST";
+                case MapNodeType.Elite: return "ELITE";
                 case MapNodeType.Boss: return "BOSS";
                 case MapNodeType.Start: return "START";
-                default: return "WALKA";
+                default: return "BATTLE";
             }
         }
 
@@ -69,19 +69,19 @@ namespace M3P
             switch (type)
             {
                 case MapNodeType.Forge:
-                    return "Kuźnia. Połóż kafelek na kowadle i wzmocnij go ulepszeniami.";
+                    return "Forge. Place a tile on the anvil and enhance it with upgrades.";
                 case MapNodeType.Shop:
-                    return "Sklep kart. Wydaj odłamki i wykuj nową kartę do talii.";
+                    return "Card shop. Spend shards to forge a new card for your deck.";
                 case MapNodeType.Chest:
-                    return "Zamknięta skrzynia. W środku czeka nagroda.";
+                    return "A locked chest. A reward awaits inside.";
                 case MapNodeType.Start:
-                    return "Początek drogi.";
+                    return "The start of your journey.";
                 case MapNodeType.Elite:
-                    return "Elitarny przeciwnik.";
+                    return "An elite enemy.";
                 case MapNodeType.Boss:
-                    return "Boss piętra.";
+                    return "The boss of this floor.";
                 default:
-                    return "Walka z przeciwnikiem.";
+                    return "A battle against an enemy.";
             }
         }
     }

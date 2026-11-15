@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
   m_Name: ShieldSlam
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
-  <_skillName>k__BackingField: Uderzenie Tarczą
-  _description: Zużywa cały Shield i zadaje obrażenia równe jego wartości, maksymalnie 20.
+  <_skillName>k__BackingField: "Shield Slam"
+  _description: "Consume all Shield and deal damage equal to its value, up to 20."
   _artwork: {fileID: 21300000, guid: 719c1851d6db5ee44a011da0705740c0, type: 3}
   _manaCosts:
   - TileType: {fileID: 11400000, guid: d2fc95fcf0bc7f94d903f81e8e26b5f1, type: 2}
@@ -28,4 +28,6 @@ MonoBehaviour:
   _castPrompt: 0
   _physicalSkill: 1
   _archetype: 1
+  _useProjectile: 1
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
   <_animationName>k__BackingField: BasicAttack

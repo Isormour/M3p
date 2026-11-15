@@ -59,7 +59,17 @@ namespace M3P
                 displayName,
                 effectiveFloor,
                 encounterType,
-                rank);
+                rank,
+                ResolveRankTexture(definition.RankThresholds, authoredProgressionFloor),
+                encounterType == MapNodeType.Boss
+                    ? definition.GetBossDamageMultiplier(floor)
+                    : encounterType == MapNodeType.Elite
+                        ? definition.GetEliteDamageMultiplier(floor)
+                        : encounterType == MapNodeType.Battle
+                            ? definition.GetDamageMultiplier(effectiveFloor)
+                            : 1f,
+                ResolveRankMaterialTextures(definition.RankThresholds, authoredProgressionFloor),
+                ResolveRankAdditionalBodyMaterial(definition.RankThresholds, authoredProgressionFloor, encounterType));
         }
 
         /// <summary>
@@ -188,7 +198,43 @@ namespace M3P
         /// <summary>Highest rank label reached on <paramref name="effectiveFloor"/>, or empty when none qualify.</summary>
         public static string ResolveRankName(IReadOnlyList<EnemyRankThreshold> ranks, int effectiveFloor)
         {
-            string rank = null;
+            int index = ResolveRankIndex(ranks, effectiveFloor);
+            return index >= 0 ? ranks[index].RankName : string.Empty;
+        }
+
+        public static Texture2D ResolveRankTexture(IReadOnlyList<EnemyRankThreshold> ranks, int effectiveFloor)
+        {
+            int index = ResolveRankIndex(ranks, effectiveFloor);
+            return index >= 0 ? ranks[index].MainTexture : null;
+        }
+
+        public static EnemyMaterialTexture[] ResolveRankMaterialTextures(IReadOnlyList<EnemyRankThreshold> ranks, int effectiveFloor)
+        {
+            int index = ResolveRankIndex(ranks, effectiveFloor);
+            return index >= 0 ? ranks[index].MaterialTextures : null;
+        }
+
+        public static Material ResolveRankAdditionalBodyMaterial(
+            IReadOnlyList<EnemyRankThreshold> ranks, int effectiveFloor, MapNodeType encounterType)
+        {
+            int index = ResolveRankIndex(ranks, effectiveFloor);
+            if (index < 0)
+                return null;
+
+            switch (encounterType)
+            {
+                case MapNodeType.Elite:
+                    return ranks[index].EliteBodyMaterial;
+                case MapNodeType.Boss:
+                    return ranks[index].BossBodyMaterial;
+                default:
+                    return null;
+            }
+        }
+
+        static int ResolveRankIndex(IReadOnlyList<EnemyRankThreshold> ranks, int effectiveFloor)
+        {
+            int rank = -1;
             int bestFloor = int.MinValue;
 
             if (ranks != null)
@@ -203,11 +249,11 @@ namespace M3P
                         continue;
 
                     bestFloor = threshold.MinFloor;
-                    rank = threshold.RankName;
+                    rank = i;
                 }
             }
 
-            return rank ?? string.Empty;
+            return rank;
         }
 
         static string BuildDisplayName(string speciesName, IReadOnlyList<EnemyRankThreshold> ranks, int effectiveFloor)

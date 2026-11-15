@@ -34,12 +34,7 @@ namespace M3P
         public override void OnTurnStarted()
         {
             CharacterStats stats = Stats;
-            GameConfig config = GameManager.Instance != null ? GameManager.Instance.Config : null;
-            stats?.Soft?.ResetActionPoints(
-                stats.Hard,
-                config != null ? config.StatProgression : null,
-                stats.TalentBonuses);
-
+            stats?.ResetActionPointsForTurn();
             stats?.Soft?.NotifyPerkTurnStarted();
 
             // Confusion drains the AP that was just restored, then expires.

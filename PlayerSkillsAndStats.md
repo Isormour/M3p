@@ -87,7 +87,7 @@ ZAŁOŻENIE: docelowy katalog zawiera **12 drzewek łącznie**, wliczając obecn
 
 ZAŁOŻENIE: **perki z tym samym efektem mają tę samą nazwę**, także na różnych progach. Każde odblokowanie stałej premii dodaje ją do wcześniejszych odblokowań. Przykładowo cztery odblokowania Ciężkiej ręki dają łącznie +4 do obrażeń podstawowych.
 
-REKOMENDACJA: poniższe drzewka stanowią roboczy balans do testów, przygotowany 17 października 2026. Zachowują limit 30 poziomów i przyznają perki na poziomach 3, 6, 9, 12, 15, 18, 21, 24, 27 i 30. Dodatkowe AP i karty powinny być rzadkimi kamieniami milowymi; pozostałe progi rozwijają statystyki bojowe i premie warunkowe. Tabele opisują projekt, nie potwierdzają wdrożenia w assetach ani kodzie.
+REKOMENDACJA: poniższe drzewka stanowią roboczy balans do testów, przygotowany 17 października 2026. Zachowują limit 30 poziomów i przyznają perki na poziomach 3, 6, 9, 12, 15, 18, 21, 24, 27 i 30. Wyjątkiem jest Tactic (§3.3.7), którego progi zaktualizowano 15 listopada 2026 do obecnej konfiguracji 1–10. Dodatkowe AP i karty powinny być rzadkimi kamieniami milowymi; pozostałe progi rozwijają statystyki bojowe i premie warunkowe. Pozostałe tabele opisują projekt, nie potwierdzają wdrożenia w assetach ani kodzie.
 
 **Rozliczenie sekwencji (Resolve)** oznacza wykonanie jednej zaplanowanej kolejki kart wraz ze wszystkimi powstałymi dopasowaniami i kaskadami oraz naliczeniem ich efektów. W jednej turze można rozliczyć kilka sekwencji. Grupa oznacza osobne dopasowanie; trzy grupy po trzy kafelki to inny wynik niż jedno dopasowanie dziewięciu kafelków. Przy sprawdzaniu poniższych warunków liczą się również dopasowania z kaskad tej samej sekwencji.
 
@@ -235,26 +235,30 @@ Na poziomie 30 samo drzewko daje **+4 `Power` i +40 maksymalnego HP**. Przy bazo
 
 #### 3.3.7. Tactic
 
-Specjalizacja: `Tempo` i maksymalny rozmiar ręki. Perki warunkowe ułatwiają wybór kart i przygotowanie następnej tury.
+Specjalizacja: dodatkowe AP od pierwszego poziomu, `Tempo` i maksymalny rozmiar ręki. Perki warunkowe ułatwiają wybór kart i przygotowanie następnej tury.
+
+Aktualizacja z 15 listopada 2026: poniższe progi odpowiadają konfiguracji `PerkTree_Tactic.asset`. Na poziomie 1 premia +1 `Tempo` została zastąpiona przez +1 maksymalne AP, a na poziomie 9 premia `Tempo` wzrosła z +1 do +2.
 
 | Poziom drzewka | Perk | Efekt |
 | --- | --- | --- |
+| 1 | Zapas energii | +1 maksymalne AP. |
+| 2 | Pojemny umysł | +1 karta do początkowej ręki w każdej turze. |
 | 3 | Szybkość | +1 `Tempo`. |
-| 6 | Pojemny umysł | +1 karta do początkowej ręki w każdej turze. |
-| 9 | Szybkość | +1 `Tempo`. |
-| 12 | Szybkość | +1 `Tempo`. |
-| 15 | Przegrupowanie | Na początku każdej tury otrzymujesz status Przegrupowanie. |
-| 18 | Szybkość | +1 `Tempo`. |
-| 21 | Pojemny umysł | +1 karta do początkowej ręki w każdej turze. |
-| 24 | Szybkość | +1 `Tempo`. |
-| 27 | Szybkość | +1 `Tempo`. |
-| 30 | Rezerwa | Na początku każdej tury otrzymujesz status Rezerwa. |
+| 4 | Szybkość | +1 `Tempo`. |
+| 5 | Przegrupowanie | Na początku każdej tury otrzymujesz status Przegrupowanie. |
+| 6 | Szybkość | +1 `Tempo`. |
+| 7 | Pojemny umysł | +1 karta do początkowej ręki w każdej turze. |
+| 8 | Szybkość | +1 `Tempo`. |
+| 9 | Szybkość II | +2 `Tempo`. |
+| 10 | Rezerwa | Na początku każdej tury otrzymujesz status Rezerwa. |
 
 **Status Przegrupowanie:** pozwala odrzucić jedną kartę z ręki i dobrać jedną w jej miejsce, bez kosztu AP. Wymiana zużywa status. Niewykorzystany status wygasa na koniec tury.
 
 **Status Rezerwa:** na koniec tury pozwala zachować jedną niewykorzystaną kartę na następną turę. Zachowana karta zajmuje normalne miejsce w początkowej ręce: przy ręce 5 kart gracz dobiera wtedy 4. Status zostaje zużyty lub wygasa, jeśli gracz nie zachowa karty.
 
-Na poziomie 30 samo drzewko daje **+6 `Tempo` i +2 do rozmiaru ręki**, czyli **5 kart przy bazowych 3**, bez innych źródeł premii. Dodatkowo pozwala wymienić jedną kartę na turę i zachować jedną na kolejną. Żaden z tych statusów nie kumuluje się.
+Na poziomie 10 samo drzewko daje **+1 maksymalne AP, +6 `Tempo` i +2 do rozmiaru ręki**, czyli **3 AP przy bazowych 2 i 5 kart przy bazowych 3**, bez innych źródeł premii. Premia do AP jest dostępna już na poziomie 1. Docelowo Przegrupowanie pozwala wymienić jedną kartę na turę, a Rezerwa zachować jedną na kolejną. Żaden z tych statusów nie kumuluje się.
+
+Stan implementacji na 15 listopada 2026: Przegrupowanie i Rezerwa mają definicje perków, ale ich obsługa w walce nie jest jeszcze zaimplementowana.
 
 #### 3.3.8. Faith
 
@@ -411,7 +415,7 @@ Każdy wpis w kolumnie kosztu zawiera manę po podwojeniu i wymaga dodatkowo **1
 
 | Status | Czas | Tick | Uwagi |
 | --- | --- | --- | --- |
-| Podpalenie (Burn) | 2 tury, stackowalne | 1 obrażenie/stack na turę wroga | Ognista Iskra, Rozniecenie, tile Stack Burn, EnemyEmber; Zapłon zużywa stacki, a Pożoga uruchamia dodatkowy tick. |
+| Podpalenie (Burn) | Stackowalne; po każdym ticku traci 1 stack, wygasa przy 0 | Na początku tury podpalonej postaci dokładnie 1 obrażenie/stack, bez mnożników K, talentów ani ataku; pancerz i tarcza absorbują obrażenia | Rozniecenie, tile Stack Burn, EnemyEmber i inne efekty nakładające Burn; Zapłon zużywa stacki, a Pożoga uruchamia dodatkowy tick. |
 | Odnowienie (RenewRegen) | `4 + 2 × Recovery` tury | +2 HP/tura gracza | `Recovery` zwiększa czas trwania; wartość ticka pozostaje stała. |
 | Duchowe naznaczenie | 1 tura; do końca bieżącej tury gracza | +1 Dusza za każde trafienie | Status rzucającego. Trafienia wielokrotne liczą się osobno; ticki Burn i innych efektów okresowych nie są trafieniami ataku. |
 

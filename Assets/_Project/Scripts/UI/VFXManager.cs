@@ -433,13 +433,23 @@ namespace M3P
 
             bool died = attack.IsLethal;
             int damage = attack.Damage;
-            Sfx.Play(SfxId.PlayerProjectileLaunch);
-            SpawnAttackProjectile(origin, GetEnemyVfxPoint(), attack.TypeId, damage, () =>
-            {
-                Sfx.Play(SfxId.EnemyProjectileHit);
-                world?.NotifyEnemyHit(died, damage);
-                PulseBattleIndicators();
-            });
+            SkillProjectileRequest request = CreateProjectileRequest(
+                origin,
+                GetEnemyVfxPoint(),
+                attack.TypeId,
+                damage,
+                () => Sfx.Play(SfxId.PlayerProjectileLaunch),
+                () =>
+                {
+                    Sfx.Play(SfxId.EnemyProjectileHit);
+                    world?.NotifyEnemyHit(died, damage);
+                    PulseBattleIndicators();
+                });
+
+            if (world != null && world.ArmPlayerProjectile(request))
+                return;
+
+            request.Launch(null);
         }
 
         void HandleSequenceResolved(ResolveReport report)
@@ -514,17 +524,35 @@ namespace M3P
             int damage = _battleManager != null ? _battleManager.LastOpponentHitDamage : 0;
             bool shielded = _battleManager != null && _battleManager.LastOpponentHitHadShield;
             bool playerCast = caster.IsPlayerControlled;
-            if (playerCast)
-                Sfx.Play(SfxId.PlayerProjectileLaunch);
-            SpawnAttackProjectile(origin, destination, damage: damage, onArrived: () =>
+            SkillProjectileRequest request = CreateProjectileRequest(
+                origin,
+                destination,
+                typeId: -1,
+                damage,
+                playerCast ? () => Sfx.Play(SfxId.PlayerProjectileLaunch) : null,
+                () =>
+                {
+                    Sfx.Play(hitPlayer ? SfxId.PlayerHit : SfxId.EnemyProjectileHit);
+                    bool died = target != null && !target.IsAlive;
+                    if (hitPlayer)
+                        world?.NotifyPlayerHit(died, damage, shielded);
+                    else
+                        world?.NotifyEnemyHit(died, damage, shielded);
+                });
+
+            if (!skill.UseProjectile)
             {
-                Sfx.Play(hitPlayer ? SfxId.PlayerHit : SfxId.EnemyProjectileHit);
-                bool died = target != null && !target.IsAlive;
-                if (hitPlayer)
-                    world?.NotifyPlayerHit(died, damage, shielded);
-                else
-                    world?.NotifyEnemyHit(died, damage, shielded);
-            });
+                request.OnArrived?.Invoke();
+                return;
+            }
+
+            if (skill.ProjectilePrefab != null)
+                request.Prefab = skill.ProjectilePrefab;
+
+            if (world != null && world.ArmCasterProjectile(playerCast, request))
+                return;
+
+            request.Launch(null);
         }
 
         void HandleShardsEarned(ShardDrop drop)
@@ -594,35 +622,28 @@ namespace M3P
             return GetPlayerAttackOrigin(world, 0);
         }
 
-        void SpawnAttackProjectile(
+        SkillProjectileRequest CreateProjectileRequest(
             Transform origin,
             Transform destination,
-            int typeId = -1,
-            int damage = 0,
-            Action onArrived = null)
+            int typeId,
+            int damage,
+            Action onLaunch,
+            Action onArrived)
         {
-            if (_projectilePrefab == null || origin == null || destination == null)
-            {
-                onArrived?.Invoke();
-                return;
-            }
-
-            GameObject instance = Instantiate(_projectilePrefab, origin.position, Quaternion.identity);
-            ProjectileVFX projectile = instance.GetComponent<ProjectileVFX>();
             Color color = typeId >= 0 && _board != null
                 ? _board.GetTileTypeColor(typeId)
                 : Color.white;
 
-            if (projectile != null)
+            return new SkillProjectileRequest
             {
-                projectile.Launch(destination, color, damage, onArrived);
-                return;
-            }
-
-            BindAttractor(instance, destination);
-            ApplyTileColor(instance, typeId);
-            Destroy(instance, _vfxLifetime);
-            onArrived?.Invoke();
+                Prefab = _projectilePrefab,
+                Origin = origin,
+                Target = destination,
+                Color = color,
+                Damage = damage,
+                OnLaunch = onLaunch,
+                OnArrived = onArrived
+            };
         }
 
         void ApplyTileColor(GameObject instance, int typeId)

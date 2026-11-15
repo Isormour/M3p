@@ -139,7 +139,7 @@ namespace M3P
             labelRect.offsetMax = new Vector2(-4f, -4f);
 
             TextMeshProUGUI label = labelObject.AddComponent<TextMeshProUGUI>();
-            label.text = "Anuluj";
+            label.text = "Cancel";
             label.alignment = TextAlignmentOptions.Center;
             label.color = Color.white;
             label.enableAutoSizing = true;

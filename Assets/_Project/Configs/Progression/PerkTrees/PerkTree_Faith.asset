@@ -13,9 +13,13 @@ MonoBehaviour:
   m_Name: PerkTree_Faith
   m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkTree
   Nazwa: Faith
-  _subtitle: TARCZA I DUSZE
-  _description: "Guard oraz Dusze na pocz\u0105tku walki."
+  _subtitle: "SHIELD AND SOULS"
+  _description: "Guard and Souls at the start of battle."
   id: 8
+  _starterSkills:
+  - {fileID: 11400000, guid: c7f7dca3a573403fb8dcf6b2829b9acc, type: 2}
+  - {fileID: 11400000, guid: d9bb4a11e7f748c5a089c9708e48a3df, type: 2}
+  - {fileID: 11400000, guid: 0453756ee00942d1921ee3255a3cbb4d, type: 2}
   perks:
   - StatLevel: 1
     Perk: {fileID: 11400000, guid: 07d79fc60a5d445daed2fdd027c16400, type: 2}

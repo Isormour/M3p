@@ -31,11 +31,11 @@ namespace M3P
         [SerializeField] Color _fillSelected = new Color(0.13f, 0.11f, 0.07f, 1f);
         [SerializeField] Color _statusIdle = new Color(0.62f, 0.58f, 0.42f, 1f);
         [SerializeField] Color _statusSelected = new Color(0.86f, 0.70f, 0.38f, 1f);
-
+        [SerializeField] UISkillButton[] _skills;
         readonly List<UIPerkTreeOfferRow> _rows = new List<UIPerkTreeOfferRow>();
 
-        string _chooseLabel = "Wybierz drzewko";
-        string _chosenLabel = "Drzewko odblokowane";
+        string _chooseLabel = "Choose a Tree";
+        string _chosenLabel = "Tree Unlocked";
         bool _selected;
 
         public event Action<UIPerkTreeOfferCard> Clicked;
@@ -88,8 +88,28 @@ namespace M3P
             if (_description != null)
                 _description.text = tree != null ? tree.Description : string.Empty;
 
+            BindStarterSkills(tree);
             RebuildRows(tree, catalog, previewCount, thresholdFormat);
             SetSelected(_selected);
+        }
+
+        void BindStarterSkills(PerkTree tree)
+        {
+            // Only the opening-choice prefab has skill slots; reward cards leave this empty.
+            if (_skills == null)
+                return;
+
+            SkillDefinition[] skills = tree != null ? tree.StarterSkills : Array.Empty<SkillDefinition>();
+            for (int i = 0; i < _skills.Length; i++)
+            {
+                UISkillButton slot = _skills[i];
+                if (slot == null)
+                    continue;
+
+                SkillDefinition skill = i < skills.Length ? skills[i] : null;
+                slot.Configure(skill, equipped: true, clicked: _ => HandleClicked());
+                slot.gameObject.SetActive(skill != null);
+            }
         }
 
         public void SetSelected(bool selected)

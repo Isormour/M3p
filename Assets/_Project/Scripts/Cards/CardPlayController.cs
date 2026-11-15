@@ -379,7 +379,7 @@ namespace M3P
 
             HideChoiceOverlay();
             _awaitingChoice = true;
-            string title = logic.ExtraChoice == CardExtraChoice.GravityDirection ? "Kierunek" : "Kolor";
+            string title = logic.ExtraChoice == CardExtraChoice.GravityDirection ? "Direction" : "Color";
             _choiceOverlay = UICardChoiceOverlay.Show(
                 parent,
                 title,

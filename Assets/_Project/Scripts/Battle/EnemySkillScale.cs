@@ -17,6 +17,22 @@ namespace M3P
     /// </summary>
     public static class EnemySkillScale
     {
+        /// <summary>Scales one enemy-to-player hit or status tick, before flat bonuses and reductions.</summary>
+        public static int ScaleDamage(int amount, BattleCharacter caster, BattleCharacter target, int flatDamageAfterEnemyScaling = 0)
+        {
+            int flatDamage = Mathf.Max(0, flatDamageAfterEnemyScaling);
+            // A missing target is a preview of the same player hit. Another character is not.
+            if (amount <= 0
+                || !(caster is EnemyBattleCharacter enemy)
+                || enemy.RuntimeSpec == null
+                || (target != null && !target.IsPlayerControlled))
+                return amount + flatDamage;
+
+            float multiplier = enemy.RuntimeSpec.DamageMultiplier;
+            // Round the complete expression once, after adding the unscaled flat damage.
+            return Mathf.Max(1, Mathf.RoundToInt(amount * multiplier + flatDamage));
+        }
+
         public static int Floor(BattleCharacter caster)
         {
             if (caster is EnemyBattleCharacter enemy && enemy.RuntimeSpec != null)

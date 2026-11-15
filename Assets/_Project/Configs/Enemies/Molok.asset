@@ -24,6 +24,29 @@ MonoBehaviour:
     Intelligence: 0.34
     Constitution: 5
     Agility: 0.2
+  _bossDamageMultiplier: 2.1
+  _damageMultipliersByEffectiveFloor:
+  - 1.34
+  - 1.1
+  - 0.9213
+  - 0.78
+  - 0.8156
+  - 0.6344
+  - 0.5625
+  - 0.508
+  - 0.4607
+  - 0.4079
+  _eliteDamageMultipliersByMapFloor:
+  - 0.6
+  - 0.67
+  - 0.6
+  - 0.5444
+  - 0.5438
+  - 0.4532
+  - 0.4079
+  - 0.3769
+  - 0.4
+  - 0.3688
   _enemyCharacterPrefab: {fileID: 5361038239209304539, guid: 7f6fff7c585ec75448eb03cc5e3e3628, type: 3}
   _skills:
   - {fileID: 11400000, guid: 4a8e0b2a6c5d1b0a9f8e7d6c5b4a3901, type: 2}
@@ -45,11 +68,23 @@ MonoBehaviour:
     Replaces: {fileID: 0}
   _rankThresholds:
   - MinFloor: 1
-    RankName: Zwiadowca
+    RankName: "Scout"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: 84047b53f24c27542b1a2fb6e5c3d91e, type: 3}
   - MinFloor: 2
-    RankName: Wartownik
+    RankName: "Sentry"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: 854d29420be06934180360853bff050d, type: 3}
   - MinFloor: 3
-    RankName: Weteran
+    RankName: "Veteran"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: 43ea0363974e08744871e87a404c43e3, type: 3}
   - MinFloor: 5
-    RankName: Herszt
+    RankName: "Chieftain"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: 97637a625ee219748a7a622ba2edfa54, type: 3}
   _enemyModelPrefab: {fileID: 2277848116310433148, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}

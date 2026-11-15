@@ -11,6 +11,7 @@ namespace M3P
     public class PerkTree : ScriptableObject
     {
         public const int InvalidId = 0;
+        public const int StarterSkillCount = 3;
 
         [SerializeField] string Nazwa;
         [Tooltip("Short line under the name on the unlock offer, such as the stat the tree grows.")]
@@ -22,6 +23,8 @@ namespace M3P
         [SerializeField] StatPerk[] perks = Array.Empty<StatPerk>();
         [SerializeReference] TreeStatBonusLogic TreeStatBonusLogic;
         [SerializeField] Sprite _icon;
+        [Tooltip("The three skills granted and equipped when this is the first tree the player unlocks. Listed in loadout order.")]
+        [SerializeField] SkillDefinition[] _starterSkills = Array.Empty<SkillDefinition>();
 
         public string DisplayName => string.IsNullOrEmpty(Nazwa) ? name : Nazwa;
         public string Subtitle => _subtitle ?? string.Empty;
@@ -30,6 +33,7 @@ namespace M3P
         public StatPerk[] Perks => perks ?? Array.Empty<StatPerk>();
         public TreeStatBonusLogic StatBonus => TreeStatBonusLogic;
         public Sprite Icon => _icon;
+        public SkillDefinition[] StarterSkills => _starterSkills ?? Array.Empty<SkillDefinition>();
 
         public bool TryGetGrantedStat(out EStatType stat)
         {

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a74a6c04732f9d34d848a9575ba539c6, type: 3}
   m_Name: BloodPact
   m_EditorClassIdentifier: Assembly-CSharp::M3P.SkillDefinition
-  <_skillName>k__BackingField: Krwawy Pakt
-  _description: Tracisz 5 + floor(Arcane / 4) HP i otrzymujesz 2 + floor(Tempo / 4) AP. Nie może zabić. Raz na turę.
+  <_skillName>k__BackingField: "Blood Pact"
+  _description: "Lose 5 + floor(Arcane / 4) HP and gain 2 + floor(Tempo / 4) AP. Cannot kill you. Once per turn."
   _artwork: {fileID: 21300000, guid: 1f9a4098d9733d54b8bd098da20f7af2, type: 3}
   _manaCosts:
   - TileType: {fileID: 11400000, guid: 88078226c0e3e49458326c6f5b431834, type: 2}
@@ -26,4 +26,6 @@ MonoBehaviour:
   _castPrompt: 0
   _physicalSkill: 0
   _archetype: 3
+  _useProjectile: 0
+  _projectilePrefab: {fileID: 8372995014727801690, guid: f74d06b8d888cbd49858a19f732e44af, type: 3}
   <_animationName>k__BackingField: BasicAttack

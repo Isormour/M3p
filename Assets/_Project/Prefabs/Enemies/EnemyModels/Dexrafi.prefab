@@ -17,6 +17,10 @@ PrefabInstance:
       value: Dexrafi
       objectReference: {fileID: 0}
     - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: hand
+      value:
+      objectReference: {fileID: 8450701784881971071}
+    - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
       propertyPath: _animator
       value: 
       objectReference: {fileID: 1365458836830088091}
@@ -204,5 +208,10 @@ MonoBehaviour:
 --- !u!137 &8467601033251294484 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: -5324531855699944674, guid: fcfdbffbd91edd140bf73f90f545870c, type: 3}
+  m_PrefabInstance: {fileID: 4871065459235771914}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8450701784881971071 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -5269373992140379787, guid: fcfdbffbd91edd140bf73f90f545870c, type: 3}
   m_PrefabInstance: {fileID: 4871065459235771914}
   m_PrefabAsset: {fileID: 0}

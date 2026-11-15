@@ -24,14 +24,37 @@ MonoBehaviour:
     Intelligence: 0.34
     Constitution: 5
     Agility: 0.2
+  _damageMultipliersByEffectiveFloor:
+  - 1.3607
+  - 2.7885
+  - 1.7845
+  - 1.6796
+  - 1.0972
+  - 0.8811
+  - 0.936
+  - 0.8802
+  - 0.8047
+  - 0.8698
+  _bossDamageMultiplier: 2.1
+  _eliteDamageMultipliersByMapFloor:
+  - 1.21
+  - 1.178
+  - 1.1801
+  - 0.8229
+  - 0.8302
+  - 0.8288
+  - 0.8124
+  - 0.8327
+  - 0.8078
+  - 0.7876
   _enemyCharacterPrefab: {fileID: 5361038239209304539, guid: 7f6fff7c585ec75448eb03cc5e3e3628, type: 3}
   _skills:
-  - {fileID: 11400000, guid: 4a8e0b2a6c5d1b0a9f8e7d6c5b4a3901, type: 2}
+  - {fileID: 11400000, guid: 107330b9125c47ef8686bca9eac17da1, type: 2}
   - {fileID: 11400000, guid: 11aa09e1b2c34d5e6f708192a3b4c5d6, type: 2}
   - {fileID: 11400000, guid: 11aa08e1b2c34d5e6f708192a3b4c5d6, type: 2}
   - {fileID: 11400000, guid: 11aa0ae1b2c34d5e6f708192a3b4c5d6, type: 2}
   _skillUnlocks:
-  - Skill: {fileID: 11400000, guid: 4a8e0b2a6c5d1b0a9f8e7d6c5b4a3901, type: 2}
+  - Skill: {fileID: 11400000, guid: 107330b9125c47ef8686bca9eac17da1, type: 2}
     MinFloor: 1
     Replaces: {fileID: 0}
   - Skill: {fileID: 11400000, guid: 11aa09e1b2c34d5e6f708192a3b4c5d6, type: 2}
@@ -45,13 +68,28 @@ MonoBehaviour:
     Replaces: {fileID: 0}
   _rankThresholds:
   - MinFloor: 1
-    RankName: Zwiadowca
+    RankName: "Scout"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: 27611c5ac6963174cb15a1d65a80b845, type: 3}
   - MinFloor: 2
-    RankName: Wartownik
+    RankName: "Sentry"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: b42e33171d17cb547a842bcddd511a0e, type: 3}
   - MinFloor: 3
-    RankName: Podpalacz
+    RankName: "Arsonist"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: 105f954ebb5faf047a2f35af8127f460, type: 3}
   - MinFloor: 5
-    RankName: Weteran
+    RankName: "Veteran"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: ba89fff03fbac2340af107001ddfd8aa, type: 3}
   - MinFloor: 8
-    RankName: Herszt
+    RankName: "Chieftain"
+    EliteBodyMaterial: {fileID: 0}
+    BossBodyMaterial: {fileID: 0}
+    MainTexture: {fileID: 2800000, guid: 0cb8735b8316b9246a9323ad8f742a9e, type: 3}
   _enemyModelPrefab: {fileID: 8545494398013846852, guid: 620ee4f6db0876d4eaba8f943e4b66c2, type: 3}

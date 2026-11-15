@@ -57,7 +57,7 @@ namespace M3P.Editor
                 typesImg.color = Panel;
                 typesImg.raycastTarget = false;
 
-                TextMeshProUGUI recipes = GetOrCreateLabel(cardTypes, "LabelRecipes", font, "RECEPTURY", 20f, Cream, TextAlignmentOptions.Left);
+                TextMeshProUGUI recipes = GetOrCreateLabel(cardTypes, "LabelRecipes", font, "RECIPES", 20f, Cream, TextAlignmentOptions.Left);
                 var recipesRect = recipes.rectTransform;
                 recipesRect.anchorMin = new Vector2(0f, 1f);
                 recipesRect.anchorMax = new Vector2(0f, 1f);
@@ -142,7 +142,7 @@ namespace M3P.Editor
 
                 TextMeshProUGUI costLabel = Find(cardCost, "LabelCost").GetComponent<TextMeshProUGUI>();
                 ApplyFont(costLabel, font, 15f, Cream, TextAlignmentOptions.Left);
-                costLabel.text = "KOSZT WYTWORZENIA";
+                costLabel.text = "CRAFTING COST";
                 PinTop(costLabel.rectTransform, -146f, 26f);
 
                 Transform costList = Find(cardCost, "CostList") ?? Find(cardCost, "GameObject");
@@ -176,7 +176,7 @@ namespace M3P.Editor
                 craftImg.color = Color.white;
                 TextMeshProUGUI craftText = craftButton.GetComponentInChildren<TextMeshProUGUI>(true);
                 ApplyFont(craftText, font, 18f, new Color(1f, 0.96f, 0.88f, 1f), TextAlignmentOptions.Center);
-                craftText.text = "WYKUJ KARTĘ";
+                craftText.text = "FORGE CARD";
 
                 Transform card = Find(root.transform, "CardToBeCrafted");
                 var cardRect = (RectTransform)card;
@@ -213,7 +213,7 @@ namespace M3P.Editor
 
                 TextMeshProUGUI title = Find(root.transform, "LabelName").GetComponent<TextMeshProUGUI>();
                 ApplyFont(title, font, 30f, Cream, TextAlignmentOptions.Center);
-                title.text = "KUŹNIA KART";
+                title.text = "CARD FORGE";
                 var titleRect = title.rectTransform;
                 titleRect.anchorMin = new Vector2(0.5f, 1f);
                 titleRect.anchorMax = new Vector2(0.5f, 1f);
@@ -279,7 +279,7 @@ namespace M3P.Editor
             colors.selectedColor = Color.white;
             button.colors = colors;
 
-            TextMeshProUGUI label = GetOrCreateLabel(go.transform, "Label", font, "Receptura", 16f, Body, TextAlignmentOptions.Left);
+            TextMeshProUGUI label = GetOrCreateLabel(go.transform, "Label", font, "Recipe", 16f, Body, TextAlignmentOptions.Left);
             Stretch(label.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             label.rectTransform.offsetMin = new Vector2(44f, 4f);
             label.rectTransform.offsetMax = new Vector2(-10f, -4f);

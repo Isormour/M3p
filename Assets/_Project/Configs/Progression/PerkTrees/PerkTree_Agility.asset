@@ -12,10 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25723ff7ec4d09240a43340a6c620ca8, type: 3}
   m_Name: PerkTree_Agility
   m_EditorClassIdentifier: Assembly-CSharp::M3P.PerkTree
-  Nazwa: Zręczność
-  _subtitle: PRECYZJA I AP
-  _description: Precision, Tempo i rzadkie premie do punktów akcji.
+  Nazwa: "Agility"
+  _subtitle: "PRECISION AND AP"
+  _description: "Precision, Tempo, and rare action point bonuses."
   id: 4
+  _starterSkills:
+  - {fileID: 11400000, guid: 0e473d27e87f4d9988856e461d413d7e, type: 2}
+  - {fileID: 11400000, guid: d9bb4a11e7f748c5a089c9708e48a3df, type: 2}
+  - {fileID: 11400000, guid: c7f7dca3a573403fb8dcf6b2829b9acc, type: 2}
   perks:
   - StatLevel: 1
     Perk: {fileID: 11400000, guid: bd5f8b4c9e6a4d5718c0d2e4f6a87901, type: 2}

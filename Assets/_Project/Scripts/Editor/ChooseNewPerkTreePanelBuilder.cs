@@ -113,14 +113,14 @@ namespace M3P.Editor
             panelFill.color = Ink;
             Stretch(panelFill.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, new Vector2(-16f, -16f));
 
-            TextMeshProUGUI eyebrow = MakeLabel(root.transform, "Header", font, "NOWA ŚCIEŻKA ROZWOJU", 15f, Gold, TextAlignmentOptions.Center);
+            TextMeshProUGUI eyebrow = MakeLabel(root.transform, "Header", font, "NEW PROGRESSION PATH", 15f, Gold, TextAlignmentOptions.Center);
             PlaceTop(eyebrow.rectTransform, -18f, new Vector2(720f, 26f));
             eyebrow.characterSpacing = 8f;
 
-            TextMeshProUGUI title = MakeLabel(root.transform, "Title", font, "Drzewko odblokowane", 40f, Cream, TextAlignmentOptions.Center);
+            TextMeshProUGUI title = MakeLabel(root.transform, "Title", font, "Tree Unlocked", 40f, Cream, TextAlignmentOptions.Center);
             PlaceTop(title.rectTransform, -46f, new Vector2(760f, 52f));
 
-            TextMeshProUGUI subtitle = MakeLabel(root.transform, "Subtitle", font, "Możesz teraz rozwijać drzewko: Kondycja.", 16f, Muted, TextAlignmentOptions.Center);
+            TextMeshProUGUI subtitle = MakeLabel(root.transform, "Subtitle", font, "You can now invest in the Constitution tree.", 16f, Muted, TextAlignmentOptions.Center);
             PlaceTop(subtitle.rectTransform, -100f, new Vector2(820f, 28f));
 
             Image ornament = MakeImage(root.transform, "Ornament", plate, false);
@@ -144,7 +144,7 @@ namespace M3P.Editor
 
             UIPerkTreeOfferCard card = BuildCard(offers, font, plate, check);
 
-            TextMeshProUGUI confirm = MakeLabel(root.transform, "ConfirmLabel", font, "Odblokowano drzewko: Kondycja.", 20f, Cream, TextAlignmentOptions.Center);
+            TextMeshProUGUI confirm = MakeLabel(root.transform, "ConfirmLabel", font, "Tree unlocked: Constitution.", 20f, Cream, TextAlignmentOptions.Center);
             PlaceBottom(confirm.rectTransform, 178f, new Vector2(760f, 32f));
 
             Button done = BuildButton(root.transform, font, plate);
@@ -154,7 +154,7 @@ namespace M3P.Editor
                 root.transform,
                 "Hint",
                 font,
-                "Po odblokowaniu możesz inwestować punkty i aktywować kolejne perki.",
+                "Once unlocked, invest points to activate more perks.",
                 15f,
                 Muted,
                 TextAlignmentOptions.Center);
@@ -242,10 +242,10 @@ namespace M3P.Editor
             icon.color = Color.white;
             PlaceTop(icon.rectTransform, -18f, new Vector2(132f, 132f));
 
-            TextMeshProUGUI name = MakeLabel(frame.transform, "Name", font, "Kondycja", 32f, Cream, TextAlignmentOptions.Center);
+            TextMeshProUGUI name = MakeLabel(frame.transform, "Name", font, "Constitution", 32f, Cream, TextAlignmentOptions.Center);
             PlaceTop(name.rectTransform, -156f, new Vector2(286f, 42f));
 
-            TextMeshProUGUI subtitle = MakeLabel(frame.transform, "Subtitle", font, "MAKSYMALNE ZDROWIE", 13f, Gold, TextAlignmentOptions.Center);
+            TextMeshProUGUI subtitle = MakeLabel(frame.transform, "Subtitle", font, "MAXIMUM HEALTH", 13f, Gold, TextAlignmentOptions.Center);
             subtitle.characterSpacing = 2.5f;
             PlaceTop(subtitle.rectTransform, -198f, new Vector2(286f, 22f));
 
@@ -258,7 +258,7 @@ namespace M3P.Editor
             PlaceTop((RectTransform)rows, -304f, new Vector2(286f, 168f));
             UIPerkTreeOfferRow row = BuildRow(rows, font, plate);
 
-            TextMeshProUGUI status = MakeLabel(frame.transform, "Status", font, "Wybierz drzewko", 16f, StatusIdle, TextAlignmentOptions.Center);
+            TextMeshProUGUI status = MakeLabel(frame.transform, "Status", font, "Choose a Tree", 16f, StatusIdle, TextAlignmentOptions.Center);
             PlaceBottom(status.rectTransform, 28f, new Vector2(270f, 28f));
 
             var card = frame.gameObject.AddComponent<UIPerkTreeOfferCard>();
@@ -314,7 +314,7 @@ namespace M3P.Editor
             linkRect.anchoredPosition = new Vector2(0f, -1f);
             linkRect.sizeDelta = new Vector2(2f, 18f);
 
-            TextMeshProUGUI threshold = MakeLabel(row, "Threshold", font, "Próg 2", 13f, Muted, TextAlignmentOptions.Left);
+            TextMeshProUGUI threshold = MakeLabel(row, "Threshold", font, "Requires 2", 13f, Muted, TextAlignmentOptions.Left);
             var thresholdRect = threshold.rectTransform;
             thresholdRect.anchorMin = new Vector2(0f, 1f);
             thresholdRect.anchorMax = new Vector2(1f, 1f);
@@ -322,7 +322,7 @@ namespace M3P.Editor
             thresholdRect.anchoredPosition = new Vector2(54f, -4f);
             thresholdRect.sizeDelta = new Vector2(-62f, 18f);
 
-            TextMeshProUGUI effect = MakeLabel(row, "Effect", font, "+5 maks. HP", 17f, Cream, TextAlignmentOptions.Left);
+            TextMeshProUGUI effect = MakeLabel(row, "Effect", font, "+5 max HP", 17f, Cream, TextAlignmentOptions.Left);
             var effectRect = effect.rectTransform;
             effectRect.anchorMin = new Vector2(0f, 1f);
             effectRect.anchorMax = new Vector2(1f, 1f);
@@ -384,7 +384,7 @@ namespace M3P.Editor
             fill.color = new Color(0.08f, 0.075f, 0.06f, 1f);
             Stretch(fill.rectTransform, Vector2.zero, Vector2.one, Vector2.zero, new Vector2(-4f, -4f));
 
-            TextMeshProUGUI label = MakeLabel(border.transform, "Label", font, "Gotowe", 26f, Cream, TextAlignmentOptions.Center);
+            TextMeshProUGUI label = MakeLabel(border.transform, "Label", font, "Done", 26f, Cream, TextAlignmentOptions.Center);
             Stretch(label.rectTransform, Vector2.zero, Vector2.one, new Vector2(0f, -1f), new Vector2(-24f, -8f));
             return button;
         }
@@ -408,7 +408,7 @@ namespace M3P.Editor
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = false;
 
-            caption = MakeLabel(bar, "Caption", font, "Twoje drzewka", 16f, Cream, TextAlignmentOptions.Right);
+            caption = MakeLabel(bar, "Caption", font, "Your Trees", 16f, Cream, TextAlignmentOptions.Right);
             caption.rectTransform.sizeDelta = new Vector2(180f, 28f);
 
             pipParent = MakeRect(bar, "Pips");
