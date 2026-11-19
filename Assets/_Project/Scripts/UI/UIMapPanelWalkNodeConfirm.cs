@@ -16,6 +16,9 @@ namespace M3P
         [SerializeField] TextMeshProUGUI _labelNodeName;
         [SerializeField] UIMapPanelWalkNodeConfirmBattleLayout _battleLayout;
         [SerializeField] UIMapPanelWalkNodeConfirmShopLayout _shopLayout;
+        [SerializeField] GameObject _border;
+        [SerializeField] GameObject _borderChampion;
+        [SerializeField] GameObject _borderBoss;
 
         Action _onConfirm;
         Action _onCancel;
@@ -89,6 +92,15 @@ namespace M3P
 
             if (_shopLayout == null && layout != null)
                 _shopLayout = layout.GetComponentInChildren<UIMapPanelWalkNodeConfirmShopLayout>(true);
+
+            if (_border == null)
+                _border = FindDescendantObject("Border");
+
+            if (_borderChampion == null)
+                _borderChampion = FindDescendantObject("BorderChampion");
+
+            if (_borderBoss == null)
+                _borderBoss = FindDescendantObject("BorderBoss");
         }
 
         /// <summary>
@@ -120,6 +132,7 @@ namespace M3P
         void Present(MapNode node)
         {
             MapNodeType type = node != null ? node.NodeType : MapNodeType.Battle;
+            ApplyEncounterBorder(type);
             if (_labelNodeName != null)
                 _labelNodeName.text = type.DisplayName();
 
@@ -140,6 +153,19 @@ namespace M3P
 
             if (Root.transform is RectTransform rootRect)
                 LayoutRebuilder.ForceRebuildLayoutImmediate(rootRect);
+        }
+
+        /// <summary>Elite fights use the champion frame. Boss fights use the boss frame. Other stops use the plain frame.</summary>
+        void ApplyEncounterBorder(MapNodeType type)
+        {
+            bool champion = type == MapNodeType.Elite;
+            bool boss = type == MapNodeType.Boss;
+            if (_border != null)
+                _border.SetActive(!champion && !boss);
+            if (_borderChampion != null)
+                _borderChampion.SetActive(champion);
+            if (_borderBoss != null)
+                _borderBoss.SetActive(boss);
         }
 
         static EnemyRuntimeSpec ResolveEnemy(MapNode node)
@@ -214,6 +240,12 @@ namespace M3P
             }
 
             return null;
+        }
+
+        GameObject FindDescendantObject(string childName)
+        {
+            Transform child = FindDescendant(childName);
+            return child != null ? child.gameObject : null;
         }
     }
 }
