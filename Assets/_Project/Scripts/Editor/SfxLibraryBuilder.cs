@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
@@ -11,10 +12,15 @@ namespace M3P.Editor
     {
         const string LibraryPath = "Assets/_Project/Audio/SfxLibrary.asset";
         const string SfxRoot = "Assets/_Project/Audio/SFX";
+        const string AcceptedRoot = "Assets/_Project/Audio/AcceptedSFX";
+        const string AcceptedManifestPath = "Assets/_Project/Audio/AcceptedSfxManifest.json";
+        const string SkillConfigRoot = "Assets/_Project/Configs/Skills";
 
         [MenuItem("M3P/Build SFX Library")]
         public static void Build()
         {
+            // Validate every approved file and mapping before touching the library.
+            AcceptedBindings accepted = LoadAcceptedBindings();
             SfxLibrary library = AssetDatabase.LoadAssetAtPath<SfxLibrary>(LibraryPath);
             if (library == null)
             {
@@ -22,6 +28,9 @@ namespace M3P.Editor
                 AssetDatabase.CreateAsset(library, LibraryPath);
             }
 
+            var existingClips = accepted != null
+                ? ReadExistingClips(library)
+                : new Dictionary<SfxId, SfxLibrary.ClipEntry>();
             var clips = new List<SfxLibrary.ClipEntry>();
             foreach (SfxId id in Enum.GetValues(typeof(SfxId)))
             {
@@ -32,14 +41,32 @@ namespace M3P.Editor
                 if (relative == null)
                     continue;
 
-                AudioClip clip = LoadClip(relative);
-                if (clip == null)
+                SfxLibrary.ClipEntry entry;
+                bool hasExisting = existingClips.TryGetValue(id, out entry);
+                if (!hasExisting)
+                {
+                    entry = new SfxLibrary.ClipEntry
+                    {
+                        Id = id,
+                        Clip = LoadClip(relative),
+                        Alternates = id == SfxId.MapNodeSelect
+                            ? new[] { LoadClip("MenuMap/encounter_select_2.mp3") }
+                            : Array.Empty<AudioClip>(),
+                    };
+                }
+                else if (entry.Clip == null)
+                    entry.Clip = LoadClip(relative);
+
+                AudioClip approved;
+                if (accepted != null && accepted.General.TryGetValue(id, out approved))
+                    entry.Clip = approved;
+                if (entry.Clip == null)
                 {
                     Debug.LogWarning($"SFX library: missing clip for {id} at {SfxRoot}/{relative}");
                     continue;
                 }
-
-                clips.Add(new SfxLibrary.ClipEntry { Id = id, Clip = clip });
+                entry.Alternates = entry.Alternates ?? Array.Empty<AudioClip>();
+                clips.Add(entry);
             }
 
             var skills = new List<SfxLibrary.SkillClip>();
@@ -48,6 +75,8 @@ namespace M3P.Editor
             AddSkillFolder(skills, "Skills/Mage", "mage_layer.mp3");
             AddSkillFolder(skills, "Skills/Warrior", "warrior_layer.mp3");
             AddSkillFolder(skills, "Skills/Shadow", "shadow_layer.mp3");
+            if (accepted != null)
+                skills = MergeAcceptedSkills(library, skills, accepted);
 
             SerializedObject serialized = new SerializedObject(library);
             SerializedProperty clipProp = serialized.FindProperty("_clips");
@@ -57,6 +86,10 @@ namespace M3P.Editor
                 SerializedProperty element = clipProp.GetArrayElementAtIndex(i);
                 element.FindPropertyRelative("Id").enumValueIndex = (int)clips[i].Id;
                 element.FindPropertyRelative("Clip").objectReferenceValue = clips[i].Clip;
+                SerializedProperty alternates = element.FindPropertyRelative("Alternates");
+                alternates.arraySize = clips[i].Alternates.Length;
+                for (int j = 0; j < alternates.arraySize; j++)
+                    alternates.GetArrayElementAtIndex(j).objectReferenceValue = clips[i].Alternates[j];
             }
 
             SerializedProperty skillProp = serialized.FindProperty("_skills");
@@ -88,6 +121,210 @@ namespace M3P.Editor
 
             AssetDatabase.SaveAssets();
             Debug.Log($"SFX library built with {clips.Count} clips and {skills.Count} skills.");
+        }
+
+        [Serializable]
+        sealed class AcceptedManifest
+        {
+            public int schemaVersion;
+            public AcceptedEntry[] entries;
+        }
+
+        [Serializable]
+        sealed class AcceptedEntry
+        {
+            public string id;
+            public string assetPath;
+            public string directory;
+            public string sha256;
+        }
+
+        sealed class SkillTarget
+        {
+            public string Name;
+            public string Folder;
+        }
+
+        sealed class AcceptedBindings
+        {
+            public readonly Dictionary<SfxId, AudioClip> General = new Dictionary<SfxId, AudioClip>();
+            public readonly Dictionary<string, AudioClip> Accents = new Dictionary<string, AudioClip>(StringComparer.Ordinal);
+            public readonly Dictionary<string, AudioClip> Layers = new Dictionary<string, AudioClip>(StringComparer.Ordinal);
+            public readonly List<SkillTarget> Targets = new List<SkillTarget>();
+        }
+
+        static string SkillAlias(string folder, string name)
+        {
+            return folder + "/" + name.Replace("_", string.Empty).ToLowerInvariant();
+        }
+
+        static string SkillFolder(string path)
+        {
+            if (path.StartsWith(SkillConfigRoot + "/Enemies/", StringComparison.Ordinal)) return "Skills/Enemy";
+            foreach (string group in new[] { "Mage", "Warrior", "Shadow" })
+                if (path.StartsWith(SkillConfigRoot + "/Player/" + group + "/", StringComparison.Ordinal))
+                    return "Skills/" + group;
+            string directory = Path.GetDirectoryName(path).Replace('\\', '/');
+            if (directory == SkillConfigRoot || directory == SkillConfigRoot + "/Player") return "Skills/Basic";
+            return null;
+        }
+
+        static Dictionary<string, SkillTarget> FindSkillTargets(List<SkillTarget> targets)
+        {
+            var aliases = new Dictionary<string, SkillTarget>(StringComparer.Ordinal);
+            foreach (string guid in AssetDatabase.FindAssets("t:SkillDefinition", new[] { SkillConfigRoot }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                SkillDefinition skill = AssetDatabase.LoadAssetAtPath<SkillDefinition>(path);
+                string folder = SkillFolder(path);
+                if (skill == null || folder == null) continue;
+                var target = new SkillTarget { Name = skill.name, Folder = folder };
+                targets.Add(target);
+                foreach (string name in new[] { skill.name, Path.GetFileNameWithoutExtension(path) })
+                {
+                    string key = SkillAlias(folder, name);
+                    SkillTarget other;
+                    if (aliases.TryGetValue(key, out other) && other.Name != target.Name)
+                        throw new InvalidOperationException("Ambiguous skill audio key: " + key);
+                    aliases[key] = target;
+                }
+            }
+            return aliases;
+        }
+
+        static string AbsoluteAssetPath(string assetPath)
+        {
+            return Path.Combine(Directory.GetParent(Application.dataPath).FullName, assetPath);
+        }
+
+        static AcceptedBindings LoadAcceptedBindings()
+        {
+            string manifestPath = AbsoluteAssetPath(AcceptedManifestPath);
+            if (!File.Exists(manifestPath)) return null;
+            AcceptedManifest manifest = JsonUtility.FromJson<AcceptedManifest>(File.ReadAllText(manifestPath));
+            if (manifest == null || manifest.schemaVersion != 1 || manifest.entries == null || manifest.entries.Length == 0)
+                throw new InvalidOperationException("Invalid accepted SFX manifest: " + AcceptedManifestPath);
+            var result = new AcceptedBindings();
+            var aliases = FindSkillTargets(result.Targets);
+            var events = new Dictionary<string, SfxId>(StringComparer.Ordinal);
+            foreach (SfxId id in Enum.GetValues(typeof(SfxId)))
+            {
+                string path = RelativePath(id);
+                if (path != null) events.Add(Path.GetFileNameWithoutExtension(path), id);
+            }
+            var ids = new HashSet<string>(StringComparer.Ordinal);
+            foreach (AcceptedEntry item in manifest.entries)
+            {
+                if (item == null || string.IsNullOrEmpty(item.id) || !ids.Add(item.id)
+                    || string.IsNullOrEmpty(item.directory) || string.IsNullOrEmpty(item.assetPath)
+                    || string.IsNullOrEmpty(item.sha256) || item.sha256.Length != 64)
+                    throw new InvalidOperationException("Invalid or duplicate accepted SFX entry");
+                string expectedPrefix = AcceptedRoot + "/" + item.directory + "/";
+                string extension = Path.GetExtension(item.assetPath).ToLowerInvariant();
+                if (item.assetPath.Contains("\\") || item.assetPath.Contains("/../") || item.assetPath.Contains("/./")
+                    || !item.assetPath.StartsWith(expectedPrefix, StringComparison.Ordinal)
+                    || Path.GetFileNameWithoutExtension(item.assetPath) != item.id
+                    || (extension != ".mp3" && extension != ".wav")
+                    || item.assetPath != expectedPrefix + item.id + extension)
+                    throw new InvalidOperationException("Invalid accepted SFX path: " + item.assetPath);
+                using (var hash = SHA256.Create())
+                using (var stream = File.OpenRead(AbsoluteAssetPath(item.assetPath)))
+                {
+                    string digest = BitConverter.ToString(hash.ComputeHash(stream)).Replace("-", string.Empty);
+                    if (!digest.Equals(item.sha256, StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidOperationException("Accepted SFX hash mismatch: " + item.id);
+                }
+                AudioClip clip = AssetDatabase.LoadAssetAtPath<AudioClip>(item.assetPath);
+                if (clip == null) throw new InvalidOperationException("Accepted SFX is not imported: " + item.assetPath);
+                if (item.directory.StartsWith("Skills/", StringComparison.Ordinal))
+                {
+                    if (item.id.EndsWith("_layer", StringComparison.Ordinal))
+                    {
+                        string group = Path.GetFileName(item.directory).ToLowerInvariant();
+                        if (item.id != group + "_layer" || !result.Targets.Exists(t => t.Folder == item.directory))
+                            throw new InvalidOperationException("Unknown accepted skill layer: " + item.id);
+                        result.Layers.Add(item.directory, clip);
+                    }
+                    else
+                    {
+                        SkillTarget target;
+                        if (!aliases.TryGetValue(SkillAlias(item.directory, item.id), out target))
+                            throw new InvalidOperationException("No actual skill for accepted audio: " + item.id);
+                        result.Accents.Add(target.Name, clip);
+                    }
+                }
+                else
+                {
+                    SfxId id;
+                    if (!events.TryGetValue(item.id, out id)
+                        || Path.GetDirectoryName(RelativePath(id)).Replace('\\', '/') != item.directory)
+                        throw new InvalidOperationException("Unknown accepted SFX event: " + item.id);
+                    result.General.Add(id, clip);
+                }
+            }
+            return result;
+        }
+
+        static Dictionary<SfxId, SfxLibrary.ClipEntry> ReadExistingClips(SfxLibrary library)
+        {
+            var result = new Dictionary<SfxId, SfxLibrary.ClipEntry>();
+            SerializedProperty entries = new SerializedObject(library).FindProperty("_clips");
+            for (int i = 0; i < entries.arraySize; i++)
+            {
+                SerializedProperty item = entries.GetArrayElementAtIndex(i);
+                SfxId id = (SfxId)item.FindPropertyRelative("Id").intValue;
+                SerializedProperty alternates = item.FindPropertyRelative("Alternates");
+                var clips = new AudioClip[alternates.arraySize];
+                for (int j = 0; j < clips.Length; j++) clips[j] = alternates.GetArrayElementAtIndex(j).objectReferenceValue as AudioClip;
+                result[id] = new SfxLibrary.ClipEntry { Id = id,
+                    Clip = item.FindPropertyRelative("Clip").objectReferenceValue as AudioClip, Alternates = clips };
+            }
+            return result;
+        }
+
+        static List<SfxLibrary.SkillClip> MergeAcceptedSkills(SfxLibrary library, List<SfxLibrary.SkillClip> legacy, AcceptedBindings accepted)
+        {
+            var entries = new Dictionary<string, SfxLibrary.SkillClip>(StringComparer.Ordinal);
+            SerializedProperty existing = new SerializedObject(library).FindProperty("_skills");
+            for (int i = 0; i < existing.arraySize; i++)
+            {
+                SerializedProperty item = existing.GetArrayElementAtIndex(i);
+                string name = item.FindPropertyRelative("SkillAssetName").stringValue;
+                if (string.IsNullOrEmpty(name)) continue;
+                entries[name] = new SfxLibrary.SkillClip { SkillAssetName = name,
+                    Layer = item.FindPropertyRelative("Layer").objectReferenceValue as AudioClip,
+                    Accent = item.FindPropertyRelative("Accent").objectReferenceValue as AudioClip };
+            }
+            foreach (SfxLibrary.SkillClip old in legacy)
+            {
+                if (!accepted.Targets.Exists(t => t.Name == old.SkillAssetName)) continue;
+                SfxLibrary.SkillClip item;
+                if (!entries.TryGetValue(old.SkillAssetName, out item)) item = old;
+                else
+                {
+                    if (item.Layer == null) item.Layer = old.Layer;
+                    if (item.Accent == null) item.Accent = old.Accent;
+                }
+                entries[item.SkillAssetName] = item;
+            }
+            foreach (SkillTarget target in accepted.Targets)
+            {
+                AudioClip accent, layer;
+                bool hasAccent = accepted.Accents.TryGetValue(target.Name, out accent);
+                bool hasLayer = accepted.Layers.TryGetValue(target.Folder, out layer);
+                if (!hasAccent && !hasLayer) continue;
+                SfxLibrary.SkillClip item;
+                if (!entries.TryGetValue(target.Name, out item))
+                    item = new SfxLibrary.SkillClip { SkillAssetName = target.Name };
+                if (hasAccent) item.Accent = accent;
+                if (hasLayer) item.Layer = layer;
+                else if (item.Layer == null)
+                    item.Layer = LoadClip(target.Folder + "/" + Path.GetFileName(target.Folder).ToLowerInvariant() + "_layer.mp3");
+                entries[target.Name] = item;
+            }
+            var result = new List<SfxLibrary.SkillClip>(entries.Values);
+            result.Sort((a, b) => string.CompareOrdinal(a.SkillAssetName, b.SkillAssetName));
+            return result;
         }
 
         static AudioClip LoadClip(string relative)
@@ -160,8 +397,9 @@ namespace M3P.Editor
             switch (id)
             {
                 case SfxId.MenuConfirm: return "MenuMap/menu_confirm.mp3";
+                case SfxId.StartGame: return "MenuMap/start_game.mp3";
                 case SfxId.SceneTransition: return "MenuMap/scene_transition.mp3";
-                case SfxId.MapNodeSelect: return "MenuMap/map_node_select.mp3";
+                case SfxId.MapNodeSelect: return "MenuMap/encounter_select.mp3";
                 case SfxId.RoutePreview: return "MenuMap/route_preview.mp3";
                 case SfxId.RouteConfirm: return "MenuMap/route_confirm.mp3";
                 case SfxId.RouteCancel: return "MenuMap/route_cancel.mp3";

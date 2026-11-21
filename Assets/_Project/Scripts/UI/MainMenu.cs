@@ -32,6 +32,7 @@ namespace M3P
         void Awake()
         {
             ResolveRefs();
+            MenuSoundSettings.Ensure(transform);
             Bind(_continueButton, OnContinue);
             Bind(_newGameButton, OnNewGame);
             Bind(_debugMapButton, OnStartDebugMap);
@@ -84,7 +85,7 @@ namespace M3P
                 return;
             }
 
-            Sfx.Play(SfxId.MenuConfirm);
+            Sfx.Play(SfxId.StartGame);
             RefreshContinue();
         }
 
@@ -100,7 +101,7 @@ namespace M3P
                 return;
             }
 
-            Sfx.Play(SfxId.MenuConfirm);
+            Sfx.Play(SfxId.StartGame);
             CommitPlayerName();
             game.ResetProfileSave();
             game.StartNewGeneratedMap();
@@ -112,7 +113,7 @@ namespace M3P
             if (game == null)
                 return;
 
-            Sfx.Play(SfxId.MenuConfirm);
+            Sfx.Play(SfxId.StartGame);
             CommitPlayerName();
             game.StartDebugMap();
         }

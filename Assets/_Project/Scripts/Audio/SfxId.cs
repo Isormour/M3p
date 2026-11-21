@@ -112,5 +112,6 @@ namespace M3P
         TileUpgradeRemove,
         TileCraftSuccess,
         UiHover,
+        StartGame,
     }
 }

@@ -12,6 +12,7 @@ namespace M3P
         {
             public SfxId Id;
             public AudioClip Clip;
+            public AudioClip[] Alternates;
         }
 
         [Serializable]
@@ -25,7 +26,8 @@ namespace M3P
         [SerializeField] ClipEntry[] _clips = Array.Empty<ClipEntry>();
         [SerializeField] SkillClip[] _skills = Array.Empty<SkillClip>();
 
-        Dictionary<SfxId, AudioClip> _byId;
+        Dictionary<SfxId, AudioClip[]> _byId;
+        Dictionary<SfxId, int> _nextClip;
         Dictionary<string, SkillClip> _bySkill;
 
         public AudioClip GetClip(SfxId id)
@@ -34,7 +36,12 @@ namespace M3P
                 return null;
 
             EnsureLookups();
-            return _byId.TryGetValue(id, out AudioClip clip) ? clip : null;
+            if (!_byId.TryGetValue(id, out AudioClip[] clips))
+                return null;
+
+            _nextClip.TryGetValue(id, out int index);
+            _nextClip[id] = (index + 1) % clips.Length;
+            return clips[index];
         }
 
         public bool TryGetSkill(string skillAssetName, out AudioClip layer, out AudioClip accent)
@@ -56,6 +63,7 @@ namespace M3P
         void OnEnable()
         {
             _byId = null;
+            _nextClip = null;
             _bySkill = null;
         }
 
@@ -64,14 +72,25 @@ namespace M3P
             if (_byId != null)
                 return;
 
-            _byId = new Dictionary<SfxId, AudioClip>();
+            _byId = new Dictionary<SfxId, AudioClip[]>();
+            _nextClip = new Dictionary<SfxId, int>();
             ClipEntry[] clips = _clips ?? Array.Empty<ClipEntry>();
             for (int i = 0; i < clips.Length; i++)
             {
-                if (clips[i].Id == SfxId.None || clips[i].Clip == null)
+                if (clips[i].Id == SfxId.None)
                     continue;
 
-                _byId[clips[i].Id] = clips[i].Clip;
+                var variants = new List<AudioClip>();
+                if (clips[i].Clip != null)
+                    variants.Add(clips[i].Clip);
+                foreach (AudioClip alternate in clips[i].Alternates ?? Array.Empty<AudioClip>())
+                {
+                    if (alternate != null)
+                        variants.Add(alternate);
+                }
+
+                if (variants.Count > 0)
+                    _byId[clips[i].Id] = variants.ToArray();
             }
 
             _bySkill = new Dictionary<string, SkillClip>(StringComparer.Ordinal);

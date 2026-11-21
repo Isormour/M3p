@@ -83,7 +83,9 @@ namespace M3P
             DontDestroyOnLoad(gameObject);
             RemoteBalanceBootstrap.Install(this);
             MapRunState.Active = MapRun;
+            GameAudio.Install(_config != null ? _config.Mixer : null);
             SfxPlayer.Ensure(_config != null ? _config.Sfx : null);
+            MusicPlayer.Ensure(_config != null ? _config.Music : null);
         }
 
         /// <summary>

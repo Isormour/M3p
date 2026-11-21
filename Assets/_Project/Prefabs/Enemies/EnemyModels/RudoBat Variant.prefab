@@ -9,6 +9,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 2581186047194474720}
     m_Modifications:
     - target: {fileID: -8970345665622707952, guid: 617e5f341e2dd684a9d96f3634c01951, type: 3}
+      propertyPath: m_UpdateWhenOffscreen
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8970345665622707952, guid: 617e5f341e2dd684a9d96f3634c01951, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 551d139e8238f3c4894507d311e6ff23, type: 2}
@@ -468,6 +472,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -6339719832940896891, guid: 617e5f341e2dd684a9d96f3634c01951, type: 3}
   m_PrefabInstance: {fileID: 6993766507617258527}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &5460217183320557657 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -6140571175727446970, guid: 617e5f341e2dd684a9d96f3634c01951, type: 3}
+  m_PrefabInstance: {fileID: 6993766507617258527}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &5918197171330295300 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -5535080703457220069, guid: 617e5f341e2dd684a9d96f3634c01951, type: 3}
@@ -702,17 +711,29 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 103593755668270073, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: ShapeModule.m_SkinnedMeshRenderer
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 1115763737850123812, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
       propertyPath: 'renderers.Array.data[0]'
       value: 
       objectReference: {fileID: 7101111947560156431}
+    - target: {fileID: 1639271707459145017, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: ShapeModule.m_SkinnedMeshRenderer
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 2277848116310433148, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
       propertyPath: m_Name
       value: RudoBat Variant
       objectReference: {fileID: 0}
+    - target: {fileID: 2806350765546835300, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: ShapeModule.m_SkinnedMeshRenderer
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
       propertyPath: hand
-      value:
+      value: 
       objectReference: {fileID: 5460217183320557657}
     - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
       propertyPath: _animator
@@ -721,6 +742,10 @@ PrefabInstance:
     - target: {fileID: 3334003410193672422, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
       propertyPath: <CharacterType>k__BackingField
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4937671883286644886, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: ShapeModule.m_SkinnedMeshRenderer
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 5393355372502565080, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -762,6 +787,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5803889617188957830, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
+      propertyPath: ShapeModule.m_SkinnedMeshRenderer
+      value: 
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 2989527877821914362, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
@@ -775,9 +804,4 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 5393355372502565080, guid: 6aa3eee26953f9f46aae9d10e0cbc39e, type: 3}
   m_PrefabInstance: {fileID: 7569208650691864632}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &5460217183320557657 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: -6140571175727446970, guid: 617e5f341e2dd684a9d96f3634c01951, type: 3}
-  m_PrefabInstance: {fileID: 6993766507617258527}
   m_PrefabAsset: {fileID: 0}

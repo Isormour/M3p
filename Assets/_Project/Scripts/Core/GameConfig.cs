@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Match3;
 using UnityEngine;
+using UnityEngine.Audio;
 
 namespace M3P
 {
@@ -49,6 +50,13 @@ namespace M3P
         [Tooltip("One-shot effects for menu, map, battle and rewards.")]
         [SerializeField] SfxLibrary _sfx;
 
+        [Header("Audio")]
+        [Tooltip("Master mixer. Music and SFX are separate groups with exposed MusicVolume and SfxVolume.")]
+        [SerializeField] AudioMixer _mixer;
+
+        [Tooltip("Scene music. Menu, map, and one arena track per biome.")]
+        [SerializeField] MusicLibrary _music;
+
         Dictionary<Match3TileTypeDefinition, int> _tileTypeIds;
         StatProgressionConfig _fallbackStatProgression;
         BattleConfig _fallbackBattle;
@@ -86,6 +94,10 @@ namespace M3P
         public VFXConfig VFX => _vfx;
 
         public SfxLibrary Sfx => _sfx;
+
+        public AudioMixer Mixer => _mixer;
+
+        public MusicLibrary Music => _music;
 
         public int TileTypeCount => _tileTypes != null ? _tileTypes.Length : 0;
 

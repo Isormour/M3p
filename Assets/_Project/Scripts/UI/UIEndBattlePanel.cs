@@ -235,6 +235,11 @@ namespace M3P
                 _loseButton.onClick.RemoveListener(HandleCloseClicked);
         }
 
+        void OnDisable()
+        {
+            StopExperienceFill();
+        }
+
         void PlayExperienceBar(BattleRewardResult rewards)
         {
             StopExperienceFill();
@@ -296,8 +301,6 @@ namespace M3P
         IEnumerator FillExperienceBarRoutine(LevelProgressionConfig curve, int startTotal, int endTotal)
         {
             int xp = startTotal;
-            if (xp < endTotal)
-                Sfx.Play(SfxId.ExperienceFill);
             while (xp < endTotal)
             {
                 int level = curve.GetLevelForTotalExperience(xp);
@@ -341,16 +344,24 @@ namespace M3P
                 yield break;
             }
 
-            float elapsed = 0f;
-            while (elapsed < duration)
+            Sfx.StartLoop(SfxId.ExperienceFill);
+            try
             {
-                elapsed += Time.deltaTime;
-                float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
-                experienceBar.SetFill(Mathf.Lerp(from, to, t));
-                yield return null;
-            }
+                float elapsed = 0f;
+                while (elapsed < duration)
+                {
+                    elapsed += Time.deltaTime;
+                    float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
+                    experienceBar.SetFill(Mathf.Lerp(from, to, t));
+                    yield return null;
+                }
 
-            experienceBar.SetFill(to);
+                experienceBar.SetFill(to);
+            }
+            finally
+            {
+                Sfx.StopLoop(SfxId.ExperienceFill);
+            }
         }
 
         static float NormalizedFill(LevelProgressionConfig curve, int totalExperience)
@@ -381,6 +392,7 @@ namespace M3P
 
         void StopExperienceFill()
         {
+            Sfx.StopLoop(SfxId.ExperienceFill);
             if (_experienceFillRoutine == null)
                 return;
 
